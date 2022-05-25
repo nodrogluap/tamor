@@ -1,2 +1,2 @@
 # tamor
-Dragen genome and transcriptome analysis automation using Snakemake
+Illumina Dragen genome and transcriptome analysis automation using Snakemake
