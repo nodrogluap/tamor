@@ -49,10 +49,10 @@ cp config.yml.sample config.yml
 This is the file that you can customize for your site-specific settings. By default the config is set up to write result files under the current directory in ``data/output``, and is expecting the list of paired tumor-normal samples in a file called ``tumor_dna_paired_germline_dna_samples.tsv`` which has 5 columns:
 
 ```
-subjectID<tab>tumor_sample_name<tab>germline_sample_name<tab>boolean_germline_data_contain_some_tumor<tab>PCGR_tissue_site_number
+subjectID<tab>tumorSampleName<tab>germlineSampleName<tab>TrueOrFalse_germline_data_contain_some_tumor<tab>PCGRTissueSiteNumber
 ```
 
-The tumor_sample_name and germline_sample_name must be exact names you used in your Illumina sequencing sample spreadsheet, as these sample sheets are the only metadata to which tamor has access. Place all the Illumina experiment sample sheets for your project into ``data/spreadsheets`` by default (see the ``samplesheets_dir`` setting in ``config.yml``). The list of tissue site numbers for the version of PCGR included here is:
+The tumorSampleName and germlineSampleName must *CONTAIN NO UNDERSCORES*, and be exact names you used in your Illumina sequencing sample spreadsheet. These sample sheets are the only metadata to which tamor has access. Place all the Illumina experiment sample sheets for your project into ``data/spreadsheets`` by default (see the ``samplesheets_dir`` setting in ``config.yml``). The list of tissue site numbers for the version of PCGR included here is:
 
 ```
                         0 = Any
@@ -88,8 +88,17 @@ The tumor_sample_name and germline_sample_name must be exact names you used in y
                         30 = Vulva/Vagina
 ```
 
-Once the sample pairing file is ready, you can simply run Snakemake to generate the BAMs, VCFs, and CPSR/PCGR reports:
+# Running a paired tumor-normal analysis
+
+Any time you want to use tamor, you must be sure to have the conda/mamba environment loaded:
+
+```bash
+mamba activate pcgrr
+```
+
+Once the sample pairing file mentioned earlier is ready, you can simply run Snakemake to generate the BAMs, VCFs, and CPSR/PCGR reports:
   
 ```bash
-snakemake 
+snakemake --cores=1
 ```
+The default outputs are in data/output/sampleID-tumorSampleName_germlineSampleName
