@@ -147,7 +147,7 @@ rule dragen_bcl_conversion:
 		analysis_dir+'/primary/{sequencer}/{run}/Reports/fastq_list.csv'
 	shell:
 		# Nota bene: Disabled for the moment to avoid big dragen job dependency cascades
-		"echo bcl-convert --force --sample-sheet {input.csv} --bcl-input-directory {bcl_dir}/{sequencer}/{wildcards.run} --output-directory {analysis_dir}/primary/{sequencer}/{wildcards.run}"
+		"bcl-convert --force --sample-sheet {input.csv} --bcl-input-directory {bcl_dir}/{sequencer}/{wildcards.run} --output-directory {analysis_dir}/primary/{sequencer}/{wildcards.run}"
 
 # One or more libraries correspond to a single sample defined by the wildcard match values for a sequencing run. 
 # Generate a file listing all those FASTQ files so they can be processed together, e.g. for reference mapping.
