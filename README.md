@@ -17,7 +17,7 @@ git clone https://github.com/nodrogluap/tamor
 mamba env create -f conda_tamor.yml
 ```
 
-3. Due to quirks in the conda dependencies spec, you will need to install the latest version of the Perl ``zlib`` library module manually, and the R hg38 sequence module:
+3. Due to quirks in the conda dependencies spec, you will need to install the latest version of the Perl ``zlib`` library module manually, and the R hg38 genome sequence module:
 
 ```bash
 cpanm Compress::Raw::Zlib
