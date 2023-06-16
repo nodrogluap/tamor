@@ -46,10 +46,10 @@ Copy the ``config.yml.sample`` file to config.yml:
 cp config.yml.sample config.yml
 ```
 
-This is the file that you can customize for your site-specific settings. By default the config is set up to write result files under the current directory in ``data/output``, and is expecting the list of paired tumor-normal samples in a file called ``tumor_dna_paired_germline_dna_samples.tsv`` which has 5 columns:
+This is the file that you can customize for your site-specific settings. By default the config is set up to write result files under the current directory in ``output``, and is expecting the input list of paired tumor-normal samples in a file called ``tumor_dna_paired_germline_dna_samples.tsv`` which has 5 columns:
 
 ```
-subjectID<tab>tumorSampleName<tab>germlineSampleName<tab>TrueOrFalse_germline_data_contain_some_tumor<tab>PCGRTissueSiteNumber
+subjectID<tab>tumorSampleName<tab>germlineSampleName<tab>TrueOrFalse_germline_contains_some_tumor<tab>PCGRTissueSiteNumber
 ```
 
 The subjectID, tumorSampleName and germlineSampleName must:
