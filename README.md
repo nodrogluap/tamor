@@ -3,7 +3,7 @@ Illumina Dragen cancer genome and transcriptome analysis automation using Snakem
 
 # Installation
 
-0. Nota bene: These insteructions assume that you already have a Dragen server with software version 3.10 or higher and a working ``hg38`` genome index.
+0. Nota bene: These instructions assume that you already have a Dragen server with software version 3.10 or higher and a working ``hg38`` genome index.
 
 1. Download this code base:
 
