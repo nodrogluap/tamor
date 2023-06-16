@@ -24,7 +24,7 @@ cpanm Compress::Raw::Zlib
 R -e 'BiocManager::install("rtracklayer", force=TRUE);BiocManager::install("BSgenome.Hsapiens.UCSC.hg38")'
 ```
 
-4. Download and index the cancer databases that CPSR and PCGR rely on for annotation of your discovered sequence variants:
+4. Download (~22GB) the cancer databases that CPSR and PCGR rely on for annotation of your discovered sequence variants:
 
 ```bash
 BUNDLE=pcgr.databundle.hg38.20220203.tgz
