@@ -17,11 +17,11 @@ git clone https://github.com/nodrogluap/tamor
 mamba env create -f conda_tamor.yml
 ```
 
-3. Due to a quirk in the conda dependencies spec, you will need to install the latest version of the Perl ``zlib`` library module manually, and the R hg38 sequence module:
+3. Due to quirks in the conda dependencies spec, you will need to install the latest version of the Perl ``zlib`` library module manually, and the R hg38 sequence module:
 
 ```bash
 cpanm Compress::Raw::Zlib
-R -e 'BiocManager::install("BSgenome.Hsapiens.UCSC.hg38")'
+R -e 'BiocManager::install("rtracklayer", force=TRUE);BiocManager::install("BSgenome.Hsapiens.UCSC.hg38")'
 ```
 
 4. Download and index the cancer databases that CPSR and PCGR rely on for annotation of your discovered sequence variants:
