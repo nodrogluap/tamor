@@ -46,13 +46,19 @@ Copy the ``config.yml.sample`` file to config.yml:
 cp config.yml.sample config.yml
 ```
 
-This is the file that you can customize for your site-specific settings. By default the config is set up to write result files under the current directory in ``data/output``, and is expecting the list of paired tumor-normal samples in a file called ``tumor_dna_paired_germline_dna_samples.tsv`` which has 5 columns:
+This is the file that you can customize for your site-specific settings. By default the config is set up to write result files under the current directory in ``output``, and is expecting the input list of paired tumor-normal samples in a file called ``tumor_dna_paired_germline_dna_samples.tsv`` which has 5 columns:
 
 ```
-subjectID<tab>tumorSampleName<tab>germlineSampleName<tab>TrueOrFalse_germline_data_contain_some_tumor<tab>PCGRTissueSiteNumber
+subjectID<tab>tumorSampleName<tab>germlineSampleName<tab>TrueOrFalse_germline_contains_some_tumor<tab>PCGRTissueSiteNumber
 ```
 
-The tumorSampleName and germlineSampleName must *CONTAIN NO UNDERSCORES*, and be exact names you used in your Illumina sequencing sample spreadsheet. These sample sheets are the only metadata to which tamor has access. Place all the Illumina experiment sample sheets for your project into ``data/spreadsheets`` by default (see the ``samplesheets_dir`` setting in ``config.yml``). The list of tissue site numbers for the version of PCGR included here is:
+The subjectID, tumorSampleName and germlineSampleName must:
+
+- *CONTAIN NO UNDERSCORES*
+- The subjectID must be between 6 and 35 characters (due to a PCGR naming limitation)
+- tumorSampleName and germlineSampleName must be the exact names you used in your Illumina sequencing sample spreadsheets
+
+These sample sheets are the only metadata to which tamor has access. Place all the Illumina experiment sample sheets for your project into ``data/spreadsheets`` by default (see the ``samplesheets_dir`` setting in ``config.yml``). The list of tissue site numbers for the version of PCGR included here is:
 
 ```
                         0 = Any
