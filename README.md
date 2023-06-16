@@ -1,5 +1,14 @@
 # tamor
-Illumina Dragen cancer genome and transcriptome analysis automation using Snakemake, integrating Personal Cancer Genome Report generation on hg38.
+
+Rapid automated [Personal Cancer Genome Report](https://sigven.github.io/pcgr/) generation using [Illumina Dragen](https://www.illumina.com/products/by-type/informatics-products/dragen-secondary-analysis.html) + [Snakemake](https://snakemake.github.io/).
+
+# tl;dr
+
+Data for large scale tumor analysis projects can be spread over multiple DNA sequencing instrument runs, ``tamor`` simplifies the process of analyzing them.
+
+A tab-delimited file is provided by the user to associate tumor and germline sequencing sample IDs with a study subject ID, along with a tissue-of-origin for the tumor. PCGR somatic variant reports (including germline susceptibility sequence variants) are generated using 1) this tab-delimited file, 2) the Illumina sequencer output (BCL or FASTQ), and 3) the Illumina Experiment Manager samplesheets CSV for the sequencing runs.
+
+Tumor RNA analysis is in development.
 
 # Installation
 
@@ -46,19 +55,27 @@ Copy the ``config.yml.sample`` file to config.yml:
 cp config.yml.sample config.yml
 ```
 
-This is the file that you can customize for your site-specific settings. By default the config is set up to write result files under the current directory in ``output``, and is expecting the input list of paired tumor-normal samples in a file called ``tumor_dna_paired_germline_dna_samples.tsv`` which has 5 columns:
+This is the file that you can customize for your site-specific settings. By default the config is set up to write result files under the current directory in ``output``, and is expecting the input list of paired tumor-normal samples in a file called ``tumor_dna_paired_germline_dna_samples.tsv`` which has 5 columns to be specified:
 
 ```
 subjectID<tab>tumorSampleName<tab>germlineSampleName<tab>TrueOrFalse_germline_contains_some_tumor<tab>PCGRTissueSiteNumber
 ```
 
-The subjectID, tumorSampleName and germlineSampleName must:
+The ``subjectID``, ``tumorSampleName`` and ``germlineSampleName`` must:
 
 - *CONTAIN NO UNDERSCORES*
-- The subjectID must be between 6 and 35 characters (due to a PCGR naming limitation)
-- tumorSampleName and germlineSampleName must be the exact names you used in your Illumina sequencing sample spreadsheets
+- The ``subjectID`` must be between 6 and 35 characters (due to a PCGR naming limitation)
+- ``tumorSampleName`` and ``germlineSampleName`` must be the exact ``Sample_Name`` values you used in your Illumina sequencing sample spreadsheets
 
-These sample sheets are the only metadata to which tamor has access. Place all the Illumina experiment sample sheets for your project into ``data/spreadsheets`` by default (see the ``samplesheets_dir`` setting in ``config.yml``). The list of tissue site numbers for the version of PCGR included here is:
+These sample sheets are the only metadata to which tamor has access. Place all the Illumina experiment sample sheets for your project into ``data/spreadsheets`` by default (see the ``samplesheets_dir`` setting in ``config.yml``). They must be called ``runID.csv`` where runID is typically the Illumina folder name in the format ``YYMMDD_machineID_SideFlowCellID``.
+
+Tamor can start with either BCL files or FASTQ. If you are starting with BCLs, the full Illumina experiment output folders (which contain the requisite ``Data/Intensities/Basecalls`` subfolder) are expected by in ``data/bcls/runID`` (see ``bcl_dir`` setting in``config.yaml``). Tamor will perform bcl to fastq conversion, with the FASTQ output into ``data/analysis/primary/sequencer/runID`` (see ``analysis_dir`` setting in ``config.yaml``, and the default ``sequencer`` is ``novaseq6000``). 
+
+If instead you are providing the FASTQs directly as input to tamor, they must also be in the ``data/analysis/primary/sequencerName/runID`` directory, with a corresponding Illumina Experiment Manager samplesheet ``data/spreadsheets/runID.csv``. *Why?* This is required because tamor reads the sample sheet to find the correspondence between Sample_Name and Sample ID for each sequencing library (multiple Sample IDs can correspond to the same tumor sample e.g. if more than one prep was done, XP loading was used, or there are multiple barcodes for one sample for color balancing on small runs). The samplesheet is also used to determine if Unique Molecular Indices were used to generate the sequencing libraries, which requires different handling in Dragen during genotyping downstream.
+
+*If you provide FASTQ files directly, they must be timestamped later than the corresponding Illumina Experiment Manager spreadsheet, otherwise Snakemake will assume you've consequentially changed the spreadsheet and try to automatically regenerated all FASTQs for that run -- from potentially non-existent BCLs*.
+
+The list of tissue site numbers for the version of PCGR included here is:
 
 ```
                         0 = Any
@@ -102,11 +119,15 @@ Any time you want to use tamor, you must be sure to have the conda/mamba environ
 mamba activate pcgrr
 ```
 
-Once the sample pairing file mentioned earlier is ready, you can simply run Snakemake to generate the BAMs, VCFs, and CPSR/PCGR reports:
+Once the sample pairing file mentioned earlier is ready, you can simply run Snakemake to generate the FASTQs (optiuonally), BAMs, VCFs, and CPSR/PCGR reports:
   
 ```bash
-snakemake --cores=1
+snakemake --cores=2
 ```
-The default outputs are in a directory called ``data/output/sampleID_tumorSampleName_germlineSampleName``. I persoanlly find the most relevant document to be the self-contained Web page ``sampleID.pcgr_acmg.grch38.flexdb.html``.
+The default outputs are in a directory called ``data/output/sampleID_tumorSampleName_germlineSampleName``. The most relevant document may be the self-contained Web page ``sampleID.pcgr_acmg.grch38.flexdb.html``.
 
 ![Screenshot of a sample Personal Cancer Genome Report, FlexDB version](docs/pcgr_screenshot.png)
+
+# Acknowledgements
+
+This project is being developed in support of the [Terry Fox Research Institute](https://www.tfri.ca/)'s [Marathon of Hope Cancer Care Network](https://www.marathonofhopecancercentres.ca/) activities within the [Prairie Cancer Research Consortium](https://www.marathonofhopecancercentres.ca/our-network/consortium/prairies-cancer-research-consortium).
