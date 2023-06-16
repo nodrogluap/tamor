@@ -1,5 +1,5 @@
 # tamor
-Illumina Dragen cancer genome and transcriptome analysis automation using Snakemake, integrating Personal Cancer Genome Report generation.
+Illumina Dragen cancer genome and transcriptome analysis automation using Snakemake, integrating Personal Cancer Genome Report generation on hg38.
 
 # Installation
 
@@ -11,7 +11,7 @@ Illumina Dragen cancer genome and transcriptome analysis automation using Snakem
 git clone https://github.com/nodrogluap/tamor
 ```
 
-2. Install all the dependencies via conda or mamba (except the Dragen command itself, which as a commercial piece of software we're assuming is pre-installed on your server):
+2. Install all the dependencies via conda or [mamba](https://mamba.readthedocs.io/en/latest/installation.html) (my preference because it's much, much faster):
 
 ```bash
 mamba env create -f conda_tamor.yml
@@ -26,7 +26,9 @@ cpanm Compress::Raw::Zlib
 4. Download and index the cancer databases that CPSR and PCGR rely on for annotation of your discovered sequence variants:
 
 ```bash
-todo
+BUNDLE=pcgr.databundle.hg38.20220203.tgz
+wget http://insilico.hpc.uio.no/pcgr/$BUNDLE
+tar zxvf $BUNDLE
 ```
 
 # Configuration
