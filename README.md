@@ -1,18 +1,40 @@
 # tamor
 Illumina Dragen cancer genome and transcriptome analysis automation using Snakemake, integrating Personal Cancer Genome Report generation.
 
-# Getting Started
+# Installation
 
-Download this code base:
+0. Nota bene: These insteructions assume that you already have a Dragen server with software version 3.10 or higher and a working ``hg38`` genome index.
+
+1. Download this code base:
 
 ```bash
 git clone https://github.com/nodrogluap/tamor
 ```
 
-Install all the dependencies via conda or mamba (except the Dragen command itself, which as a commercial piece of software we're assuming is pre-installed on your server):
+2. Install all the dependencies via conda or mamba (except the Dragen command itself, which as a commercial piece of software we're assuming is pre-installed on your server):
 
 ```bash
 mamba env create -f conda_tamor.yml
+```
+
+3. Due to a quirk in the conda dependencies spec, you will need to install the latest version of the Perl ``zlib`` library module manually:
+
+```bash
+cpanm Compress::Raw::Zlib
+```
+
+4. Download and index the cancer databases that CPSR and PCGR rely on for annotation of your discovered sequence variants:
+
+```bash
+todo
+```
+
+# Configuration
+
+If you do not have the tamor directory leading in your shell's ``PATH`` variable, you will need to prepend it so tamor's ersatz ``bcftools`` command (place this in your .bashrc if you don't want to do this manually each etime):
+
+```bash
+export PATH=/where/you/have/put/tamor:$PATH
 ```
 
 Copy the ``config.yml.sample`` file to config.yml:
