@@ -112,14 +112,12 @@ rule generate_pcgr_html:
 	run:
 		tumor_site = get_tumor_site(wildcards)
 
-		# Germline susceptibility reporting
-		shell("cpsr --input_vcf {input.germline_snv_vcf} --pcgr_dir . --output_dir {output_dir}/pcgr/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal} --genome_assembly grch38 --panel_id 0 --sample_id {wildcards.subject}_{wildcards.normal} --secondary_findings --classify_all --maf_upper_threshold 0.2 --force_overwrite")
-
 		# Somatic small nucleotide variants reformatting
 		tf=tempfile.NamedTemporaryFile(suffix=".vcf")
 		SNVFILE=tf.name
-		shell("gzip -cd {input.germline_snv_vcf} | perl -pe 'if(/^##INFO=<ID=DP,/){{print \"##INFO=<ID=TDP,Number=1,Type=Integer,Description=\\\"Read depth of alternative allele in the tumor\\\">\\n##INFO=<ID=TVAF,Number=1,Type=Float,Description=\\\"Alternative allele proportion of reads in the tumor\\\">\\n\"}}($tdp, $tvaf) = /\\t[01][\/|][01]:\d+.?\d*:\d+,(\d+):([0-9]+\.[0-9]*):\S+?$/;s/\\tDP=/\\tTDP=$tdp;TVAF=$tvaf;DP=/; s/;SOMATIC//' > {SNVFILE}")
-		shell("bgzip {SNVFILE}")
+		shell("gzip -cd {input.somatic_snv_vcf} | perl -pe 'if(/^##INFO=<ID=DP,/){{print \"##INFO=<ID=TDP,Number=1,Type=Integer,Description=\\\"Read depth of alternative allele in the tumor\\\">\\n##INFO=<ID=TVAF,Number=1,Type=Float,Description=\\\"Alternative allele proportion of reads in the tumor\\\">\\n\"}}($tdp, $tvaf) = /\\t[01][\/|][01]:\d+.?\d*:\d+,(\d+):([0-9]+\.[0-9]*):\S+?$/;s/\\tDP=/\\tTDP=$tdp;TVAF=$tvaf;DP=/; s/;SOMATIC//' > {SNVFILE}")
+		# Only keeping the original to avoid FileNotFoundError when temp file automatically cleaned up by Snakemake after rule application.
+		shell("bgzip -c {SNVFILE} > {SNVFILE}.gz")
 		shell("tabix {SNVFILE}.gz")
 
 		# Somatic copy number variants reformatting
