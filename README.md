@@ -34,7 +34,7 @@ tar zxvf $BUNDLE
 
 # Configuration
 
-If you do not have the tamor directory leading in your shell's ``PATH`` variable, you will need to prepend it so tamor's ersatz ``bcftools`` command (place this in your .bashrc if you don't want to do this manually each etime):
+If you do not have the tamor directory leading in your shell's ``PATH`` variable, you will need to prepend it so tamor's ersatz ``bcftools`` command (place this in your .bashrc if you don't want to do this manually each time):
 
 ```bash
 export PATH=/where/you/have/put/tamor:$PATH
