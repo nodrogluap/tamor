@@ -257,9 +257,10 @@ rule dragen_exec_somatic_snv_sv_and_cnv_calls:
 		"{output_dir}/{subject}_{tumor}_{normal}.dna.somatic.hard-filtered.vcf.gz",
 		"{output_dir}/{subject}_{tumor}_{normal}.dna.somatic.sv.vcf.gz"
 	run:
-		dragen_cmd = "dragen --enable-map-align false --bam-input {input.germline_bam} --tumor-bam-input {input.tumor_bam} -r {refgenome} --output-directory {output_dir} --output-file-prefix {wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic --enable-cnv true --intermediate-results-dir {temp_dir} --enable-variant-caller true --vc-enable-unequal-ntd-errors=true --vc-enable-trimer-context=true --enable-sv true --cnv-use-somatic-vc-baf true -f; mv {output_dir}/sv/results/variants/somaticSV.vcf.gz {output_dir}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.sv.vcf.gz; mv {output_dir}/sv/results/variants/somaticSV.vcf.gz.tbi {output_dir}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.sv.vcf.gz.tbi"
+		dragen_cmd = "dragen --enable-map-align false --bam-input {input.germline_bam} --tumor-bam-input {input.tumor_bam} -r {refgenome} --output-directory {output_dir} --output-file-prefix {wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic --enable-cnv true --intermediate-results-dir {temp_dir} --enable-variant-caller true --vc-enable-unequal-ntd-errors=true --vc-enable-trimer-context=true --enable-sv true --cnv-use-somatic-vc-baf true -f"
 		has_tumor_in_normal = get_normal_contains_some_tumor(wildcards)
 		if has_tumor_in_normal:
 			shell(dragen_cmd +  " --sv-enable-liquid-tumor-mode true --sv-tin-contam-tolerance {tumor_in_normal_tolerance_proportion}")
 		else:
 			shell(dragen_cmd)
+		shell("mv {output_dir}/sv/results/variants/somaticSV.vcf.gz {output_dir}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.sv.vcf.gz; mv {output_dir}/sv/results/variants/somaticSV.vcf.gz.tbi {output_dir}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.sv.vcf.gz.tbi")
