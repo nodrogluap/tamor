@@ -16,7 +16,7 @@ temp_dir = config["temp_dir"]
 sequencer = config["sequencer"]
 refgenome = config["refgenome"]
 ref_exon_annotations = config["ref_exon_annotations"]
-
+tumor_in_normal_tolerance_proportion = config["tumor_in_normal_tolerance_proportion"]
 
 # Convenience method to strip lines starting with a hashmark from a CSV file being read (assumed to be comments).
 def decomment(csvfile):
@@ -58,6 +58,9 @@ def get_samplesheet(wildcards):
 
 def get_tumor_site(wildcards):
 	return dna_paired_samples["_".join((wildcards.subject, wildcards.tumor, wildcards.normal))][2]
+
+def get_normal_contains_some_tumor(wildcards):
+	return dna_paired_samples["_".join((wildcards.subject, wildcards.tumor, wildcards.normal))][1]
 
 def get_file(sample_name, suffix):
 	# Code that returns a list of bam files for based on *sample_name* 
@@ -147,7 +150,7 @@ rule dragen_bcl_conversion:
 		analysis_dir+'/primary/{sequencer}/{run}/Reports/fastq_list.csv'
 	shell:
 		# Nota bene: Disabled for the moment to avoid big dragen job dependency cascades
-		"bcl-convert --force --sample-sheet {input.csv} --bcl-input-directory {bcl_dir}/{sequencer}/{wildcards.run} --output-directory {analysis_dir}/primary/{sequencer}/{wildcards.run}"
+		"echo bcl-convert --force --sample-sheet {input.csv} --bcl-input-directory {bcl_dir}/{sequencer}/{wildcards.run} --output-directory {analysis_dir}/primary/{sequencer}/{wildcards.run}"
 
 # One or more libraries correspond to a single sample defined by the wildcard match values for a sequencing run. 
 # Generate a file listing all those FASTQ files so they can be processed together, e.g. for reference mapping.
@@ -253,5 +256,10 @@ rule dragen_exec_somatic_snv_sv_and_cnv_calls:
 		"{output_dir}/{subject}_{tumor}_{normal}.dna.somatic.cnv.vcf.gz",
 		"{output_dir}/{subject}_{tumor}_{normal}.dna.somatic.hard-filtered.vcf.gz",
 		"{output_dir}/{subject}_{tumor}_{normal}.dna.somatic.sv.vcf.gz"
-	shell:
-		"dragen --enable-map-align false --bam-input {input.germline_bam} --tumor-bam-input {input.tumor_bam} -r {refgenome} --output-directory {output_dir} --output-file-prefix {wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic --enable-cnv true --intermediate-results-dir {temp_dir} --enable-variant-caller true --vc-enable-unequal-ntd-errors=true --vc-enable-trimer-context=true --enable-sv true --cnv-use-somatic-vc-baf true -f; mv {output_dir}/sv/results/variants/somaticSV.vcf.gz {output_dir}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.sv.vcf.gz; mv {output_dir}/sv/results/variants/somaticSV.vcf.gz.tbi {output_dir}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.sv.vcf.gz.tbi"
+	run:
+		dragen_cmd = "dragen --enable-map-align false --bam-input {input.germline_bam} --tumor-bam-input {input.tumor_bam} -r {refgenome} --output-directory {output_dir} --output-file-prefix {wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic --enable-cnv true --intermediate-results-dir {temp_dir} --enable-variant-caller true --vc-enable-unequal-ntd-errors=true --vc-enable-trimer-context=true --enable-sv true --cnv-use-somatic-vc-baf true -f; mv {output_dir}/sv/results/variants/somaticSV.vcf.gz {output_dir}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.sv.vcf.gz; mv {output_dir}/sv/results/variants/somaticSV.vcf.gz.tbi {output_dir}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.sv.vcf.gz.tbi"
+		has_tumor_in_normal = get_normal_contains_some_tumor(wildcards)
+		if has_tumor_in_normal:
+			shell(dragen_cmd +  " --sv-enable-liquid-tumor-mode true --sv-tin-contam-tolerance {tumor_in_normal_tolerance_proportion}")
+		else:
+			shell(dragen_cmd)
