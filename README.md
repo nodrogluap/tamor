@@ -126,7 +126,7 @@ Once the sample pairing file mentioned earlier is ready, you can simply run Snak
 ```bash
 snakemake --cores=2
 ```
-The default outputs are in a directory called ``data/output/pcgr/sampleID_tumorSampleName_germlineSampleName``. The most relevant document may be the self-contained Web page ``sampleID.pcgr_acmg.grch38.flexdb.html``.
+The default outputs are in a directory called ``data/output/pcgr/subjectID_tumorSampleName_germlineSampleName``. The most relevant document may be the self-contained Web page ``subjectID.pcgr_acmg.grch38.flexdb.html``.
 
 ![Screenshot of a sample Personal Cancer Genome Report, FlexDB version](docs/pcgr_screenshot.png)
 
