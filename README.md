@@ -75,7 +75,7 @@ If instead you are providing the FASTQs directly as input to tamor, they must al
 
 *If you provide FASTQ files directly, they must be timestamped later than the corresponding Illumina Experiment Manager spreadsheet, otherwise Snakemake will assume you've consequentially changed the spreadsheet and try to automatically regenerated all FASTQs for that run -- from potentially non-existent BCLs*.
 
-The *fourth* column of the paired input sample TSV file is usually ``False``, unless your germline sample is from a leukemia or perhaps a poor quality histology section from a tumor, in which case use ``True``. This instructs Dragen to consider low frequency variants in the germline sample to still show up as somatic variants in the tumor analysis output (see default of 0.05 under ``tumor_in_normal_tolerance_proportion`` in ``config.yaml.sample``)
+The *fourth* column of the paired input sample TSV file is usually ``False``, unless your germline sample is from a leukemia or perhaps a poor quality histology section from a tumor, in which case use ``True``. This instructs Dragen to consider low frequency variants in the germline sample to still show up as somatic variants in the tumor analysis output (see default of 0.05 under ``tumor_in_normal_tolerance_proportion`` in ``config.yaml``)
 
 For the *fifth* column, the list of tissue site numbers for the version of PCGR included here is:
 
