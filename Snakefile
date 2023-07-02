@@ -25,7 +25,7 @@ def decomment(csvfile):
         if raw: yield raw
 
 # The format of the paired DNA samples file is tab-delimited, with subject ID in the zeroth column, tumor sample name in first column, then matched normal in the second. 
-# Additional columns are metadata: Boolean indicating if some tumor is expected in the normal sample, and a number representing the tumor site as per PCGR guidelines (see generate_pcgr.sh for details).
+# Additional columns are metadata: Boolean indicating if some tumor is expected in the normal sample, and a number representing the tumor site as per PCGR guidelines (see README.md for details).
 dna_paired_samples = {}
 with open(config["dna_paired_samples_tsv"], 'r') as data_in:
 	tsv_file = csv.reader(decomment(data_in), delimiter="\t")
@@ -65,7 +65,7 @@ def get_normal_contains_some_tumor(wildcards):
 def get_file(sample_name, suffix):
 	# Code that returns a list of bam files for based on *sample_name* 
 	bams = sorted(glob.glob('{analysis_dir}/secondary/{sequencer}/*/'+sample_name+suffix))
-	# If the file with the given suffix hasn't been generated yet, find which sequencing run has it
+	# If the file with the given suffix hasn't been generated yet, find which sequencing run has it.
 	if not bams:
 		for path in Path(samplesheet_dir).iterdir():
 			if path.is_file() and Path(path).suffix == '.csv':
@@ -74,16 +74,20 @@ def get_file(sample_name, suffix):
 				csv_file = csv.reader(current_file)
 				sample_name_index = -1
 				sample_id_index = -1
+				sample_project_index = -1
                         	for line in csv_file:
-					if 'Sample_Name' in line and 'Sample_ID' in line: #it's the header for the sample list
+					if 'Sample_Name' in line and 'Sample_ID' in line and 'Sample_Project' in line: # It's the header for the sample list.
                                         	sample_name_index = line.index('Sample_Name')
                                         	sample_id_index = line.index('Sample_ID')
-					elif sample_name_index != -1 and sample_id_index != -1 and line[sample_name_index] == sample_name and (len(line) < 11 or not "RNA" in line[10]):
+						sample_project_index = line.index('Sample_Project')
+					elif sample_name_index != -1 and sample_id_index != -1 and sample_project_index != -1 and line[sample_name_index] == sample_name and not("RNA" in line[sample_project_index]):
                                         	return analysis_dir+'/secondary/'+sequencer+'/'+os.path.splitext(os.path.basename(path))[0]+'/'+sample_name+suffix;
 				if sample_name_index == -1:
 					print("Missing Sample_Name column in Illumina samplesheet "+str(path)+", skipping")
 				if sample_id_index == -1:
 					print("Missing Sample_ID column in Illumina samplesheet "+str(path)+", skipping")
+				if sample_project_index == -1:
+					print("Missing Sample_Project column in Illumina samplesheet "+str(path)+", skipping")
 			
 def get_normal_bam(wildcards):
 	return get_file(wildcards.normal, ".bam")
