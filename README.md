@@ -1,6 +1,6 @@
 # tamor
 
-Rapid automated [Personal Cancer Genome Report](https://sigven.github.io/pcgr/) generation using [Illumina Dragen](https://www.illumina.com/products/by-type/informatics-products/dragen-secondary-analysis.html) + [Snakemake](https://snakemake.github.io/).
+Rapid automated [Personal Cancer Genome Report](https://sigven.github.io/pcgr/) (PCGR) generation using [Illumina Dragen](https://www.illumina.com/products/by-type/informatics-products/dragen-secondary-analysis.html) + [Snakemake](https://snakemake.github.io/).
 
 # tl;dr
 
@@ -33,7 +33,7 @@ cpanm Compress::Raw::Zlib
 R -e 'BiocManager::install("rtracklayer", force=TRUE);BiocManager::install("BSgenome.Hsapiens.UCSC.hg38")'
 ```
 
-4. Download (~22GB) the cancer databases that CPSR and PCGR rely on for annotation of your discovered sequence variants:
+4. Download (~22GB) the cancer databases that [CPSR](https://github.com/sigven/cpsr) and PCGR rely on for annotation of your discovered sequence variants:
 
 ```bash
 BUNDLE=pcgr.databundle.hg38.20220203.tgz
