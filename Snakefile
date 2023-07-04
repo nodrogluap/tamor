@@ -18,6 +18,8 @@ refgenome = config["refgenome"]
 ref_exon_annotations = config["ref_exon_annotations"]
 tumor_in_normal_tolerance_proportion = config["tumor_in_normal_tolerance_proportion"]
 
+samplesheet_cache = {}
+
 # Convenience method to strip lines starting with a hashmark from a CSV file being read (assumed to be comments).
 def decomment(csvfile):
     for row in csvfile:
@@ -32,6 +34,12 @@ with open(config["dna_paired_samples_tsv"], 'r') as data_in:
 	for line in tsv_file:
 		if len(line[0]) > 35 or len(line[0]) < 6:
 			raise NameError("Subject names are limited to between 6 and 35 characters by PCGR reporting requirements, please revise "+line[0])
+		if '_' in line[0]:
+			raise NameError("Subject name cannot contain any underscores ('_'), please revise "+line[0])
+		if '_' in line[1]:
+			raise NameError("Tumor sample name cannot contain any underscores ('_'), please revise "+line[1])
+		if '_' in line[2]:
+			raise NameError("Germline sample name cannot contain any underscores ('_'), please revise "+line[2])
 		dna_paired_samples_key = "_".join((line[0],line[1],line[2]))
 		dna_paired_samples[dna_paired_samples_key] = [line[0],line[3],line[4]]
 
@@ -62,32 +70,55 @@ def get_tumor_site(wildcards):
 def get_normal_contains_some_tumor(wildcards):
 	return dna_paired_samples["_".join((wildcards.subject, wildcards.tumor, wildcards.normal))][1]
 
+def load_samplesheet_info():
+	if samplesheet_cache:
+		return samplesheet_cache
+	for path in Path(samplesheet_dir).iterdir():
+		if path.is_file() and Path(path).suffix == '.csv':
+			# print("Reading file " + str(path))
+			samplesheet_lines = []
+			current_file = open(path, "r")
+			csv_file = csv.reader(current_file)
+			sample_name_index = -1
+			sample_id_index = -1
+			sample_project_index = -1
+			for line in csv_file:
+				# It's the header for the sample list.
+				if 'Sample_Name' in line and 'Sample_ID' in line and 'Sample_Project' in line: 
+					sample_name_index = line.index('Sample_Name')
+					sample_id_index = line.index('Sample_ID')
+					sample_project_index = line.index('Sample_Project')
+				# It's a line for which we might have some use.
+				if sample_name_index != -1 and sample_id_index != -1 and sample_project_index != -1:
+					if str(path) not in samplesheet_cache:
+						samplesheet_cache[str(path)] = samplesheet_lines
+					samplesheet_lines.append(line)
+			if sample_name_index == -1:
+				print("Missing Sample_Name column in Illumina samplesheet "+str(path)+", skipping")
+			if sample_id_index == -1:
+				print("Missing Sample_ID column in Illumina samplesheet "+str(path)+", skipping")
+			if sample_project_index == -1:
+				print("Missing Sample_Project column in Illumina samplesheet "+str(path)+", skipping")
+
+
 def get_file(sample_name, suffix):
 	# Code that returns a list of bam files for based on *sample_name* 
 	bams = sorted(glob.glob('{analysis_dir}/secondary/{sequencer}/*/'+sample_name+suffix))
 	# If the file with the given suffix hasn't been generated yet, find which sequencing run has it.
 	if not bams:
-		for path in Path(samplesheet_dir).iterdir():
-			if path.is_file() and Path(path).suffix == '.csv':
-				# print("Reading file " + str(path))
-				current_file = open(path, "r")
-				csv_file = csv.reader(current_file)
-				sample_name_index = -1
-				sample_id_index = -1
-				sample_project_index = -1
-                        	for line in csv_file:
-					if 'Sample_Name' in line and 'Sample_ID' in line and 'Sample_Project' in line: # It's the header for the sample list.
-                                        	sample_name_index = line.index('Sample_Name')
-                                        	sample_id_index = line.index('Sample_ID')
-						sample_project_index = line.index('Sample_Project')
-					elif sample_name_index != -1 and sample_id_index != -1 and sample_project_index != -1 and line[sample_name_index] == sample_name and not("RNA" in line[sample_project_index]):
-                                        	return analysis_dir+'/secondary/'+sequencer+'/'+os.path.splitext(os.path.basename(path))[0]+'/'+sample_name+suffix;
-				if sample_name_index == -1:
-					print("Missing Sample_Name column in Illumina samplesheet "+str(path)+", skipping")
-				if sample_id_index == -1:
-					print("Missing Sample_ID column in Illumina samplesheet "+str(path)+", skipping")
-				if sample_project_index == -1:
-					print("Missing Sample_Project column in Illumina samplesheet "+str(path)+", skipping")
+		# Allows us to cache the samplesheet info.
+		load_samplesheet_info()
+		for path_str in samplesheet_cache:
+			sample_name_index = -1
+			sample_id_index = -1
+			sample_project_index = -1
+		      	for line in samplesheet_cache[path_str]:
+				if 'Sample_Name' in line and 'Sample_ID' in line and 'Sample_Project' in line: # It's the header for the sample list.
+				       	sample_name_index = line.index('Sample_Name')
+				       	sample_id_index = line.index('Sample_ID')
+					sample_project_index = line.index('Sample_Project')
+				elif sample_name_index != -1 and sample_id_index != -1 and sample_project_index != -1 and line[sample_name_index] == sample_name and not("RNA" in line[sample_project_index]):
+				       	return analysis_dir+'/secondary/'+sequencer+'/'+os.path.splitext(os.path.basename(Path(path_str)))[0]+'/'+sample_name+suffix;
 			
 def get_normal_bam(wildcards):
 	return get_file(wildcards.normal, ".bam")
@@ -233,7 +264,7 @@ rule dragen_dna_read_mapping:
 			shell("dragen -r {refgenome} --output-dir {analysis_dir}/secondary/{wildcards.sequencer}/{wildcards.run} --output-file-prefix {wildcards.sample} --enable-map-align true --enable-sort true --enable-map-align-output true --enable-bam-indexing true --fastq-list {this_sample_only_fastq_list_csv} --fastq-list-all-samples true --intermediate-results-dir {temp_dir}")
 
 #rule dragen_rna_read_mapping:
-#        input:
+#	input:
 #		samplesheet_dir+'/{run}.csv',
 #		analysis_dir+'/primary/{sequencer}/{run}/Reports/fastq_list.csv',
 #		refgenome+'/anchored_rna',
