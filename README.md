@@ -29,6 +29,7 @@ mamba env create -f conda_tamor.yml
 3. Due to quirks in the conda dependencies spec, you will need to install the latest version of the Perl ``zlib`` library module manually, and the R hg38 genome sequence module:
 
 ```bash
+mamba activate pcgrr
 cpanm Compress::Raw::Zlib
 R -e 'BiocManager::install("rtracklayer", force=TRUE);BiocManager::install("BSgenome.Hsapiens.UCSC.hg38")'
 ```
