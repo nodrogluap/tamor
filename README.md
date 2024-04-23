@@ -125,9 +125,14 @@ mamba activate pcgrr
 Once the sample pairing file mentioned earlier is ready, you can simply run Snakemake to generate the FASTQs (optiuonally), BAMs, VCFs, and CPSR/PCGR reports:
   
 ```bash
-snakemake --cores=2
+snakemake --cores=1
 ```
 The default outputs are in a directory called ``data/output/pcgr/subjectID_tumorSampleName_germlineSampleName``. The most relevant document may be the self-contained Web page ``subjectID.pcgr_acmg.grch38.flexdb.html``.
+
+In a multi-user system, it is imperative to use a queuing system such as slurm to submit only one job at a time to Dragen v4.x. Once slurm is installed and configured on your Dragen system, Snakemake support for slurm is enabled by invoking like so:
+```bash
+snakemake --cluster sbatch --cores=2
+```
 
 ![Screenshot of a sample Personal Cancer Genome Report, FlexDB version](docs/pcgr_screenshot.png)
 
