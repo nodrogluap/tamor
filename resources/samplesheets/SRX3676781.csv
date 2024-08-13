@@ -1,0 +1,24 @@
+[Header]
+IEMFileVersion,5
+Investigator Name,University of Bari
+Experiment Name,SRX3676780
+Date,4/18/2017
+Workflow,GenerateFASTQ
+Application,NovaSeq FASTQ Only
+Instrument Type,HiSeq X Ten 
+Assay,Illumina DNA PCR-Free 2x151
+Index Adapters,"IDT-Ilmn DNA-RNA UD Indexes SetABCD Tagmentation"
+Description,HiSeq X Ten whole genome shotgun data from NCBI Short Read Archive (accessions below)
+Chemistry,Amplicon
+
+[Reads]
+151
+151
+
+[Settings]
+AdapterRead1,CTGTCTCTTATACACATCT
+
+[Data]
+Sample_ID,Sample_Name,Sample_Plate,Sample_Well,Index_Plate,Index_Plate_Well,I7_Index_ID,index,I5_Index_ID,index2,Sample_Project,Description
+SRR6702602,PR-TEST-CLL-SAMN08512283-SRR6702602-T,WGS,,,A,A12,UDP0089,GTCCGTAAGC,UDP0089,AAGATACACG,PRJNA433607,30x Tumor Genome from SRA
+scrubbed-SRR6702602,PR-TEST-CLL-SAMN08512283-SRR6702602-N,WGS,,,A,B12,UDP0090,ACTTCAAGCG,UDP0090,TTCATGGTTC,PRJNA433607,Same input reads but informatically scrubbed of most somatic mutations...so it can be used as a normal/germline sample

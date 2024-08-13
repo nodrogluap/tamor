@@ -1,0 +1,23 @@
+[Header]
+IEMFileVersion,5
+Investigator Name,University of Bari
+Experiment Name,SRX3676781
+Date,3/22/2017
+Workflow,GenerateFASTQ
+Application,NovaSeq FASTQ Only
+Instrument Type,HiSeq 2500
+Assay,Illumina Stranded Total RNA
+Index Adapters,"IDT-Ilmn RNA UD Indexes SetABCD Ligation"
+Description,HiSeq 2500 transcriptome data from NCBI Short Read Archive (accessions below)
+Chemistry,Amplicon
+
+[Reads]
+151
+151
+
+[Settings]
+AdapterRead1,CTGTCTCTTATACACATCT
+
+[Data]
+Sample_ID,Sample_Name,Sample_Plate,Sample_Well,Index_Plate,Index_Plate_Well,I7_Index_ID,index,I5_Index_ID,index2,Sample_Project,Description
+SRR6702601,PR-TEST-CLL-SAMN08512283-SRR6702601-T,,,C,A03,UDP0209,GCTAGACTAT,UDP0209,ATGTCGTATT,PRJNA433607-RNA,
