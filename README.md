@@ -39,10 +39,10 @@ This is recommended by Illumina support, but not part of the Dragen documentatio
 
 0. [Install the mamba package manager](https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html) if you don't already have it on your system.
 
-1. Create a mamba or conda environment for the latest Snakemake (8.something) and git:
+1. Create a mamba or conda environment for the latest Snakemake (8.something) and utilities:
 
 ```bash 
-mamba create -c conda-forge -c bioconda -n snakemake snakemake git
+mamba create -c conda-forge -c bioconda -n snakemake snakemake git wget
 mamba activate snakemake
 ```
 2. Download the Tamor code:
@@ -64,11 +64,14 @@ Tamor follows the Snakemake [Distribution and Reproducibility](https://snakemake
 The default config files are pre-configured for running a single test case from the [NCBI Short Read Archive](https://www.ncbi.nlm.nih.gov/bioproject/PRJNA433607).  This case of apparent Chronic
 Lymphocytic Leukemia (CLL) has both tumor DNA (30x coverage) and RNA data (27M) available, both 2x150bp paired-end Illumina.
 
-If you would like to run the test case before reconfiguring Tamor to use your own data, you will need to download and format the CLL SRA records:
+If you would like to run the test case before reconfiguring Tamor to use your own data, you will need to download and format the CLL SRA records. 
+This requires some additional specialty software not otherwise required by Tamor, so you will need to install a test mamba environment first.
 
 ```bash
+mamba create env -f workflow/envs/test.yaml
+mamba activate test
 workflow/scripts/download_testdata.py
-snakemake --use-conda --cluster sbatch --cores=1
+mamba deactivate test
 ```
 
 This can take a few hours depending on your Internet connection speed, and requires at least 40GB of RAM to generate matched-pseudonormal FASTQ files from the cancer sample FASTQ files.
@@ -207,13 +210,10 @@ These sample sheets are the only other metadata to which Tamor has access. Place
 [Illumina experiment sample sheets](https://support.illumina.com/downloads/sample-sheet-v2-template.html) for your project 
 into ``resources/spreadsheets`` by default (see the ``samplesheets_dir`` setting in ``config/config.yaml``). They must be 
 called ``runID.csv``, where runID is typically the Illumina folder name in the format ``YYMMDD_machineID_SideFlowCellID``.
+Note that a sample can actually be sequenced across multiple runs, Tamor will aggregate the sequence data across the runs to
+generate a single report (e.g. a primary run and some top-up sequencing due to unexpected low read count on the first run). 
 
-Tamor can start with either BCL files or FASTQ. If you are starting with BCLs, the full Illumina experiment output folders (which contain the 
-requisite ``Data/Intensities/Basecalls`` subfolder) are expected by in ``resources/bcls/runID`` (see ``bcl_dir`` setting in``config.yaml``). Tamor will perform BCL 
-to FASTQ conversion, with the FASTQ output into ``results/analysis/primary/sequencer/runID`` (see ``analysis_dir`` setting in ``config.yaml``, and the 
-default ``sequencer`` is ``HiSeq`` per the test data mentioned earlier). 
-
-If instead you are providing the FASTQs directly as input to Tamor, they must also be in the ``resources/analysis/primary/sequencerName/runID`` directory, 
+If you are providing the FASTQs directly as input to Tamor, they must also be in the ``resources/analysis/primary/sequencerName/runID`` directory, 
 with a corresponding Illumina Experiment Manager samplesheet ``resources/spreadsheets/runID.csv``. *Why?* This is required because Tamor reads the sample 
 sheet to find the correspondence between Sample_Name and Sample ID for each sequencing library, also analysis for DNA samples differs from that for RNA 
 samples, so the sample sheet must also contain a ``Sample_Project`` column. Sample projects with names that contain "RNA" in them will be processed as such, 
@@ -225,6 +225,11 @@ The samplesheet is also used to determine if Unique Molecular Indices were used 
 *If you provide FASTQ files directly, they must be timestamped later than the corresponding Illumina Experiment Manager spreadsheet, 
 otherwise Snakemake will assume you've consequentially changed the spreadsheet and try to automatically regenerated all FASTQs 
 for that run -- from potentially non-existent BCLs*.
+
+If you are starting with BCLs, the full Illumina experiment output folders (which contain the 
+requisite ``Data/Intensities/Basecalls`` subfolder) are expected by in ``resources/bcls/runID`` (see ``bcl_dir`` setting in``config.yaml``). Tamor will perform BCL 
+to FASTQ conversion, with the FASTQ output into ``results/analysis/primary/sequencer/runID`` (see ``analysis_dir`` setting in ``config.yaml``, and the 
+default ``sequencer`` is ``HiSeq`` per the test data mentioned earlier).
 
 # Acknowledgements
 
