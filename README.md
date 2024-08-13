@@ -64,11 +64,13 @@ Tamor follows the Snakemake [Distribution and Reproducibility](https://snakemake
 The default config files are pre-configured for running a single test case from the [NCBI Short Read Archive](https://www.ncbi.nlm.nih.gov/bioproject/PRJNA433607).  This case of apparent Chronic
 Lymphocytic Leukemia (CLL) has both tumor DNA (30x coverage) and RNA data (27M) available, both 2x150bp paired-end Illumina.
 
-If you would like to run the test case before reconfiguring Tamor to use your own data, you will need to download and format the CLL SRA records:
+If you would like to run the test case before reconfiguring Tamor to use your own data, you will need to download and format the CLL SRA records. 
+This requires some additional specialty software not otherwise required by Tamor, so you will need to install a test mamba environment first.
 
 ```bash
+mamba create env -f workflow/envs/test.yaml
+mamba activate test
 workflow/scripts/download_testdata.py
-snakemake --use-conda --cluster sbatch --cores=1
 ```
 
 This can take a few hours depending on your Internet connection speed, and requires at least 40GB of RAM to generate matched-pseudonormal FASTQ files from the cancer sample FASTQ files.
