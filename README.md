@@ -113,6 +113,10 @@ The ``subjectID``, ``tumorSampleID`` and ``germlineSampleID`` must:
 - The ``subjectID`` must be between 6 and 35 characters (due to a PCGR naming limitation)
 - ``tumorSampleID`` and ``germlineSampleID`` must be the exact ``Sample_Name`` values you used in your Illumina sequencing sample spreadsheets (see samplesheet section below for details).
 
+The *sixth* column is a unique project ID to which the subject belongs. For example if you have two cohorts of lung and breast cancer, 
+assigning individuals to two projects would be logical. 
+All project output files go into their own output folders, even if they were sequenced together on the same Illumina sequencing runs.
+
 The *fourth* column of the paired input sample TSV file is usually ``False``, unless your germline sample is from a leukemia or perhaps 
 a poor quality histology section from a tumor, in which case use ``True``. This instructs Dragen to consider low frequency variants 
 in the germline sample to still show up as somatic variants in the tumor analysis output (see default of 0.05 under ``tumor_in_normal_tolerance_proportion`` in ``config.yaml``)
