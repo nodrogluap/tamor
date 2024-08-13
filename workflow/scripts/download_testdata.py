@@ -1,5 +1,5 @@
 # Go to where Tamor expects the FASTQs in its default config.
-cd ../results/analysis/primary/HiSeq
+cd results/analysis/primary/HiSeq
 
 # Use the SRA tools (install in the test conda env) to fetch a publicly available sequencing dataset.
 # Short Read Archive retrieval of sequencing data by accession - CLL DNA
@@ -35,11 +35,25 @@ gzip -cd SRR6702602_1.fastq.gz | perl -ne 'BEGIN{open(H,"cat human.15mers.txt sn
 gzip -cd SRR6702602_1.nonsomatic.fastq.gz | perl -ne 'print "$1\n" if /^\@(\d+)/' > r1
 gzip -cd SRR6702602_2.nonsomatic.fastq.gz | perl -ne 'print "$1\n" if /^\@(\d+)/' > r2
 sort r1 r2 | uniq -d > keeper_read_ids
-gzip -cd SRR6702602_1.nonsomatic.fastq.gz | perl -ne 'BEGIN{%keep = split /(\n)/s, `cat keeper_read_ids`; $/="\n\@"} if(/^\@?(\d+)/ and $keep{$1}){s/^\@// if $. == 1; chomp; print "\@$_\n"} ' | gzip -c - > SRR6702602_1.pseudonormal.fastq.gz
-gzip -cd SRR6702602_2.nonsomatic.fastq.gz | perl -ne 'BEGIN{%keep = split /(\n)/s, `cat keeper_read_ids`; $/="\n\@"} if(/^\@?(\d+)/ and $keep{$1}){s/^\@// if $. == 1; chomp; print "\@$_\n"} ' | gzip -c - > SRR6702602_2.pseudonormal.fastq.gz
+mkdir SRX3676780
+gzip -cd SRR6702602_1.nonsomatic.fastq.gz | perl -ne 'BEGIN{%keep = split /(\n)/s, `cat keeper_read_ids`; $/="\n\@"} if(/^\@?(\d+)/ and $keep{$1}){s/^\@// if $. == 1; chomp; print "\@$_\n"} ' | gzip -c - > SRX3676780/SRR6702602_1.pseudonormal.fastq.gz
+gzip -cd SRR6702602_2.nonsomatic.fastq.gz | perl -ne 'BEGIN{%keep = split /(\n)/s, `cat keeper_read_ids`; $/="\n\@"} if(/^\@?(\d+)/ and $keep{$1}){s/^\@// if $. == 1; chomp; print "\@$_\n"} ' | gzip -c - > SRX3676780/SRR6702602_2.pseudonormal.fastq.gz
 
 # Clean up large intermediate files
 rm SRR6702602_1.nonsomatic.fastq.gz SRR6702602_2.nonsomatic.fastq.gz r1 r2 keeper_read_ids
+# Place the new generated sample FASTQs (SRR*) into their respective run folders (SRX*) as specified in the default config/dna_samples.tsv and config/rna_samples.tsv specs
+# RNA
+mkdir SRX3676781
+mv SRR6702601_1.fastq.gz SRR6702601_2.fastq.gz SRX3676781
+# DNA
+mv SRR6702602_1.fastq.gz SRR6702602_2.fastq.gz SRX3676780
 
-# Sentinel file to indicate that the base config Tamor test can be run safely (i.e. this script has run to completion, so the FASTQs specified in the default config are in place)
-touch resources/test_data_has_been_generated
+# Generate a fastq_list.csv file like bcl-convert normally would, as this file is used by Tamor to pass FASRQ file paths along to Dragen. Absolute paths are preferred by Dragen.
+PWD=`pwd`
+mkdir SRX3676781/Reports
+echo "RGID,RGSM,RGLB,Lane,Read1File,Read2File" >> SRX3676781/Reports/fastq_list.csv
+echo "GCTAGACTAT.ATGTCGTATT.1,SRR6702601,UnknownLibrary,1,$PWD/SRX3676781/SRR6702601_1.fastq.gz,$PWD/SRX3676781/SRR6702601_2.fastq.gz" >> SRX3676781/Reports/fastq_list.csv
+mkdir SRX3676780/Reports
+echo "RGID,RGSM,RGLB,Lane,Read1File,Read2File" >> SRX3676780/Reports/fastq_list.csv
+echo "GCTAGACTAT.ATGTCGTATT.1,SRR6702602,UnknownLibrary,1,$PWD/SRX3676780/SRR6702602_1.fastq.gz,$PWD/SRX3676780/SRR6702602_2.fastq.gz" >> SRX3676780/Reports/fastq_list.csv
+echo "ACTTCAAGCG.TTCATGGTTC.1,scrubbed-SRR6702602,UnknownLibrary,1,$PWD/SRX3676780/SRR6702602_1.pseudonormal.fastq.gz,$PWD/SRX3676780/SRR6702602_2.pseudonormal.fastq.gz" >> SRX3676780/Reports/fastq_list.csv
