@@ -71,6 +71,7 @@ This requires some additional specialty software not otherwise required by Tamor
 mamba create env -f workflow/envs/test.yaml
 mamba activate test
 workflow/scripts/download_testdata.py
+mamba deactivate test
 ```
 
 This can take a few hours depending on your Internet connection speed, and requires at least 40GB of RAM to generate matched-pseudonormal FASTQ files from the cancer sample FASTQ files.
