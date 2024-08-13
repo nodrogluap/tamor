@@ -1,0 +1,36 @@
+# Columns: <subject> <tumor/normal rna> <tumor dna> <project> <cancer type>
+# Cancer type should be one of the following values used by the immunedeconv R package (see immunedeconv::timer_available_cancers,
+# and descriptions from https://gdc.cancer.gov/resources-tcga-users/tcga-code-tables/tcga-study-abbreviations):
+# "kich" Kidney Chromophobe
+# "blca" Bladder Urothelial Carcinoma
+# "brca" Breast invasive carcinoma
+# "cesc" Cervical squamous cell carcinoma and endocervical adenocarcinoma
+# "gbm"  Glioblastoma multiforme
+# "hnsc" Head and Neck squamous cell carcinoma
+# "kirp" Kidney renal papillary cell carcinoma
+# "lgg"  Brain Lower Grade Glioma
+# "lihc" Liver hepatocellular carcinoma
+# "luad" Lung adenocarcinoma
+# "lusc" Lung squamous cell carcinoma
+# "prad" Prostate adenocarcinoma
+# "sarc" Sarcoma
+# "pcpg" Pheochromocytoma and Paraganglioma
+# "paad" Pancreatic adenocarcinoma
+# "tgct" Testicular Germ Cell Tumors
+# "ucec" Uterine Corpus Endometrial Carcinoma
+# "ov"   Ovarian serous cystadenocarcinoma
+# "skcm" Skin Cutaneous Melanoma
+# "dlbc" Lymphoid Neoplasm Diffuse Large B-cell Lymphoma
+# "kirc" Kidney renal clear cell carcinoma
+# "acc"  Adrenocortical carcinoma
+# "meso" Mesothelioma
+# "thca" Thyroid carcinoma
+# "uvm"  Uveal Melanoma
+# "ucs"  Uterine Carcinosarcoma
+# "thym" Thymoma
+# "esca" Esophageal carcinoma
+# "stad" Stomach adenocarcinoma
+# "read" Rectum adenocarcinoma
+# "coad" Colon adenocarcinoma
+# "chol" Cholangiocarcinoma
+PR-TEST-CLL-SAMN08512283	PR-TEST-CLL-SAMN08512283-SRR6702601-T	PR-TEST-CLL-SAMN08512283-SRR6702602-T	PR-TEST-CLL	dlbc

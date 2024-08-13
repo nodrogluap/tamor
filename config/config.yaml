@@ -1,0 +1,62 @@
+# Directories where the Dragen formatted copies of the reference genome are located (including the RNA splicing version if tumor transcriptome analysis will be run).
+# For RNA alignment, must have been built with  --enable-rna
+#ref_anchored_genome: "/bulk/chgi_analysis/tiered_chgi_analysis/reference/dragen/hg38-alt_masked.cnv.graph.hla.rna-9-r3.0-1"
+ref_anchored_genome: "/usr/local/illumina/genomes/hg38-alt_masked.cnv.graph.hla.rna-9-r3.0-2/DRAGEN/9"
+
+# For DNA alignment, must have been built with --enable-cnv (can be same as ref_anchored_genome)
+#refgenome: "/bulk/chgi_analysis/tiered_chgi_analysis/reference/dragen/hg38-alt_masked.cnv.graph.hla.rna-9-r3.0-1"
+refgenome: "/usr/local/illumina/genomes/hg38-alt_masked.cnv.graph.hla.rna-9-r3.0-2/DRAGEN/9"
+#ref_fasta: "/bulk/chgi_analysis/tiered_chgi_analysis/reference/dragen/hg38-alt_masked.cnv.graph.hla.rna-9-r3.0-1/hg38-custom-reference-genome-1.1.0/hg38.fa"
+ref_fasta: "/usr/local/illumina/genomes/hg38-alt_masked.cnv.graph.hla.rna-9-r3.0-2/genome.fa"
+
+# Directory where the ORA de/compression reference data is located, need to run dragen map/align steps with .ora files
+#ora_reference: "/bulk/chgi_analysis/tiered_chgi_analysis/reference/dragen/oradata"
+ora_reference: "/usr/local/illumina/genomes/oradata"
+
+# GTF/GFF3 formatted exon annotations for the reference genome, which are used to generate spliced RNA alignments and annotate sequence variant effects.
+# ref_exon_annotations: "/bulk/chgi_analysis/tiered_chgi_analysis/reference/dragen/hg38_rna/gencode.v43.chr_patch_hapl_scaff.annotation.gtf"
+ref_exon_annotations: "/usr/local/illumina/genomes/hg38-alt_masked.cnv.graph.hla.rna-9-r3.0-2/genes.gtf.gz"
+
+# Within this directory, the sample sheets must be named as experimentID.csv
+# Additionally, if the libraries were prepped using a kit with a UMI-indexing scheme, this must be noted in the sample sheet under "OverrideCycles", for example if you have an 8 base UMI 
+# and 10 base unique dual index for the samples (such as found in the IDT xGen kit) your file might look like so:
+# [Settings]
+# AdapterRead1,AGATCGGAAGAGCACACGTCTGAACTCCAGTCA
+# AdapterRead2,AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT
+# BarcodeMismatchesIndex1,2
+# BarcodeMismatchesIndex2,2
+# OverrideCycles,U8Y143;I10;I10;U8Y143
+
+samplesheet_dir: "resources/samplesheets"
+
+# Where the catalog of samples to be processed lives.
+
+rna_paired_samples_tsv: "config/rna_samples.tsv"
+dna_paired_samples_tsv: "config/dna_samples.tsv"
+
+# For normal samples given the possible tumor contamination flag, what is the maximum tolerance of tumor in normal? Dragen default is 0.15.
+
+tumor_in_normal_tolerance_proportion: 0.05
+
+# Where the BCL and other files coming straight off the sequencer are stored, in case you need to generate the FASTQ files using this workflow
+
+bcl_dir: "resources/bcls"
+
+# Where to write the intermediate outputs (BAMs, stats, etc.).
+
+analysis_dir: "results/analysis"
+
+# Where to write temporary intermediate outputs used internally by Dragen (preferably an SSD or other very fast storage).
+
+#temp_dir: "/staging/tmp"
+temp_dir: "/usr/local/illumina/"
+
+# The name of the sequencer used to generate the data (may be useful for batch effect or other corrections downstream, and avoids possible run name collision 
+# if aggregating data from multiple machines).
+
+sequencer: "HiSeq"
+
+# For RNA transcript counting, the orientation of reads relative to the mRNA orientation. See https://support-docs.illumina.com/SW/DRAGEN_v310/Content/SW/DRAGEN/GeneExpressionQuantification_fDG.htm
+rna_quantification_library_type: ISR
+
+output_dir: "results"
