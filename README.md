@@ -15,12 +15,12 @@ Somatic variants (including small nucleotide variants, structural variants and c
 3) the Illumina Experiment Manager samplesheets (CSV) for the sequencing runs
 
 # Table of Contents
-[Prerequisites](#prerequisites)
-[Installation](#installation)
-[Testing](#testing)
-[Running Tamor](#running-tamor)
-[Configuration](#configuration)
-[Acknowledgements](#acknowledgements)
+* [Prerequisites](#prerequisites)
+* [Installation](#installation)
+* [Testing](#testing)
+* [Running Tamor](#running-tamor)
+* [Configuration](#configuration)
+* [Acknowledgements](#acknowledgements)
 
 # Prerequisites
 
