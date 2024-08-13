@@ -10,7 +10,9 @@ Data for large scale tumor analysis projects can be spread over multiple DNA seq
 
 Tab-delimited files are configured by the user to associate tumor (DNA and/or RNA) and germline sequencing sample IDs with a study subject ID, along with a tissue-of-origin for the tumor. 
 Somatic variants (including small nucleotide variants, structural variants and copy number variants) as well as gene expression reports are generated using 
-1) these tab-delimited files, 2) the Illumina sequencer output (BCL or FASTQ), and 3) the Illumina Experiment Manager samplesheets (CSV) for the sequencing runs.
+1) these tab-delimited files
+2) the Illumina sequencer output (BCL or FASTQ), and
+3) the Illumina Experiment Manager samplesheets (CSV) for the sequencing runs
 
 # Table of Contents
 [Prerequisites](#prerequisites)
