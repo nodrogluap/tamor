@@ -39,10 +39,10 @@ This is recommended by Illumina support, but not part of the Dragen documentatio
 
 0. [Install the mamba package manager](https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html) if you don't already have it on your system.
 
-1. Create a mamba or conda environment for the latest Snakemake (8.something) and git:
+1. Create a mamba or conda environment for the latest Snakemake (8.something) and utilities:
 
 ```bash 
-mamba create -c conda-forge -c bioconda -n snakemake snakemake git
+mamba create -c conda-forge -c bioconda -n snakemake snakemake git wget
 mamba activate snakemake
 ```
 2. Download the Tamor code:
