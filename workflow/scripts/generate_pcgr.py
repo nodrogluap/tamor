@@ -67,7 +67,7 @@ TPMFILE=tf3.name
 tpm_header = "TargetID\tTPM\n"
 with open(TPMFILE, "w") as text_file:
         text_file.write(tpm_header)
-system(f"tail -n +2 {tumor_expr_tpm_tsv} | cut -f 1,4 >> {TPMFILE}")
+system(f"tail -n +2 {tumor_expr_tpm_tsv} | perl -ane '$F[0] =~ s/\\.\\d$//; print \"$F[0]\\t$F[3]\\n\"' >> {TPMFILE}; cp {TPMFILE} /tmp/paulcheck")
 
 # Generate PCGR report with all these data, include CNAs file only if not empty (PCGR fails if it's empty beyond the header)
 system(f"pcgr --vep_dir resources --refdata_dir resources --output_dir {args.outdir}/pcgr/{args.project}/{args.subject}_{args.tumor}_{args.normal} --sample_id {args.subject} --debug --tumor_dp_tag TDP --tumor_af_tag TVAF --genome_assembly grch38 --input_vcf {SNVFILE}.gz --tumor_site {tumor_site} --tumor_purity 0.9 --tumor_ploidy 2.0 --assay WGS --estimate_signatures --estimate_msi --estimate_tmb --force_overwrite " + (f"--input_cna {CNAFILE} --n_copy_gain 3" if os.path.getsize(CNAFILE) != len(cna_header) else "") + (f" --input_rna_expression {TPMFILE} --expression_sim" if os.path.getsize(TPMFILE) != len(tpm_header) else ""))
