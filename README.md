@@ -32,7 +32,8 @@ Assuming you have a fresh Dragen server, you will need to download a
 preferably hg38. You can put this anywhere on the filesystem; by default Tamor will expect it in 
 a subfolder of ``/usr/local/illumina/genomes`` (see [Configuration](#configuration)).
 
-You will also need to set up a [slurm](https://slurm.schedmd.com/quickstart_admin.html#quick_start) queue so that jobs running on the Dragen FPGA don't collide with each other.
+If you are the sole user of the Dragen system, luck you: that's it! If there is potentially more than one user of the Dragen system, you will 
+also need to set up a [slurm](https://slurm.schedmd.com/quickstart_admin.html#quick_start) queue so that jobs running on the Dragen FPGA don't collide with each other.
 This is recommended by Illumina support, but not part of the Dragen documentation.
 
 # Installation
@@ -84,17 +85,30 @@ Once either the test data or your own (see [Configuration section below](#config
 [VCF](https://en.wikipedia.org/wiki/Variant_Call_Format) files, and 
 [CPSR/PCGR reports](https://sigven.github.io/pcgr/index.html).
 
-In a multi-user system, it is imperative to use a queuing system such as slurm to submit only one job at a time to Dragen v4.x. 
+On a single-user system:
+
+```bash
+snakemake --use-conda -j 1
+```
+
+Otherwise, on a multi-user system, it is imperative to use a queuing system such as slurm to submit only one job at a time to Dragen v4.x. 
 Once slurm is installed and configured on your Dragen system, Snakemake support for slurm is enabled by invoking like so:
   
 ```bash
-snakemake --executor cluster-generic --cluster-generic-submit-cmd "sbatch" --use-conda -j 1
+snakemake --use-conda -j 1 --executor cluster-generic --cluster-generic-submit-cmd sbatch
 ```
 
-The default outputs are in a directory called ``results/pcgr/projectID/subjectID_tumorSampleID_germlineSampleID``. 
+Rehardless of the invocation method used above, the default outputs are in a directory called ``results/pcgr/projectID/subjectID_tumorSampleID_germlineSampleID``. 
 The most relevant document may be the self-contained Web page ``subjectID.pcgr.grch38.html``.
 
 ![Screenshot of a sample Personal Cancer Genome Report, Quarto version](docs/pcgr_screenshot.png)
+
+After a successful workflow run, additional reporting information (including provenance) can be aggregated into a self-contained HTML report using 
+Snakemake's automated workflow reporting tool:
+
+```bash
+snakemake --report report.html
+```
 
 # Configuration
 
