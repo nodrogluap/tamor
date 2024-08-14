@@ -1,4 +1,4 @@
-#!/usr/bin/env -S snakemake --cores 1 --quiet --cluster sbatch --use_conda --snakefile
+#!/usr/bin/env -S snakemake --use-conda --quiet --snakefile
 
 import os.path
 import tempfile
@@ -6,7 +6,7 @@ import csv
 from pathlib import Path
 import glob
 
-from tamor_utils import decomment
+from scripts.tamor_utils import decomment
 
 # Site-specific config, most changes would be made in that file rather than this one.
 configfile: "config/config.yaml"
@@ -204,23 +204,36 @@ rule generate_minimal_maf:
 		# t_ref_count (Optional, but recommended): Reference allele count (tumor).
 		shell("gzip -cd {input.somatic_snv_vcf} | perl -F\\t -ane '$F[0] =~ s/^chr//; print join(\"\\t\", $F[0], $F[1], $F[1]+length($F[3])-1, $F[3], $F[4], $2, $1, \"{wildcards.tumor}\"), \"\\n\" if not /^#/ and $F[$#F] =~ /^[^:]+:[^:]+:(\d+),(\d+)/' > {output.maf}")
 
+rule setup_pcgrr_conda_env:
+	priority: 105
+	output:
+		".snakemake/conda/pcgrr/bin/Rscript"
+	# The PCGR software requires that a env called pcgrr is available. Rather than having this be globally installed, 
+	# let's invoke it here so Snakemake keeps a locally accessible copy that can be loaded by PCGR when ever that rule gets executed
+	# (since it has a different env requirement 'pcgr', and conda can reasonably only handle one per rule).
+	conda:
+		"envs/pcgrr.yaml"
+	shell:
+		"workflow/scripts/link_pcgrr_env.sh"
+
 # Personal Cancer Genome Report (user-friendly triaged variants self-contained Web page)
 # The Web page name is limited by PCGR to 35 characters, so we have the full subject-tumor-normal unique combo in the dir name only.
 rule generate_pcgr_html:
 	input:
 		somatic_snv_vcf = output_dir+'/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.hard-filtered.vcf.gz',
-		somatic_cnv_vcf = output_dir+'/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.cnv.vcf.gz'
+		somatic_cnv_vcf = output_dir+'/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.cnv.vcf.gz',
+		pcgrr_env = ".snakemake/conda/pcgrr/bin/Rscript"
 	output:
-		output_dir+'/pcgr/{project}/{subject}_{tumor}_{normal}/{subject}.pcgr_acmg.grch38.html'
+		output_dir+'/pcgr/{project}/{subject}_{tumor}_{normal}/{subject}.pcgr.grch38.html',
 		report(directory(output_dir+'/pcgr/{project}/{subject}_{tumor}_{normal}'), 
                        caption="report/pcgr_caption.rst", 
                        category="Reports",
-                       htmlindex="{subject}.pcgr_acmg.grch38.html")
+                       htmlindex="{subject}.pcgr.grch38.html")
 	conda:
 		"envs/pcgr.yaml"
 	shell:
 		# Wrapper script to reformat inputs and run PCGR, so we can use PCGR's conda env directly.
-		"./scripts/generate_pcgr.py {input.somatic_snv_vcf} {input.somatic_cnv_vcf} " +
+		"workflow/scripts/generate_pcgr.py {input.somatic_snv_vcf} {input.somatic_cnv_vcf} " +
 		# DNA sample spec
 		"{output_dir} {wildcards.project} {wildcards.subject} {wildcards.tumor} {wildcards.normal}" 
 
