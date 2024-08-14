@@ -11,6 +11,8 @@ from tamor_utils import decomment
 # Site-specific config, most changes would be made in that file rather than this one.
 configfile: "config/config.yaml"
 
+report: "report/workflow.rst"
+
 analysis_dir = config["analysis_dir"]
 bcl_dir = config["bcl_dir"]
 output_dir = config["output_dir"]
@@ -177,7 +179,7 @@ rule generate_cpsr_json:
 	output:
 		output_dir+'/{project}/{subject}/{normal}.cpsr.grch38.pass.tsv.gz'
 	conda:
-		"pcgr"
+		"envs/pcgr.yaml"
 	shell:
 		"cpsr --input_vcf {input.germline_snv_vcf} --vep_dir . --refdata_dir . --output_dir {output_dir}/{wildcards.project}/{wildcards.subject} --genome_assembly grch38 --panel_id 0 --sample_id {wildcards.normal} --secondary_findings --classify_all --maf_upper_threshold 0.2 --force_overwrite"
 
@@ -210,11 +212,15 @@ rule generate_pcgr_html:
 		somatic_cnv_vcf = output_dir+'/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.cnv.vcf.gz'
 	output:
 		output_dir+'/pcgr/{project}/{subject}_{tumor}_{normal}/{subject}.pcgr_acmg.grch38.html'
+		report(directory(output_dir+'/pcgr/{project}/{subject}_{tumor}_{normal}'), 
+                       caption="report/pcgr_caption.rst", 
+                       category="Reports",
+                       htmlindex="{subject}.pcgr_acmg.grch38.html")
 	conda:
-		"pcgr"
+		"envs/pcgr.yaml"
 	shell:
 		# Wrapper script to reformat inputs and run PCGR, so we can use PCGR's conda env directly.
-		"./generate_pcgr.py {input.somatic_snv_vcf} {input.somatic_cnv_vcf} " +
+		"./scripts/generate_pcgr.py {input.somatic_snv_vcf} {input.somatic_cnv_vcf} " +
 		# DNA sample spec
 		"{output_dir} {wildcards.project} {wildcards.subject} {wildcards.tumor} {wildcards.normal}" 
 
