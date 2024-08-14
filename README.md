@@ -88,7 +88,7 @@ In a multi-user system, it is imperative to use a queuing system such as slurm t
 Once slurm is installed and configured on your Dragen system, Snakemake support for slurm is enabled by invoking like so:
   
 ```bash
-snakemake --cluster sbatch --use-conda --cores=1
+snakemake --executor cluster-generic --cluster-generic-submit-cmd "sbatch" --use-conda -j 1
 ```
 
 The default outputs are in a directory called ``results/pcgr/projectID/subjectID_tumorSampleID_germlineSampleID``. 
