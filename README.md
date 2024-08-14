@@ -44,6 +44,7 @@ This is recommended by Illumina support, but not part of the Dragen documentatio
 ```bash 
 mamba create -c conda-forge -c bioconda -n snakemake snakemake git wget
 mamba activate snakemake
+pip install snakemake-executor-plugin-cluster-generic
 ```
 2. Download the Tamor code:
 
