@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!env bash
 cd resources
 BUNDLE=pcgr_ref_data.grch38.20240621.tgz
 wget http://insilico.hpc.uio.no/pcgr/$BUNDLE
