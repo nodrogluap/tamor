@@ -3,8 +3,10 @@
 import os.path
 import tempfile
 import csv
+import re
 import argparse
 import yaml
+import gzip
 from pathlib import Path
 from os import system
 
@@ -24,6 +26,23 @@ args = parser.parse_args()
 
 with open("config/config.yaml", "r") as f:
     config = yaml.safe_load(f)
+
+# Get tumor purity and ploidy estimates from Dragen CNV caller
+tumor_purity = 0
+tumor_ploidy = 2
+tumor_cnv_vcf = f"{args.outdir}/{args.project}/{args.subject}/{args.subject}_{args.tumor}_{args.normal}.dna.somatic.cnv.vcf.gz"
+# In the VCF headers from Dragen CNV calls, there is something like this:
+##EstimatedTumorPurity=0.650000
+##DiploidCoverage=116.000000
+##OverallPloidy=1.964210
+with gzip.open(tumor_cnv_vcf, 'rt') as data_in:
+    for line in data_in:
+        mpurity = re.search("##EstimatedTumorPurity=(\\S+)", line)
+        mploidy = re.search("##OverallPloidy=(\\S+)", line)
+        if mpurity:
+            tumor_purity = mpurity.group(1)
+        elif mploidy:
+            tumor_ploidy = mploidy.group(1)
 
 # Read in the tamor RNA sample metadata file
 # Third column is associated tumor DNA sample for the RNA
@@ -67,9 +86,19 @@ TPMFILE=tf3.name
 tpm_header = "TargetID\tTPM\n"
 with open(TPMFILE, "w") as text_file:
         text_file.write(tpm_header)
-system(f"tail -n +2 {tumor_expr_tpm_tsv} | perl -ane '$F[0] =~ s/\\.\\d$//; print \"$F[0]\\t$F[3]\\n\"' >> {TPMFILE}; cp {TPMFILE} /tmp/paulcheck")
+system(f"tail -n +2 {tumor_expr_tpm_tsv} | perl -ane '$F[0] =~ s/\\.\\d$//; print \"$F[0]\\t$F[3]\\n\"' >> {TPMFILE}")
+
+# RNA fusion reformatting - not active in PCGR quite yet, but ready to go when it is supported
+tumor_rna_fusion_tsv = f"{args.outdir}/{args.project}/{args.subject}/rna/{args.subject}_{rna_sample}.rna.fusion_candidates.features.csv"
+tf4=tempfile.NamedTemporaryFile(suffix=".rna_fusions.tsv")
+RNAFUSIONFILE=tf4.name
+fusion_header = "GeneA\tGeneB\tConfidence\n"
+with open(RNAFUSIONFILE, "w") as text_file:
+        text_file.write(fusion_header)
+system(f"tail -n +2 {tumor_rna_fusion_tsv} | perl -ane '$confidence = $F[4] =~ /FAIL/ ? \"low\" : \"high\"; ($geneA, $geneB) = $F[0] =~ /(\\S+)--(\\S+)/; print \"$geneA\\t$geneB\\t$confidence\\n\" unless $printed_already{{$F[0]}}++' >> {RNAFUSIONFILE}")
+#TODO: append DNA structural variants to fusion call list where appropriate
 
 # Generate PCGR report with all these data, include CNAs file only if not empty (PCGR fails if it's empty beyond the header)
-system(f"pcgr --vep_dir resources --refdata_dir resources --output_dir {args.outdir}/pcgr/{args.project}/{args.subject}_{args.tumor}_{args.normal} --sample_id {args.subject} --debug --tumor_dp_tag TDP --tumor_af_tag TVAF --genome_assembly grch38 --input_vcf {SNVFILE}.gz --tumor_site {tumor_site} --tumor_purity 0.9 --tumor_ploidy 2.0 --assay WGS --estimate_signatures --estimate_msi --estimate_tmb --force_overwrite " + (f"--input_cna {CNAFILE} --n_copy_gain 3" if os.path.getsize(CNAFILE) != len(cna_header) else "") + (f" --input_rna_expression {TPMFILE} --expression_sim" if os.path.getsize(TPMFILE) != len(tpm_header) else ""))
+system(f"pcgr --vep_dir resources --refdata_dir resources --output_dir {args.outdir}/pcgr/{args.project}/{args.subject}_{args.tumor}_{args.normal} --sample_id {args.subject} --debug --tumor_dp_tag TDP --tumor_af_tag TVAF --genome_assembly grch38 --input_vcf {SNVFILE}.gz --tumor_site {tumor_site} --tumor_purity {tumor_purity} --tumor_ploidy {tumor_ploidy} --assay WGS --estimate_signatures --estimate_msi --estimate_tmb --force_overwrite " + (f"--input_cna {CNAFILE} --n_copy_gain 3" if os.path.getsize(CNAFILE) != len(cna_header) else "") + (f" --input_rna_expression {TPMFILE} --expression_sim" if os.path.getsize(TPMFILE) != len(tpm_header) else ""))
 
 exit(0)
