@@ -20,7 +20,6 @@ Somatic variants (including small nucleotide variants, structural variants and c
 * [Testing](#testing)
 * [Running Tamor](#running-tamor)
 * [Configuration](#configuration)
-* [Troubleshooting](#troubleshooting)
 * [Acknowledgements](#acknowledgements)
 
 # Prerequisites
@@ -246,13 +245,6 @@ If you are starting with BCLs, the full Illumina experiment output folders (whic
 requisite ``Data/Intensities/Basecalls`` subfolder) are expected by in ``resources/bcls/runID`` (see ``bcl_dir`` setting in``config.yaml``). Tamor will perform BCL 
 to FASTQ conversion, with the FASTQ output into ``results/analysis/primary/sequencer/runID`` (see ``analysis_dir`` setting in ``config.yaml``, and the 
 default ``sequencer`` is ``HiSeq`` per the test data mentioned earlier).
-
-# Troubleshooting
-
-Tamor's Snakemake folder is such that ``pcgr`` and ``pcgrr`` mamba environments will be installed under the Tamor directory. 
-If you already have a ``pcgr`` or ``pcgrr`` environment on your system, Snakemake defaults to these instead of downloading a new 
-one to be cached in the Tamor ``.snakemake`` folder. This can cause problems if your existing ``pcgrr`` or ``pcgrr`` is not the latest
-and greatest.  Please either upgrade these pre-existing mamba environments, or delete them and let Snakemake download and cache fresh copies.
 
 # Acknowledgements
 
