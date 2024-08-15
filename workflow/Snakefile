@@ -19,13 +19,13 @@ output_dir = config["output_dir"]
 samplesheet_dir = config["samplesheet_dir"]
 temp_dir = config["temp_dir"]
 sequencer = config["sequencer"]
-refgenome = config["refgenome"]
-ref_anchored_genome = config["ref_anchored_genome"]
+refgenome = config["ref_genome"]
+ref_anchored_genome = config["ref_genome"]
 ref_fasta = config["ref_fasta"]
 ref_exon_annotations = config["ref_exon_annotations"]
 rna_quantification_library_type = config["rna_quantification_library_type"]
 tumor_in_normal_tolerance_proportion = config["tumor_in_normal_tolerance_proportion"]
-ora_reference = config["ora_reference"]
+ora_reference = config["ref_ora"]
 
 samplesheet_cache = {}
 
@@ -371,8 +371,6 @@ rule dragen_dna_read_mapping:
 		slurm_extra="--gres=fpga:1 --mem-per-cpu=0"
 	input:
 		get_dna_sample_fastq_list_csvs,
-		# Omitting dependency on index date because Dragen 3.10 to 4.2 caused index changes that would require rerunning all old samples. 
-		#refgenome+'/reference.bin'
 	output:
 		# Avoid greedy default wildcard that'll suck up "project/sample" prefix into the project wildcard and give us "rna" as a sample name if that subdir exists with the RNA BAM file in it.
 		output_dir+'/{project,[^/]+}/{subject,[^/]+}/{sample,[^/]+}.bam'
