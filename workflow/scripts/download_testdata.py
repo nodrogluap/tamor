@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import subprocess
 
 # To be executed from Tamor root dir
