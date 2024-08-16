@@ -27,11 +27,6 @@ Somatic variants (including small nucleotide variants, structural variants and c
 This workflow is intended for people with an Illumina Dragen hardware-accelerated (FPGA) system for high-throughput genomics analysis.  
 If you don't have this hardware, this probably isn't for you.
 
-Assuming you have a fresh Dragen server, you will need to download a 
-[Dragen-formatted human reference genome](https://support.illumina.com/sequencing/sequencing_software/dragen-bio-it-platform/product_files.html), 
-preferably hg38. You can put this anywhere on the filesystem; by default Tamor will expect it in 
-a subfolder of ``/usr/local/illumina/genomes`` (see [Configuration](#configuration)).
-
 If you are the sole user of the Dragen system, luck you: that's it! If there is potentially more than one user of the Dragen system, you will 
 also need to set up a [slurm](https://slurm.schedmd.com/quickstart_admin.html#quick_start) queue so that jobs running on the Dragen FPGA don't collide with each other.
 This is recommended by Illumina support, but not part of the Dragen documentation.
