@@ -44,8 +44,8 @@ with open(config["dna_paired_samples_tsv"], 'r') as data_in:
 		if '_' in line[2]:
 			raise NameError("Germline sample name cannot contain any underscores ('_'), please revise "+line[2])
 		dna_paired_samples_key = "_".join((line[0],line[1],line[2]))
-		dna_paired_samples[dna_paired_samples_key] = [line[0],line[3],line[4],line[5]]
-
+		dna_paired_samples[dna_paired_samples_key] = [line[0],line[3],line[4],line[5],line[1],line[2]]
+ 
 # Fourth column is the project, and fifth column is the source tissue type abbreviation per https://omnideconv.org/immunedeconv/articles/immunedeconv.html.
 rna_paired_samples = {} 
 with open(config["rna_paired_samples_tsv"], 'r') as data_in:
@@ -63,6 +63,9 @@ def get_rna_projects(rna_sample_values):
 def get_subjects(paired_sample_values):
 	return [tuple[0] for tuple in paired_sample_values]
 
+def get_normal(paired_sample_values):
+	return [tuple[5] for tuple in paired_sample_values]
+
 # The format of the paired RNA samples file is tab-delimited, with subject ID in the zeroth column, tumor RNA sample name in first column, then matched normal *DNA* in the second.
 
 rule all:
@@ -76,7 +79,7 @@ rule all:
 		expand(output_dir+"/{project_name}/{subject}/{sample_combo}.dna.somatic.hla.tsv", zip, project_name=get_dna_projects(dna_paired_samples.values()), subject=get_subjects(dna_paired_samples.values()), sample_combo=list(dna_paired_samples.keys())),
 		expand(output_dir+"/pcgr/{project_name}/{sample_combo}/{subject}.pcgr.grch38.html", zip, project_name=get_dna_projects(dna_paired_samples.values()), subject=get_subjects(dna_paired_samples.values()), sample_combo=list(dna_paired_samples.keys())),
 		#expand(output_dir+"/{project_name}/{subject}/{sample_combo}.dna.somatic.hard-filtered.maf.txt", zip, project_name=get_dna_projects(dna_paired_samples.values()), subject=get_subjects(dna_paired_samples.values()), sample_combo=list(dna_paired_samples.keys())),
-
+		expand(output_dir+"/{project_name}/{subject}/{subject}_{normal}.dna.germline.vcf.gz", zip, project_name=get_dna_projects(dna_paired_samples.values()), subject=get_subjects(dna_paired_samples.values()), normal=get_normal(dna_paired_samples.values())),
 		expand(output_dir+"/{project_name}/{subject}/rna/{sample_combo}.rna.quant.genes.hugo.tpm.txt", zip, project_name=get_rna_projects(rna_paired_samples.values()), subject=get_subjects(rna_paired_samples.values()), sample_combo=list(rna_paired_samples.keys())),
 		expand(output_dir+"/{project_name}/{subject}/rna/{sample_combo}.rna.fusion_candidates.features.csv", zip, project_name=get_rna_projects(rna_paired_samples.values()), subject=get_subjects(rna_paired_samples.values()), sample_combo=list(rna_paired_samples.keys()))
 
@@ -246,9 +249,10 @@ rule dragen_germline_snv_vcf:
 	input:
 		germline_bam = get_normal_bam
 	output:
-		output_dir+'/{project}/{subject}/{subject}_{normal}.dna.germline.hard-filtered.vcf.gz'
+		output_dir+'/{project}/{subject}/{subject}_{normal}.dna.germline.hard-filtered.vcf.gz',
+		output_dir+'/{project}/{subject}/{subject}_{normal}.dna.germline.cnv.vcf.gz'
 	shell:
-		"dragen -b {input.germline_bam} -r {refgenome} --output-directory {output_dir}/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.normal}.dna.germline --enable-variant-caller true --enable-cnv true --intermediate-results-dir {temp_dir} --enable-map-align false"
+		"dragen -b {input.germline_bam} -r {refgenome} --output-directory {output_dir}/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.normal}.dna.germline --enable-variant-caller true --enable-cnv true --cnv-enable-self-normalization true --intermediate-results-dir {temp_dir} --enable-map-align false"
 
 rule dragen_bcl_conversion:
 	# If the run was generated using a library prep kit that includes UMIs, this must be noted in the samplesheet to allow proper grouping of the reads.
@@ -433,7 +437,7 @@ rule dragen_exec_somatic_snv_sv_and_cnv_calls:
 		"{output_dir}/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.hard-filtered.vcf.gz",
 		"{output_dir}/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.sv.vcf.gz"
 	run:
-		dragen_cmd = "dragen --enable-map-align false --bam-input {input.germline_bam} --tumor-bam-input {input.tumor_bam} -r {refgenome} --output-directory {output_dir}/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic --enable-cnv true --intermediate-results-dir {temp_dir} --enable-variant-caller true --vc-enable-unequal-ntd-errors=true --vc-enable-trimer-context=true --enable-sv true --cnv-use-somatic-vc-baf true -f"
+		dragen_cmd = "dragen --enable-map-align false --bam-input {input.germline_bam} --tumor-bam-input {input.tumor_bam} -r {refgenome} --output-directory {output_dir}/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic --enable-cnv true --intermediate-results-dir {temp_dir} --enable-variant-caller true --vc-enable-unequal-ntd-errors=true --vc-enable-trimer-context=true --enable-sv true --cnv-use-somatic-vc-baf true --cnv-normal-cnv-vcf {output_dir}/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.cnv.vcf.gz -f"
 		has_tumor_in_normal = get_normal_contains_some_tumor(wildcards)
 		if has_tumor_in_normal:
 			shell(dragen_cmd +  " --sv-enable-liquid-tumor-mode true --sv-tin-contam-tolerance {tumor_in_normal_tolerance_proportion}")
