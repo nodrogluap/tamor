@@ -52,20 +52,21 @@ rule dragen_somatic_snv_sv_and_cnv_calls:
                 germline_sample_libraries = germline_library_info[1]
                 print("Using UMIs: " + str(has_UMIs))
                 print("Germline libraries: " + ", ".join(germline_sample_libraries))
-                this_sample_germline_only_fastq_list_csv = make_sample_fastq_list_csv(wildcards, False, False, sample_libraries)
+                this_sample_germline_only_fastq_list_csv = make_sample_fastq_list_csv(wildcards, False, False, germline_sample_libraries)
 
                 tumor_library_info = identify_libraries(False, True, wildcards)
                 if germline_library_info[0] != tumor_library_info[0]:
                         raise Error("Tumor and germline libraries for paired samples "+tumor+" and "+normal+" have incompatible UMI status (must both be true or both false), aborting.")
+                tumor_sample_libraries = tumor_library_info[1]
                 print("Tumor libraries: " + ", ".join(tumor_sample_libraries))
-                this_sample_tumor_only_fastq_list_csv = make_sample_fastq_list_csv(wildcards, False, True, sample_libraries)
+                this_sample_tumor_only_fastq_list_csv = make_sample_fastq_list_csv(wildcards, False, True, tumor_sample_libraries)
 
-                dragen_cmd = "dragen --enable-map-align true --enable-map-align-output true --enable-bam-indexing true --fastq-list {this_sample_germline_only_fastq_list_csv} "+"--fastq-list-all-samples true --tumor-fastq-list {this_sample_tumor_only_fastq_list_csv} --tumor-fastq-list-all-samples true -r "+config["ref_genome"]+" --output-directory {output_dir}/{wildcards.project}/{wildcards.subject} "+"--output-file-prefix {wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic --enable-cnv true --intermediate-results-dir "+config["temp_dir"]+" --enable-variant-caller true --vc-enable-unequal-ntd-errors=true --vc-enable-trimer-context=true --enable-sv true " + "--cnv-use-somatic-vc-baf true --cnv-normal-cnv-vcf {input.germline_cnv} -f"
+                dragen_cmd = "dragen --enable-map-align true --enable-map-align-output true --enable-bam-indexing true --fastq-list {this_sample_germline_only_fastq_list_csv} "+"--fastq-list-all-samples true --tumor-fastq-list {this_sample_tumor_only_fastq_list_csv} --tumor-fastq-list-all-samples true -r "+config["ref_genome"]+" --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} "+"--output-file-prefix {wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic --enable-cnv true --intermediate-results-dir "+config["temp_dir"]+" --enable-variant-caller true --vc-enable-unequal-ntd-errors=true --vc-enable-trimer-context=true --enable-sv true " + "--cnv-use-somatic-vc-baf true --cnv-normal-cnv-vcf {input.germline_cnv} -f"
                         
                 if has_UMIs:
                         dragen_cmd = dragen_cmd + " --umi-enable true --umi-correction-scheme=random --umi-min-supporting-reads 1 --umi-min-map-quality 1"
                 if has_tumor_in_normal:
-                        dragen_cmd = dragen_cmd +  " --sv-enable-liquid-tumor-mode true --sv-tin-contam-tolerance {tumor_in_normal_tolerance_proportion}"
+                        dragen_cmd = dragen_cmd +  " --sv-enable-liquid-tumor-mode true --sv-tin-contam-tolerance "+str(config["tumor_in_normal_tolerance_proportion"])
                 shell(dragen_cmd)
                 shell("mv "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/sv/results/variants/somaticSV.vcf.gz "+
                             config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.sv.vcf.gz; "+
