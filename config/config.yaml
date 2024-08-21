@@ -45,7 +45,7 @@ analysis_dir: "results/analysis"
 
 sequencer: "HiSeq"
 
-# For RNA transcript counting, the orientation of reads relative to the mRNA orientation. See https://support-docs.illumina.com/SW/DRAGEN_v310/Content/SW/DRAGEN/GeneExpressionQuantification_fDG.htm
-rna_quantification_library_type: ISR
-
 output_dir: "results"
+
+# If Tamor is being used with a slurm queue, these arguments will be passed on to sbatch
+slurm_extra: "--gres=fpga:1 --mem-per-cpu=0"
