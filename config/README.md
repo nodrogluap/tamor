@@ -98,7 +98,7 @@ If you have both normal and tumor RNA samples available, it is critical to list 
 The first RNA sample listed in the file is the one that will be included on the PCGR report for ``matchedTumorDNASampleID``,
 and typically you want to report out regarding the tumor RNA.
 
-The last column, ``[ImmuneDeconv](https://omnideconv.org/immunedeconv/articles/immunedeconv.html)CancerType``, is 
+The last column, [ImmuneDeconv](https://omnideconv.org/immunedeconv/articles/immunedeconv.html)CancerType, is 
 one of the following (pick what seems closest if no exact match is available):
 
 ```
