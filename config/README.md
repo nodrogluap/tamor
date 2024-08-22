@@ -94,7 +94,7 @@ Has 5 columns to be specified:
 subjectID<tab>tumorRNASampleID<tab>matchedTumorDNASampleID<tab>ProjectID<tab>ImmuneDeconvCancerType
 ```
 
-If you have both normal and tumor RNA samples availble, it is critical to list the tumor RNA sample first.  
+If you have both normal and tumor RNA samples available, it is critical to list the tumor RNA sample first.  
 The first RNA sample listed in the file is the one that will be included on the PCGR report for ``matchedTumorDNASampleID``,
 and typically you want to report out regarding the tumor RNA.
 
