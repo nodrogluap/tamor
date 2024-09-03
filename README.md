@@ -2,7 +2,8 @@
 
 Rapid automated [Personal Cancer Genome Report](https://sigven.github.io/pcgr/) (PCGR) generation using 
 [Illumina Dragen](https://www.illumina.com/products/by-type/informatics-products/dragen-secondary-analysis.html) + 
-[Snakemake](https://snakemake.github.io/), handling both genomic and transcriptomic input data.
+[Snakemake](https://snakemake.github.io/), handling both genomic and transcriptomic input data. 
+Catalogues as conforming to [Standardized Snakemake Workflow](https://snakemake.github.io/snakemake-workflow-catalog/#standardized) rules for reproducibility.
 
 # tl;dr
 
