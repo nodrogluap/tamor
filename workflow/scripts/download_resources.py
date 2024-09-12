@@ -20,7 +20,7 @@ for resource_name, spec in resource_dict.items():
     if(not os.path.exists(spec[1])):
         print("Fetching missing resource " + resource_name +  " from " + spec[0])
         # Adding -c so we can resume interrupted large downloads if possible
-        subprocess.run(["wget", "-c", spec[0], "-‐output-document", spec[0]+".part"])
+        subprocess.run(["wget", "-c", spec[0], "-‐output-file", spec[0]+".part"])
         subprocess.run(["mv", spec[0]+".part", spec[0]])
         # Post-process as required
         if length(spec) == 3:
