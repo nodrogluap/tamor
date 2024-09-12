@@ -14,6 +14,7 @@ configfile: "config/config.yaml"
 report: "report/workflow.rst"
 
 # Roughly in order of rule execution
+include: "rules/resources.smk"
 include: "rules/metadata.smk"
 include: "rules/fastq_list.smk"
 include: "rules/bcl_conversion.smk"
