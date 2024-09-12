@@ -94,7 +94,7 @@ Once slurm is installed and configured on your Dragen system, Snakemake support 
 snakemake --use-conda -j 1 --executor cluster-generic --cluster-generic-submit-cmd sbatch
 ```
 
-Rehardless of the invocation method used above, the default outputs are in a directory called ``results/pcgr/projectID/subjectID_tumorSampleID_germlineSampleID``. 
+Regardless of the invocation method used above, the default outputs are in a directory called ``results/pcgr/projectID/subjectID_tumorSampleID_germlineSampleID``. 
 The most relevant document may be the self-contained Web page ``subjectID.pcgr.grch38.html``.
 
 ![Screenshot of a sample Personal Cancer Genome Report, Quarto version](docs/pcgr_screenshot.png)
