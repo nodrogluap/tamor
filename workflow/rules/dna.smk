@@ -14,7 +14,8 @@ rule dragen_germline_snv_sv_and_cnv_calls:
         output:
                 config["output_dir"]+'/{project}/{subject}/{subject}_{normal}.dna.germline.hard-filtered.vcf.gz',
                 config["output_dir"]+'/{project}/{subject}/{subject}_{normal}.dna.germline.cnv.vcf.gz',
-                config["output_dir"]+'/{project}/{subject}/{subject}_{normal}.dna.germline.sv.vcf.gz'
+                config["output_dir"]+'/{project}/{subject}/{subject}_{normal}.dna.germline.sv.vcf.gz',
+                config["output_dir"]+'/{project}/{subject}/{subject}_{normal}.dna.germline.bam'
         run:
                 library_info = identify_libraries(False, False, wildcards)
                 has_UMIs = library_info[0]
@@ -43,7 +44,8 @@ rule dragen_somatic_snv_sv_and_cnv_calls:
         output:
                 config["output_dir"]+"/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.cnv.vcf.gz",
                 config["output_dir"]+"/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.hard-filtered.vcf.gz",
-                config["output_dir"]+"/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.sv.vcf.gz"
+                config["output_dir"]+"/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.sv.vcf.gz",
+                config["output_dir"]+"/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.bam"
         run:
                 has_tumor_in_normal = get_normal_contains_some_tumor(wildcards)
 
