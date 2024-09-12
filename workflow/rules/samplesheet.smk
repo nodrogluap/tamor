@@ -25,8 +25,12 @@ def load_samplesheet_info():
                                                 sample_name_index = line.index('Sample_Name')
                                                 sample_id_index = line.index('Sample_ID')
                                                 sample_project_index = line.index('Sample_Project')
+					# New simple format from NextSeq2000
+                                        elif 'Sample ID*' in line and 'Project' in line:
+                                                sample_id_index = line.index('Sample ID*')
+                                                sample_project_index = line.index('Project')
                                         # It's a line for which we might have some use.
-                                        if sample_name_index != -1 and sample_id_index != -1 and sample_project_index != -1:
+                                        if sample_id_index != -1 and sample_project_index != -1:
                                                 if str(path) not in samplesheet_cache:
                                                         samplesheet_cache[str(path)] = samplesheet_lines
                                         samplesheet_lines.append(line)
@@ -35,8 +39,6 @@ def load_samplesheet_info():
                                 lineGuess = ude.object[:ude.start].count(b'\n') + 1
                                 sys.exit("Found a bad char (non-UTF-8) in file " + str(path) + " at byte " + str(ude.start) + " around line " + str(lineGuess))
 
-                        if sample_name_index == -1:
-                                print("Missing Sample_Name column in Illumina samplesheet "+str(path)+", skipping")
                         if sample_id_index == -1:
                                 print("Missing Sample_ID column in Illumina samplesheet "+str(path)+", skipping")
                         if sample_project_index == -1:
