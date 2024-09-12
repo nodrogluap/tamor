@@ -1,3 +1,5 @@
+*NOTA BENE!!! When running snakemake for the first time with this repository, it may take many hours, as it will download both all the software environment needed to run [PCGR](https://sigven.github.io/pcgr/) mutation impact reports, and all the large public resource files needed for the same (by automatically running ``workflow/scripts/download_resources.py``)*
+
 # Configuring Tamor to Analyze Your Cancer Cases
 
 Cases are organized into logical units: Projects (a.k.a. cohorts), that have Subjects (a.k.a. patients) that have Samples (e.g. biopsy or blood).  
@@ -22,7 +24,7 @@ linked to designated Subjects and Samples via the [Illumina Samplesheets](#sampl
 
 ## config/config.yaml
 
-This is the file that you can customize for your site-specific settings. 
+``config/config.yaml`` is the file that you can customize for your site-specific settings. 
 By default the config is set up to read input files from the ``resources`` folder, and write result files under the ``results`` folder. 
 By default the genome index and annotation files, as well as the PCGR data bundle, are expected in ``resources``. 
 This is where ``workflow/scripts/download_resources.py`` puts those files.
