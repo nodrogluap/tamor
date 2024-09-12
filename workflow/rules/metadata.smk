@@ -67,7 +67,11 @@ def identify_libraries(is_rna, is_tumor, wildcards):
                                         sample_name_index = line.index("Sample_Name")
                                         sample_id_index = line.index("Sample_ID")
                                         sample_project_index = line.index("Sample_Project")
-                                elif sample_name_index != -1 and sample_id_index != -1 and line[sample_name_index] == target_sample:
+				# New NextSeq2000 format with sample ID and sample name squished into one field by convention (hyphen separated)
+                                elif "Sample ID*" in line and "Project" in line:
+                                        sample_id_index = line.index("Sample ID*")
+                                        sample_project_index = line.index("Project")
+                                elif sample_name_index != -1 and line[sample_name_index] == target_sample or sample_id_index != -1 and line[sample_id_index].endswith("-"+target_sample):
                                         if is_rna:
                                                 if "RNA" in line[sample_project_index] and not "test" in line[sample_project_index]:
                                                         sample_libraries.append(line[sample_id_index])
