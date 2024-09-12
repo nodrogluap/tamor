@@ -1,4 +1,4 @@
-*NOTA BENE!!! When running snakemake for the first time with this repository, it may take many hours, as it will download both all the software environment needed to run [PCGR](https://sigven.github.io/pcgr/) mutation impact reports, and all the large public resource files needed for the same (by automatically running ``workflow/scripts/download_resources.py``)*
+*NOTA BENE!!! When running snakemake for the first time with this repository, it may take many hours, as it will download both all the software environment needed to run [PCGR](https://sigven.github.io/pcgr/) mutation impact reports, and all the large public resource files needed for the same (by automatically running ``workflow/scripts/download_resources.py``). If you intererupt the downloading and unpacking of these files, you will need to rerun the download script manually.*
 
 # Configuring Tamor to Analyze Your Cancer Cases
 
