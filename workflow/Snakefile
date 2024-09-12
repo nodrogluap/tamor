@@ -24,10 +24,12 @@ include: "rules/data_export.smk"
 include: "rules/pcgr.smk"
 
 rule all:
+	# Download reference data if not found on the system.
 	# Generate a Dragen somatic mutation analysis for each pair for tumor-normal listed in the DNA pairs file.
 	# Generate RNA quantification for samples listed in the RNA samples file.
 	# Also generate a PCGR user-friendly variant report, which will require the germline variant calls as well in another rule.
 	input:
+		config["ref_fasta"],
 		expand(config["output_dir"]+"/{project_name}/{subject}/rna/{sample_combo}.rna.quant.genes.hugo.tpm.txt", zip, project_name=get_rna_projects(), subject=get_rna_subjects(), sample_combo=get_rna_sample_keys()),
 		expand(config["output_dir"]+"/{project_name}/{subject}/rna/{sample_combo}.rna.fusion_candidates.features.csv", zip, project_name=get_rna_projects(), subject=get_rna_subjects(), sample_combo=get_rna_sample_keys()),
 		expand(config["output_dir"]+"/{project_name}/{subject}/{sample_combo}.dna.somatic.hard-filtered.vcf.gz", zip, project_name=get_dna_projects(), subject=get_dna_subjects(), sample_combo=get_dna_sample_keys()),
