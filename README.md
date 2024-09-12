@@ -50,12 +50,6 @@ git clone https://github.com/nodrogluap/tamor
 cd tamor
 ```
 
-3. Download (~22GB) the cancer annotation databases that [CPSR](https://github.com/sigven/cpsr) and PCGR rely on for annotating your discovered sequence variants:
-
-```bash
-workflow/scripts/download_resources.py
-```
-
 # Testing
 
 Tamor follows the Snakemake [Distribution and Reproducibility](https://snakemake.readthedocs.io/en/stable/snakefiles/deployment.html) guidelines, so files are located in standardized locations.
@@ -75,6 +69,8 @@ mamba deactivate test
 This can take a few hours depending on your Internet connection speed, and requires at least 40GB of RAM to generate matched-pseudonormal FASTQ files from the cancer sample FASTQ files.
 
 # Running Tamor
+
+*NOTA BENE!!! The first time you run Tamor, it will download (~22GB) the cancer annotation databases that [CPSR](https://github.com/sigven/cpsr) and PCGR rely on for annotating your discovered sequence variants, by automatically running the ``workflow/scripts/download_resources.py`` script. This will likely take several hours. If you interrupt that process, you will need to run that script manually.*
 
 Once either the test data or your own (see [Configuration section below](#configuration)) is ready, you can run Snakemake to generate the 
 [BAM](https://en.wikipedia.org/wiki/Binary_Alignment_Map) files, 
