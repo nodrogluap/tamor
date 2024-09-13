@@ -23,7 +23,7 @@ rule dragen_germline_snv_sv_and_cnv_calls:
                 print("Germline using UMIs: " + str(has_UMIs))
                 print("Germline libraries: " + ", ".join(sample_libraries))
                 this_sample_only_fastq_list_csv = make_sample_fastq_list_csv(wildcards, False, False, sample_libraries)
-                dragen_cmd = "dragen -r "+config["ref_genome"]+" --fastq-list {this_sample_only_fastq_list_csv} --fastq-list-all-samples true --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.normal}.dna.germline "+ "--enable-variant-caller true --enable-cnv true --cnv-enable-self-normalization true --enable-sv true --intermediate-results-dir " + config["temp_dir"]+" --enable-map-align true --enable-map-align-output true --enable-bam-indexing true -f"
+                dragen_cmd = "dragen -r "+config["ref_genome"]+" --fastq-list {this_sample_only_fastq_list_csv} --fastq-list-all-samples true --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.normal}.dna.germline "+ "--enable-variant-caller true --enable-cnv true --cnv-enable-self-normalization true --enable-sv true --intermediate-results-dir " + config["temp_dir"]+" --enable-map-align true --enable-map-align-output true --enable-bam-indexing true --enable-duplicate-marking true -f"
                         
                 if has_UMIs:
                         dragen_cmd = dragen_cmd + " --umi-enable true --umi-correction-scheme=random --umi-min-supporting-reads 1 --umi-min-map-quality 1"
@@ -40,7 +40,8 @@ rule dragen_somatic_snv_sv_and_cnv_calls:
         input:
                 get_normal_dna_sample_fastq_list_csvs,
                 get_tumor_dna_sample_fastq_list_csvs,
-                germline_cnv=config["output_dir"]+"/{project}/{subject}/{subject}_{normal}.dna.germline.cnv.vcf.gz"
+                germline_cnv=config["output_dir"]+"/{project}/{subject}/{subject}_{normal}.dna.germline.cnv.vcf.gz",
+                germline_snv=config["output_dir"]+"/{project}/{subject}/{subject}_{normal}.dna.germline.hard-filtered.vcf.gz"
         output:
                 config["output_dir"]+"/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.cnv.vcf.gz",
                 config["output_dir"]+"/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.hard-filtered.vcf.gz",
@@ -63,7 +64,7 @@ rule dragen_somatic_snv_sv_and_cnv_calls:
                 print("Tumor libraries: " + ", ".join(tumor_sample_libraries))
                 this_sample_tumor_only_fastq_list_csv = make_sample_fastq_list_csv(wildcards, False, True, tumor_sample_libraries)
 
-                dragen_cmd = "dragen --enable-map-align true --enable-map-align-output true --enable-bam-indexing true --fastq-list {this_sample_germline_only_fastq_list_csv} "+"--fastq-list-all-samples true --tumor-fastq-list {this_sample_tumor_only_fastq_list_csv} --tumor-fastq-list-all-samples true -r "+config["ref_genome"]+" --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} "+"--output-file-prefix {wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic --enable-cnv true --intermediate-results-dir "+config["temp_dir"]+" --enable-variant-caller true --vc-enable-unequal-ntd-errors=true --vc-enable-trimer-context=true --enable-sv true " + "--cnv-use-somatic-vc-baf true --cnv-normal-cnv-vcf {input.germline_cnv} -f"
+                dragen_cmd = "dragen --enable-map-align true --enable-map-align-output true --enable-bam-indexing true --enable-duplicate-marking true --fastq-list {this_sample_germline_only_fastq_list_csv} "+"--fastq-list-all-samples true --tumor-fastq-list {this_sample_tumor_only_fastq_list_csv} --tumor-fastq-list-all-samples true -r "+config["ref_genome"]+" --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} "+"--output-file-prefix {wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic --enable-cnv true --intermediate-results-dir "+config["temp_dir"]+" --enable-variant-caller true --vc-enable-unequal-ntd-errors=true --vc-enable-trimer-context=true --enable-sv true " + "--cnv-use-somatic-vc-baf true --cnv-normal-cnv-vcf {input.germline_cnv} --enable-checkfingerprint true --checkfingerprint-expected-vcf {input.germline_snv} -f"
                         
                 if has_UMIs:
                         dragen_cmd = dragen_cmd + " --umi-enable true --umi-correction-scheme=random --umi-min-supporting-reads 1 --umi-min-map-quality 1"
