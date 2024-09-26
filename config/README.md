@@ -33,10 +33,17 @@ Tamor's default config has the input lists of paired tumor-normal samples (with 
 These TSVs are the main config files that you will need to edit to run your own samples through the workflow.
 
 ## config/dna_samples.tsv
-Has 6 columns to be specified:
+Has 8 columns to be specified:
 
 ```
-subjectID<tab>tumorSampleID<tab>germlineSampleID<tab>TrueOrFalse_germline_contains_some_tumor<tab>PCGRTissueSiteNumber<tab>ProjectID
+subjectID<tab>
+tumorSampleID<tab>
+TrueOrFalseTumorHasPCRDuplicates<tab>
+germlineSampleID<tab>
+TrueOrFalseGermlineHasPCRDuplicates<tab>
+TrueOrFalse_germline_contains_some_tumor<tab>
+PCGRTissueSiteNumber<tab>
+ProjectID
 ```
 
 The ``subjectID``, ``tumorSampleID`` and ``germlineSampleID`` must:
@@ -45,15 +52,18 @@ The ``subjectID``, ``tumorSampleID`` and ``germlineSampleID`` must:
 - The ``subjectID`` must be between 6 and 35 characters (due to a PCGR naming limitation)
 - ``tumorSampleID`` and ``germlineSampleID`` must be the exact ``Sample_Name`` values you used in your Illumina sequencing sample spreadsheets (see samplesheet section below for details).
 
-The *sixth* column is a unique project ID to which the subject belongs. For example if you have two cohorts of lung and breast cancer, 
+The *third* and *fifth* column tell Dragen whether to consider (in tumor and germline respectively) as PCR duplicates read pairs that map to the same start and end in the reference genome. 
+If you used a PCR-free library prep, set this to ``False``, otherwise set it to ``True``.
+
+The *eighth* column is a unique project ID to which the subject belongs. For example if you have two cohorts of lung and breast cancer, 
 assigning individuals to two projects would be logical. 
 All project output files go into their own output folders, even if they were sequenced together on the same Illumina sequencing runs.
 
-The *fourth* column of the paired input sample TSV file is usually ``False``, unless your germline sample is from a leukaemia or perhaps 
+The *sixth* column of the paired input sample TSV file is usually ``False``, unless your germline sample is from a leukaemia or perhaps 
 a poor quality histology section from a tumor, in which case use ``True``. This instructs Dragen to consider low frequency variants 
 in the germline sample to still show up as somatic variants in the tumor analysis output (see default of 0.05 under ``tumor_in_normal_tolerance_proportion`` in ``config.yaml``)
 
-For the *fifth* column, the list of tissue site numbers for the version of PCGR included here is:
+For the *seventh* column, the list of tissue site numbers for the version of PCGR included here is:
 
 ```
                         0  = Any
