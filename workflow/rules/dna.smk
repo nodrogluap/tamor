@@ -20,11 +20,15 @@ rule dragen_germline_snv_sv_and_cnv_calls:
                 library_info = identify_libraries(False, False, wildcards)
                 has_UMIs = library_info[0]
                 sample_libraries = library_info[1]
+                has_pcr_duplicates = get_normal_has_pcr_duplicates(wildcards)
                 print("Germline using UMIs: " + str(has_UMIs))
+                print("Marking germline PCR duplicates: " + str(has_pcr_duplicates))
                 print("Germline libraries: " + ", ".join(sample_libraries))
                 this_sample_only_fastq_list_csv = make_sample_fastq_list_csv(wildcards, False, False, sample_libraries)
-                dragen_cmd = "dragen -r "+config["ref_genome"]+" --fastq-list {this_sample_only_fastq_list_csv} --fastq-list-all-samples true --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.normal}.dna.germline "+ "--enable-variant-caller true --enable-cnv true --cnv-enable-self-normalization true --enable-sv true --intermediate-results-dir " + config["temp_dir"]+" --enable-map-align true --enable-map-align-output true --enable-bam-indexing true --enable-duplicate-marking true -f"
+                dragen_cmd = "dragen -r "+config["ref_genome"]+" --fastq-list {this_sample_only_fastq_list_csv} --fastq-list-all-samples true --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.normal}.dna.germline "+ "--enable-variant-caller true --enable-cnv true --cnv-enable-self-normalization true --enable-sv true --intermediate-results-dir " + config["temp_dir"]+" --enable-map-align true --enable-map-align-output true --enable-bam-indexing true -f"
                         
+                if has_pcr_duplicates:
+                        dragen_cmd = dragen_cmd + " --enable-duplicate-marking true"
                 if has_UMIs:
                         dragen_cmd = dragen_cmd + " --umi-enable true --umi-correction-scheme=random --umi-min-supporting-reads 1 --umi-min-map-quality 1"
                 shell(dragen_cmd)
@@ -53,8 +57,10 @@ rule dragen_somatic_snv_sv_and_cnv_calls:
                 germline_library_info = identify_libraries(False, False, wildcards)
                 has_UMIs = germline_library_info[0]
                 germline_sample_libraries = germline_library_info[1]
-                print("Using UMIs: " + str(has_UMIs))
-                print("Germline libraries: " + ", ".join(germline_sample_libraries))
+                has_pcr_duplicates = get_tumor_has_pcr_duplicates(wildcards)
+                print("Somatic using UMIs: " + str(has_UMIs))
+                print("Marking somatic PCR duplicates: " + str(has_pcr_duplicates))
+                print("Somatic libraries: " + ", ".join(germline_sample_libraries))
                 this_sample_germline_only_fastq_list_csv = make_sample_fastq_list_csv(wildcards, False, False, germline_sample_libraries)
 
                 tumor_library_info = identify_libraries(False, True, wildcards)
@@ -64,8 +70,10 @@ rule dragen_somatic_snv_sv_and_cnv_calls:
                 print("Tumor libraries: " + ", ".join(tumor_sample_libraries))
                 this_sample_tumor_only_fastq_list_csv = make_sample_fastq_list_csv(wildcards, False, True, tumor_sample_libraries)
 
-                dragen_cmd = "dragen --enable-map-align true --enable-map-align-output true --enable-bam-indexing true --enable-duplicate-marking true --fastq-list {this_sample_germline_only_fastq_list_csv} "+"--fastq-list-all-samples true --tumor-fastq-list {this_sample_tumor_only_fastq_list_csv} --tumor-fastq-list-all-samples true -r "+config["ref_genome"]+" --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} "+"--output-file-prefix {wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic --enable-cnv true --intermediate-results-dir "+config["temp_dir"]+" --enable-variant-caller true --vc-enable-unequal-ntd-errors=true --vc-enable-trimer-context=true --enable-sv true " + "--cnv-use-somatic-vc-baf true --cnv-normal-cnv-vcf {input.germline_cnv} --enable-checkfingerprint true --checkfingerprint-expected-vcf {input.germline_snv} -f"
+                dragen_cmd = "dragen --enable-map-align true --enable-map-align-output true --enable-bam-indexing true --fastq-list {this_sample_germline_only_fastq_list_csv} "+"--fastq-list-all-samples true --tumor-fastq-list {this_sample_tumor_only_fastq_list_csv} --tumor-fastq-list-all-samples true -r "+config["ref_genome"]+" --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} "+"--output-file-prefix {wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic --enable-cnv true --intermediate-results-dir "+config["temp_dir"]+" --enable-variant-caller true --vc-enable-unequal-ntd-errors=true --vc-enable-trimer-context=true --enable-sv true " + "--cnv-use-somatic-vc-baf true --cnv-normal-cnv-vcf {input.germline_cnv} --enable-checkfingerprint true --checkfingerprint-expected-vcf {input.germline_snv} -f"
                         
+                if has_pcr_duplicates:
+                        dragen_cmd = dragen_cmd + " --enable-duplicate-marking true"
                 if has_UMIs:
                         dragen_cmd = dragen_cmd + " --umi-enable true --umi-correction-scheme=random --umi-min-supporting-reads 1 --umi-min-map-quality 1"
                 if has_tumor_in_normal:

@@ -18,8 +18,8 @@ with open(config["dna_paired_samples_tsv"], 'r') as data_in:
                         raise NameError("Tumor sample name cannot contain any underscores ('_'), please revise "+line[1])
                 if '_' in line[2]:
                         raise NameError("Germline sample name cannot contain any underscores ('_'), please revise "+line[2])
-                dna_paired_samples_key = "_".join((line[0],line[1],line[2]))
-                dna_paired_samples[dna_paired_samples_key] = [line[0],line[3],line[4],line[5]]
+                dna_paired_samples_key = "_".join((line[0],line[1],line[3]))
+                dna_paired_samples[dna_paired_samples_key] = [line[0],line[5],line[6],line[7],line[2],line[4]]
 
 with open(config["rna_paired_samples_tsv"], 'r') as data_in:
         tsv_file = csv.reader(decomment(data_in), delimiter="\t")
@@ -73,7 +73,7 @@ def identify_libraries(is_rna, is_tumor, wildcards):
                                         sample_project_index = line.index("Project")
                                 elif sample_name_index != -1 and line[sample_name_index] == target_sample or sample_id_index != -1 and line[sample_id_index].endswith("-"+target_sample):
                                         if is_rna:
-                                                if "RNA" in line[sample_project_index] and not "test" in line[sample_project_index]:
+                                                if "RNA" in line[sample_project_index] and (not "test" in line[sample_project_index]):
                                                         sample_libraries.append(line[sample_id_index])
                                                         sample_has_UMIs = run_has_UMIs
                                         else:
@@ -112,5 +112,15 @@ def get_tumor_site(wildcards):
 
 def get_normal_contains_some_tumor(wildcards):
         return dna_paired_samples["_".join((wildcards.subject, wildcards.tumor, wildcards.normal))][1]
+
+def get_tumor_has_pcr_duplicates(wildcards):
+        return dna_paired_samples["_".join((wildcards.subject, wildcards.tumor, wildcards.normal))][4]
+
+# In theory since we record the PCR status of the normal on multiple lines of the config file, we will use the first instance encountered as correct.
+# TODO: enforce PCR status to be the same across all DNA config lines a normal appears on?
+def get_normal_has_pcr_duplicates(wildcards):
+	for key, tuplevalues in dna_paired_samples.items():
+		if key.startswith(wildcards.subject+"_") and key.endswith("_"+wildcards.normal):
+        		return tuplevalues[5]
 
 

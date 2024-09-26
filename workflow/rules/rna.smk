@@ -17,6 +17,7 @@ rule dragen_rna_read_mapping_quant_and_fusion_calls:
         run:
                 library_info = identify_libraries(True, True, wildcards)
                 sample_libraries = library_info[1]
+                print("RNA sample libraries: " + ",".join(sample_libraries))	
                 this_sample_only_fastq_list_csv = make_sample_fastq_list_csv(wildcards, True, True, sample_libraries)
                 shell("dragen -r "+config["ref_genome"]+" --ora-reference "+config["ref_ora"]+
 			" --fastq-list {this_sample_only_fastq_list_csv} --fastq-list-all-samples true --intermediate-results-dir "+config["temp_dir"]+
