@@ -28,6 +28,8 @@ Somatic variants (including small nucleotide variants, structural variants and c
 This workflow is intended for people with an Illumina Dragen hardware-accelerated (FPGA) system for high-throughput genomics analysis.  
 If you don't have this hardware, this probably isn't for you.
 
+*This code has been tested with Dragen version 4.2 only.*
+
 If you are the sole user of the Dragen system, luck you: that's it! If there is potentially more than one user of the Dragen system, you will 
 also need to set up a [slurm](https://slurm.schedmd.com/quickstart_admin.html#quick_start) queue so that jobs running on the Dragen FPGA don't collide with each other.
 This is recommended by Illumina support, but not part of the Dragen documentation.
