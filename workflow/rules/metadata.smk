@@ -122,5 +122,6 @@ def get_normal_has_pcr_duplicates(wildcards):
 	for key, tuplevalues in dna_paired_samples.items():
 		if key.startswith(wildcards.subject+"_") and key.endswith("_"+wildcards.normal):
         		return tuplevalues[5]
+	return False
 
 

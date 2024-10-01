@@ -28,6 +28,10 @@ def make_sample_fastq_list_csv(wildcards, is_rna, is_tumor, sample_libraries):
         else:
                 raise Error("Wildcards have no useable attribute (tumor, normal, or sample) in call to make_sample_fastq_list_csv")
         header_printed = False
+	# TODO: If a sample has been run across multiple flowcells, it's possible that some of the data has been ORA compressed, but not others.
+	# This causes an error while processing the data as Dragen can't handle mixed compression schemes during mapping.
+	# So if we find this situation, we could automatically uncompress the ORA files so we have all .fastq.gz, but then the user would need to clean
+	# these up afterwards or we add a snakemake hook.
         with open(sample_fastq_list_csv, 'w') as f:
                 # Gather file specs from all run that have been converted.
                 for fastq_list_csv in glob.iglob(config["analysis_dir"]+'/primary/'+config["sequencer"]+'/*/Reports/fastq_list.csv'):
