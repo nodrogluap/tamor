@@ -1,1 +1,2 @@
+resources/gnomad.exomes.v4.1.sites.all_chr.select_afs.vcf.gz filter=lfs diff=lfs merge=lfs -text
 **/gnomad.exomes.v4.1.sites.all_chr.select_afs.vcf.gz filter=lfs diff=lfs merge=lfs -text
