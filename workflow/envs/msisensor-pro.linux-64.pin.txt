@@ -1,0 +1,26 @@
+# This file may be used to create an environment using:
+# $ conda create --name <env> --file <this file>
+# platform: linux-64
+@EXPLICIT
+https://conda.anaconda.org/conda-forge/linux-64/_libgcc_mutex-0.1-conda_forge.tar.bz2
+https://conda.anaconda.org/anaconda/linux-64/ca-certificates-2024.9.24-h06a4308_0.tar.bz2
+https://conda.anaconda.org/conda-forge/linux-64/libstdcxx-ng-12.2.0-h46fd767_19.tar.bz2
+https://conda.anaconda.org/conda-forge/linux-64/libgomp-12.2.0-h65d4601_19.tar.bz2
+https://conda.anaconda.org/conda-forge/linux-64/_openmp_mutex-4.5-2_gnu.tar.bz2
+https://conda.anaconda.org/conda-forge/linux-64/libgcc-ng-12.2.0-h65d4601_19.tar.bz2
+https://conda.anaconda.org/anaconda/linux-64/bzip2-1.0.8-h5eee18b_6.tar.bz2
+https://conda.anaconda.org/anaconda/linux-64/c-ares-1.19.1-h5eee18b_0.tar.bz2
+https://conda.anaconda.org/anaconda/linux-64/libdeflate-1.17-h5eee18b_1.tar.bz2
+https://conda.anaconda.org/anaconda/linux-64/libev-4.33-h7f8727e_1.tar.bz2
+https://conda.anaconda.org/conda-forge/linux-64/libzlib-1.2.13-h166bdaf_4.tar.bz2
+https://conda.anaconda.org/anaconda/linux-64/ncurses-6.4-h6a678d5_0.tar.bz2
+https://conda.anaconda.org/anaconda/linux-64/openssl-1.1.1w-h7f8727e_0.tar.bz2
+https://conda.anaconda.org/anaconda/linux-64/xz-5.2.10-h5eee18b_1.tar.bz2
+https://conda.anaconda.org/anaconda/linux-64/libedit-3.1.20230828-h5eee18b_0.tar.bz2
+https://conda.anaconda.org/anaconda/linux-64/libssh2-1.10.0-h37d81fd_2.tar.bz2
+https://conda.anaconda.org/conda-forge/linux-64/zlib-1.2.13-h166bdaf_4.tar.bz2
+https://conda.anaconda.org/anaconda/linux-64/krb5-1.20.1-h568e23c_1.tar.bz2
+https://conda.anaconda.org/anaconda/linux-64/libnghttp2-1.52.0-ha637b67_1.tar.bz2
+https://conda.anaconda.org/anaconda/linux-64/libcurl-7.88.1-h91b91d3_2.tar.bz2
+https://conda.anaconda.org/bioconda/linux-64/htslib-1.17-h6bc39ce_1.tar.bz2
+https://conda.anaconda.org/bioconda/linux-64/msisensor-pro-1.2.0-h0033a41_6.tar.bz2
