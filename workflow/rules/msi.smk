@@ -8,6 +8,8 @@ rule generate_microsatellite_locations_from_genome:
         input:
                 config["ref_fasta"]
         output:
-		"resources/msisensor-pro-scan.tsv"
+                tsv="resources/msisensor-pro-scan.tsv"
+        conda:
+                "../envs/msisensor-pro.yaml"
         shell:
-		"msisensorapro scan -d " + config["ref_fasta"] + " -o {wildcards.output} -p 1"
+                "msisensor-pro scan -d " + config["ref_fasta"] + " -o {output.tsv} -p 1"
