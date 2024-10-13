@@ -5,21 +5,22 @@ def generate_djerba_labels(wildcards):
 
 # The R package GenomeInfoDb is the only part of the Djerba dependencies that won't install properly via conda, 
 # so install in separately and explicitly.
-rule setup_djerba_conda_env:
-	priority: 104
-	output:
-		".snakemake/conda/djerba/lib/R/library/GenomeInfoDb"
-	conda:
-		"../envs/djerba.yaml"
-	shell:
-		"workflow/scripts/install_GenomeInfoDb.sh"
+#rule setup_djerba_conda_env:
+#	priority: 104
+#	output:
+#		".snakemake/conda/djerba/lib/R/library/GenomeInfoDb"
+#	conda:
+#		"../envs/djerba.yaml"
+#	shell:
+#		"workflow/scripts/install_GenomeInfoDb.sh"
 
 # Djerba research report (triaged variants self-contained PDF file from the Ontario Institute for Cancer Research)
 rule generate_djerba_pdf:
 	priority: 10
 	input:
 		somatic_snv_vcf = config["output_dir"]+'/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.hard-filtered.vcf.gz',
-		somatic_cnv_vcf = config["output_dir"]+'/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.cnv.vcf.gz',
+		somatic_cnv_vcf = config["output_dir"]+'/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.cnv.vcf.gz'
+#		djerba_env = ".snakemake/conda/djerba/lib/R/library/GenomeInfoDb"
 	output:
 		html=config["output_dir"]+'/djerba/{project}/{subject}_{tumor}_{normal}/{subject}-v1_report.research.html',
 		rep=report(directory(config["output_dir"]+'/djerba/{project}/{subject}_{tumor}_{normal}'),

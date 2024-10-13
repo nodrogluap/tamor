@@ -1,0 +1,3 @@
+[submodule "workflow/submodules/djerba"]
+	path = workflow/submodules/djerba
+	url = https://github.com/oicr-gsi/djerba

@@ -1,0 +1,66 @@
+[core]
+
+[input_params_helper]
+assay = WGTS
+donor = {{subject}}
+oncotree_code = SOFT_TISSUE
+primary_cancer = Soft tissue sarcoma
+project = {{project}}
+requisition_approved = {{date}}
+requisition_id = {{subject}}
+sample_type = Fresh Frozen
+site_of_biopsy = NA
+study = {{project}}
+tcgacode = {{tcgacode}}
+
+[report_title]
+
+[provenance_helper]
+provenance_input_path = results/files_report_latest.tsv.gz
+tumour_id = {{tumor_dna}}
+sample_name_aux = {{tumor_rna}}
+sample_name_tumour = {{tumor_dna}}
+normal_id = {{normal}}
+sample_name_normal =  {{normal}}
+
+[treatment_options_merger]
+
+[summary]
+
+#[genomic_landscape]
+#purity = 0.34
+#msi_file = results/PR-CY-SAR-01010032-5715-T1.msi
+#hrd_path = results/PR-CY-SAR-01010032-5715-T1.signatures.json
+#clinical = True
+#supplementary = True 
+
+[expression_helper]
+attributes = research
+tcga_data = resources/tcga
+gep_reference = results/gep_reference.txt.gz
+enscon = resources/ensemble_conversion_hg38.txt
+rsem_genes_results = results/PR-CY-SAR-01010032-5715-T1.genes.results
+
+[wgts.snv_indel]
+attributes = research
+maf_path = {{maf_file}}
+oncokb cache = resources/oncokb_cache
+update cache = True
+
+[wgts.cnv_purple]
+attributes = research
+purple_zip = results/PR-CY-SAR-01010032-5715-T1.purple.zip
+oncokb cache = resources/oncokb_cache
+update cache = True 
+
+ 
+#[fusion]
+#mavis_path = results/PR-CY-SAR-01010032-5715-T1.mavis_summary.tab
+#arriba_path = results/PR-CY-SAR-01010032-5715-T1.arriba_fusions.tsv
+#entrez conv path = resources/entrez_conversion.txt
+#minimum fusion reads = 20
+
+[gene_information_merger]
+
+[supplement.body]
+attributes = research
