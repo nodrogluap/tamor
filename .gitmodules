@@ -1,3 +1,6 @@
 [submodule "workflow/submodules/djerba"]
 	path = workflow/submodules/djerba
 	url = https://github.com/oicr-gsi/djerba
+[submodule "workflow/submodules/oncokb-annotator"]
+	path = workflow/submodules/oncokb-annotator
+	url = https://github.com/oncokb/oncokb-annotator
