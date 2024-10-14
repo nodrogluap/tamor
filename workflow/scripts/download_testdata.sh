@@ -53,7 +53,8 @@ mv SRR6702601_1.fastq.gz SRR6702601_2.fastq.gz SRX3676781
 # DNA
 mv SRR6702602_1.fastq.gz SRR6702602_2.fastq.gz SRX3676780
 
-# Generate a fastq_list.csv file like bcl-convert normally would, as this file is used by Tamor to pass FASRQ file paths along to Dragen. Absolute paths are preferred by Dragen.
+# Generate a fastq_list.csv file like bcl-convert normally would, as this file is used by Tamor to pass FASTQ file paths along to Dragen. 
+# Absolute paths are preferred by Dragen.
 PWD=`pwd`
 mkdir SRX3676781/Reports
 echo "RGID,RGSM,RGLB,Lane,Read1File,Read2File" >> SRX3676781/Reports/fastq_list.csv
