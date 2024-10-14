@@ -1,4 +1,4 @@
-#!env bash
+#!/usr/bin/env bash
 # Go to where Tamor expects the FASTQs in its default config.
 mkdir -p results/analysis/primary/HiSeq
 cd results/analysis/primary/HiSeq
