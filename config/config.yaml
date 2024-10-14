@@ -48,7 +48,7 @@ analysis_dir: "results/analysis"
 # The name of the sequencer used to generate the data (may be useful for batch effect or other corrections downstream, and avoids possible run name collision 
 # if aggregating data from multiple machines).
 
-sequencer: "novaseq6000"
+sequencer: "HiSeq"
 
 output_dir: "results"
 
