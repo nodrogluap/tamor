@@ -62,7 +62,7 @@ If you would like to run the test case before reconfiguring Tamor to use your ow
 This requires some additional specialty software not otherwise required by Tamor, so you will need to install a test mamba environment first.
 
 ```bash
-mamba create env -f workflow/envs/test.yaml
+mamba env create -f workflow/envs/test.yaml
 mamba activate test
 workflow/scripts/download_testdata.py
 mamba deactivate test
