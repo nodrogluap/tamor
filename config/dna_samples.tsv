@@ -1,4 +1,6 @@
-# Columns: <subject> <tumor dna> <tumor is PCR'ed> <normal dna> <normal is PCR'ed> <normal_contains_tumor> <tumor_site_number> <project>
+# Columns: <subject> <tumor dna> <tumor is PCR'ed> <normal dna> <normal is PCR'ed> <normal_contains_tumor> <pcgr_tumor_site_number> <onco_tree_code> <TCGA_code> <project>
+# OncoTree codes for cancer types can be found here: https://oncotree.mskcc.org/
+# TCGA codes can be found here: https://gdc.cancer.gov/resources-tcga-users/tcga-code-tables/tcga-study-abbreviations
 # The list of tumor site numbers for the version of PCGR included here is:
 #                       0  = Any
 #                       1  = Adrenal Gland
@@ -31,4 +33,4 @@
 #                       28 = Thyroid
 #                       29 = Uterus
 #                       30 = Vulva/Vagina
-PR-TEST-CLL-SAMN08512283	PR-TEST-CLL-SAMN08512283-SRR6702602-T	False	PR-TEST-CLL-SAMN08512283-SRR6702602-N	False	True	16	PR-TEST-CLL
+PR-TEST-CLL-SAMN08512283	PR-TEST-CLL-SAMN08512283-SRR6702602-T	False	PR-TEST-CLL-SAMN08512283-SRR6702602-N	False	True	16	CLLSLL	DLBC	PR-TEST-CLL
