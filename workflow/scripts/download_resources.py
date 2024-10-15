@@ -27,3 +27,8 @@ for resource_name, spec in resource_dict.items():
             a = urlparse(spec[0])
             spec[3].append(os.path.basename(a.path))
             subprocess.run(spec[3])
+
+# Illumina Annotation Engine (used for Tumor Mutational Burden reporting) has its own downloading system, in a standard place on Dragen servers
+if(not os.path.exists("nirvana")):
+    subprocess.run(["mkdir", "nirvana"])
+subprocess.run(["/opt/edico/share/nirvana/Downloader", "--ga", "GRCh38", "--out", "nirvana"])
