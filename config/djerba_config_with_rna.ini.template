@@ -2,57 +2,55 @@
 
 [input_params_helper]
 assay = WGTS
-donor = {{subject}}
-oncotree_code = SOFT_TISSUE
-primary_cancer = Soft tissue sarcoma
-project = {{project}}
-requisition_approved = {{date}}
-requisition_id = {{subject}}
-sample_type = Fresh Frozen
-site_of_biopsy = NA
-study = {{project}}
-tcgacode = {{tcgacode}}
+donor = {{ subject }}
+oncotree_code = {{oncotree }}
+primary_cancer = {{ cancer_type }}
+project = {{ project }}
+requisition_approved = {{ date }}
+requisition_id = {{ subject }}
+sample_type = {{ fresh_frozen }}
+site_of_biopsy = {{ site }}
+study = {{ project }}
+tcgacode = {{ tcgacode }}
 
 [report_title]
 
 [provenance_helper]
-provenance_input_path = results/files_report_latest.tsv.gz
-tumour_id = {{tumor_dna}}
-sample_name_aux = {{tumor_rna}}
-sample_name_tumour = {{tumor_dna}}
-normal_id = {{normal}}
-sample_name_normal =  {{normal}}
+provenance_input_path = {{ provenance_file_path }}
+tumour_id = {{ tumor_dna }}
+sample_name_aux = {{ tumor_rna }}
+sample_name_tumour = {{ tumor_dna }}
+normal_id = {{ normal }}
+sample_name_normal =  {{ normal }}
 
 [treatment_options_merger]
 
 [summary]
 
-#[genomic_landscape]
-#purity = 0.34
-#msi_file = results/PR-CY-SAR-01010032-5715-T1.msi
-#hrd_path = results/PR-CY-SAR-01010032-5715-T1.signatures.json
-#clinical = True
-#supplementary = True 
+[genomic_landscape]
+attributes = research
+purity = {{ purity }}
+msi_file = {{ msi_file_path }}
+hrd_path = {{ hrd_file_path }}
 
 [expression_helper]
 attributes = research
 tcga_data = resources/tcga
-gep_reference = results/gep_reference.txt.gz
 enscon = resources/ensemble_conversion_hg38.txt
-rsem_genes_results = results/PR-CY-SAR-01010032-5715-T1.genes.results
+gep_reference = {{ cohort_rna_file_path }}
+rsem_genes_results = {{ rna_file_path }}
 
 [wgts.snv_indel]
 attributes = research
-maf_path = {{maf_file}}
 oncokb cache = resources/oncokb_cache
 update cache = True
+maf_path = {{ maf_file }}
 
 [wgts.cnv_purple]
 attributes = research
-purple_zip = results/PR-CY-SAR-01010032-5715-T1.purple.zip
 oncokb cache = resources/oncokb_cache
 update cache = True 
-
+purple_zip = {{ cnv_file_path }}
  
 #[fusion]
 #mavis_path = results/PR-CY-SAR-01010032-5715-T1.mavis_summary.tab
