@@ -59,8 +59,8 @@ tumor_site = 0 # 0 = "Any" in PCGR parlance
 with open(config["dna_paired_samples_tsv"], 'r') as data_in:
     tsv_file = csv.reader(decomment(data_in), delimiter="\t")
     for line in tsv_file:
-        if line[0] == args.subject and line[1] == args.tumor and line[2] == args.normal and line[5] == args.project:
-            tumor_site = line[4]
+        if line[0] == args.subject and line[1] == args.tumor and line[3] == args.normal and line[9] == args.project:
+            tumor_site = line[6]
             break
 
 # Somatic small nucleotide variants reformatting
