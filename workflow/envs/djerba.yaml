@@ -24,3 +24,4 @@ dependencies:
   - bioconda::bioconductor-bsgenome.hsapiens.ucsc.hg38
   - vcfanno
   - jinja2
+  - r-base64enc
