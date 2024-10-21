@@ -14,6 +14,7 @@ study = {{ project }}
 tcgacode = {{ tcgacode }}
 
 [report_title]
+attributes = research
 
 [provenance_helper]
 provenance_input_path = {{ provenance_file_path }}
@@ -23,9 +24,14 @@ sample_name_tumour = {{ tumor_dna }}
 normal_id = {{ normal }}
 sample_name_normal =  {{ normal }}
 
+[case_overview]
+attributes = research
+
 [treatment_options_merger]
+attributes = research
 
 [summary]
+attributes = research
 
 [genomic_landscape]
 attributes = research
