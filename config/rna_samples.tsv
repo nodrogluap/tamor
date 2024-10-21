@@ -1,4 +1,4 @@
-# Columns: <subject> <tumor/normal rna> <tumor dna> <project> <cancer type>
+# Columns: <subject> <tumor/normal rna> <tumor dna> <project> <cancer type> <cohort for stats>
 # Cancer type should be one of the following values used by the immunedeconv R package (see immunedeconv::timer_available_cancers,
 # and descriptions from https://gdc.cancer.gov/resources-tcga-users/tcga-code-tables/tcga-study-abbreviations):
 # "kich" Kidney Chromophobe
@@ -33,4 +33,4 @@
 # "read" Rectum adenocarcinoma
 # "coad" Colon adenocarcinoma
 # "chol" Cholangiocarcinoma
-PR-TEST-CLL-SAMN08512283	PR-TEST-CLL-SAMN08512283-SRR6702601-T	PR-TEST-CLL-SAMN08512283-SRR6702602-T	PR-TEST-CLL	dlbc
+PR-TEST-CLL-SAMN08512283	PR-TEST-CLL-SAMN08512283-SRR6702601-T	PR-TEST-CLL-SAMN08512283-SRR6702602-T	PR-TEST-CLL	dlbc	test_rna_cohort1
