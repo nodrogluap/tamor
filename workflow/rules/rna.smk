@@ -35,12 +35,15 @@ rule annotate_rna_genes:
                 annotations = config["ref_exon_annotations"],
                 sf = config["output_dir"]+"/{project}/{subject}/rna/{subject}_{tumor}.rna.quant.genes.sf"
         output:
-                hugo_tpm_file = config["output_dir"]+"/{project}/{subject}/rna/{subject}_{tumor}.rna.quant.genes.hugo.tpm.txt"
+                hugo_tpm_file = config["output_dir"]+"/{project}/{subject}/rna/{subject}_{tumor}.rna.quant.genes.hugo.tpm.txt",
+                gene_fpkm_file = config["output_dir"]+"/{project}/{subject}/rna/{subject}_{tumor}.rna.quant.genes.fpkm.txt"
 
         shell:
                 # Generate Transcripts Per Million normalized data for the RNA with HUGO gene names, this can be used downstream by packages like immunedeconv.
                 # In the GTF annotations, we might have mutliple gene IDs mappinga to the same HUGO (e.g, this is true in the Gencode GTF), so sum values with same HUGO mapping.
-                "perl -F\\\\t -ane \'BEGIN{{print \"Hugo_Symbol\\t{wildcards.tumor}\\n\"; for(split /\\n/s, `grep gene_name {input.annotations}`){{$gene2hugo{{$1}} = $2 if /gene_id \"(\\S+)\".*gene_name \"(\\S+)\"/}}}}" +
-                      "$hugo_sum{{$gene2hugo{{$F[0]}}}} += $F[3] if $. > 1; END{{for(sort keys %hugo_sum){{print $_,\"\\t\",$hugo_sum{{$_}},\"\\n\" }}}}\' {input.sf} > {output.hugo_tpm_file}"
+                "perl -F\\\\t -ane \'BEGIN{{print \"Hugo_Symbol\\t{wildcards.tumor}\\n\"; for(split /\\n/s, `gzip -cd {input.annotations}| grep gene_name`){{$gene2hugo{{$1}} = $2 if /gene_id \"(\\S+)\".*gene_name \"(\\S+)\"/}}}}" +
+                      "$hugo_sum{{$gene2hugo{{$F[0]}}}} += $F[3] if $. > 1; END{{for(sort keys %hugo_sum){{print $_,\"\\t\",$hugo_sum{{$_}},\"\\n\" }}}}\' {input.sf} > {output.hugo_tpm_file};"+
+                "perl -F\\\\t -ane \'BEGIN{{print \"gene_id\\t{wildcards.tumor}\\tHugo_Symbol\\n\"; for(split /\\n/s, `gzip -cd {input.annotations}| grep gene_name`){{$gene2hugo{{$1}} = $2 if /gene_id \"(\\S+)\".*gene_name \"(\\S+)\"/}}}}" +
+                      "$gene_sum{{$F[0]}} += $F[3]/$F[2]*1000 if $. > 1; END{{for(sort keys %gene_sum){{$gene = $_; $gene =~ s/\\.\\d+//; print $gene,\"\\t\",$gene_sum{{$_}},\"\\t\",$gene2hugo{{$_}},\"\\n\" }}}}\' {input.sf} > {output.gene_fpkm_file}"
 
 
