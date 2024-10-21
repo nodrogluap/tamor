@@ -9,6 +9,7 @@ import yaml
 import gzip
 import sys
 import datetime
+import zipfile
 from pathlib import Path
 from os import system
 # Jinja2 for template-filling the config.ini for Djerba
@@ -45,6 +46,7 @@ with open("config/config.yaml", "r") as f:
         print_error_exit("No setting for oncokb_api_token_file was found in the config file config/config.yaml")
     if not os.path.exists(config["oncokb_api_token_file"]): 
         print_error_exit("The oncokb_api_token file path ("+config["oncokb_api_token_file"]+") found in the config file does not exist.")
+os.environ["ONCOKB_TOKEN"] = config["oncokb_api_token_file"]
 
 # Start to fill out the Djerba config.ini template values
 tamor = {}
@@ -69,7 +71,7 @@ tamor["provenance_file_path"] = BLANK_GZIP_FILE+".gz"
 # Biomarker outputs from Dragen for microsatellite instability and homologous recombination deficiency
 msi = tempfile.NamedTemporaryFile(suffix=".txt")
 dragen_msi = f"{args.outdir}/{args.project}/{args.subject}/{args.subject}_{args.tumor}_{args.normal}.dna.somatic.microsat_output.json"
-#TODO transform MSI from Dragen formt top tht expected by Djerba
+#TODO transform MSI from Dragen form to that expected by Djerba
 tamor["msi_file_path"] = msi.name
 hrd = tempfile.NamedTemporaryFile(suffix=".txt")
 #TODO transform HRD from Dragen formt top tht expected by Djerba
@@ -89,6 +91,7 @@ with gzip.open(tumor_cnv_vcf, 'rt') as data_in:
         mpurity = re.search("##EstimatedTumorPurity=(\\S+)", line)
         mploidy = re.search("##OverallPloidy=(\\S+)", line)
         if mpurity:
+            tumor_purity = mpurity.group(1)
             tamor["purity"] = mpurity.group(1)
         elif mploidy:
             tumor_ploidy = mploidy.group(1)
@@ -96,24 +99,35 @@ with gzip.open(tumor_cnv_vcf, 'rt') as data_in:
 # Read in the tamor RNA sample metadata file
 # Third column is associated tumor DNA sample for the RNA
 rna_sample = ""
+rna_cohort = ""
+cohort_sample2tumor_dna = {} 
 with open(config["rna_paired_samples_tsv"], 'r') as data_in:
     tsv_file = csv.reader(decomment(data_in), delimiter="\t")
     for line in tsv_file:
         if line[0] == args.subject and line[2] == args.tumor:
             rna_sample = line[1]
+            rna_cohort = line[5]
             break
-# There may not be an RNA sample associated with the DNA sample (yet), and that's okay.
+print ("RNA cohort for %s is %s" % (rna_sample, rna_cohort))
+with open(config["rna_paired_samples_tsv"], 'r') as data_in:
+        if rna_sample and line[5] == rna_cohort:
+            cohort_sample2tumor_dna[line[1]] = line[2]
 
+# There may not be an RNA sample associated with the DNA sample (yet), and that's okay.
+tumor_dna2subject = {}
+tumor_dna2project = {}
 with open(config["dna_paired_samples_tsv"], 'r') as data_in:
     tsv_file = csv.reader(decomment(data_in), delimiter="\t")
     for line in tsv_file:
         if line[0] == args.subject and line[1] == args.tumor and line[3] == args.normal and line[9] == args.project:
             tamor["oncotree"] = line[7]
             tamor["tcgacode"] = line[8]
-            break
+        if line[1] in cohort_sample2tumor_dna.values():
+            tumor_dna2subject[line[1]] = line[0]
+            tumor_dna2project[line[1]] = line[9]
 
 # Somatic small nucleotide variants reformatting
-tf=tempfile.NamedTemporaryFile(suffix=".vcf")
+tf=tempfile.NamedTemporaryFile(prefix="djerba", suffix=".vcf")
 SNVFILE=tf.name
 system(f"gzip -cd {args.snv} | perl -pe 'if(/^##INFO=<ID=DP,/){{print \"##INFO=<ID=TDP,Number=1,Type=Integer,Description=\\\"Read depth of alternative allele in the tumor\\\">\\n##INFO=<ID=TVAF,Number=1,Type=Float,Description=\\\"Alternative allele proportion of reads in the tumor\\\">\\n\"}}($tdp, $tvaf) = /\\t[01][]\\/|][01]:\\d+.?\\d*:\\d+,(\\d+):([0-9]+\\.[0-9]*):\\S+?$/;s/\\tDP=/\\tTDP=$tdp;TVAF=$tvaf;DP=/; s/;SOMATIC//' > {SNVFILE}")
 # Only keeping the original to avoid FileNotFoundError when temp file automatically cleaned up by Snakemake after rule application.
@@ -121,48 +135,136 @@ system(f"bgzip -c {SNVFILE} > {SNVFILE}.gz")
 system(f"tabix {SNVFILE}.gz")
 tamor["maf_file"] = f"{SNVFILE}.gz"
 
-# Somatic copy number variants reformatting
-tf2=tempfile.NamedTemporaryFile(suffix="cna.tsv")
-CNAFILE=tf2.name
-cna_header = "Chromosome\tStart\tEnd\tnMajor\tnMinor\n"
-with open(CNAFILE, "w") as text_file:
-        text_file.write(cna_header)
-system(f"gzip -cd {args.cnv} | perl -ane 'next if /^#/ or not /\tPASS\t/; ($end) = /END=(\\d+)/; @d = split /:/, $F[$#F]; $d[2] = 1 if $d[2] == \".\"; print join(\"\\t\", $F[0], $F[1], $end, $d[1]-$d[2], $d[2]),\"\\n\"' >> {CNAFILE}")
-tamor["cnv_file_path"] = CNAFILE
+os.environ["DJERBA_BASE_DIR"] = ".snakemake/conda/djerba/lib/python3.10/site-packages/djerba"
+os.environ["DJERBA_RUN_DIR"] = os.environ["DJERBA_BASE_DIR"] + "/data"
+# Somatic copy number variants reformatting, to resemble Purple's output.
+tmpdir = tempfile.TemporaryDirectory(prefix="djerba")
+os.environ["DJERBA_PRIVATE_DIR"] = tmpdir.name
+os.environ["PATH"] = os.environ["PATH"]+":"+os.getcwd()+"/workflow/submodules/oncokb-annotator" # so that Djerba can find OncoKB Annotator
+# Djerba is looking for four files in the zip:
+# *purple.purity.range.tsv
+# *purple.cnv.somatic.tsv
+# *purple.segment.tsv
+# *purple.cnv.gene.tsv
+CNAFILE=f"{args.outdir}/djerba/{args.project}/{args.subject}_{args.tumor}_{args.normal}/CNA"
+
+tf_purity = f"{CNAFILE}.purple.purity.tsv"
+# Only the purity and ploidy fields are read by Djerba
+purity_header = "purity\tploidy\n"
+with open(tf_purity, 'w') as purity_tsv:
+        purity_tsv.write(purity_header)
+        purity_tsv.write(f"{tumor_purity}\t{tumor_ploidy}\n")
+# The following wioll be used to make QC plots, purity, ploidy, and score in the range [0,1]
+# are used in Djerba's purple_QC_functions.r
+# Dragen reports log probabilities instead of scores but we can just change the sign of the exponent and scale as it's going to percentile rank them
+# Dragen does not provide different ploidy models, so we use its fixed estimate.
+tf_purity_range = f"{CNAFILE}.purple.purity.range.tsv"
+purity_range_header = "purity\tploidy\tscore\n"
+with open(tf_purity_range, 'w') as purity_range_tsv:
+        purity_range_tsv.write(purity_range_header)
+        purity2score = {}
+        max_score = -100000000000
+        min_score = 0
+        with open(f"{args.outdir}/{args.project}/{args.subject}/{args.subject}_{args.tumor}_{args.normal}.dna.somatic.cnv.purity.coverage.models.tsv", "r") as dragen_models_tsv:
+                for line in dragen_models_tsv:
+                        if line.startswith('#'):
+                                continue
+                        values = line.strip().split('\t')
+                        score = float(values[2])
+                        if(not values[0] in purity2score or purity2score[values[0]] > score):
+                                purity2score[values[0]] = score # take the min log likelihood score for the given purity 
+                        if(score > max_score):
+                                max_score = score
+                        if(score < min_score):
+                                min_score = score 
+        for purity,score in purity2score.items():
+                scaled_score = (max_score-score)/(max_score-min_score+1)
+                purity_range_tsv.write(f"{purity}\t{tumor_ploidy}\t{score}\n")
+
+tf_cnv = f"{CNAFILE}.purple.cnv.somatic.tsv"
+cnv_header = "chromosome\tstart\tend\tcopyNumber\tbafCount\tobservedBAF\tbaf\tsegmentStartSupport\tsegmentEndSupport\tmethod\tdepthWindowCount\tgcContent\tminStart\tmaxStart\tminorAlleleCopyNumber\tmajorAlleleCopyNumber\n"
+with open(tf_cnv, "w") as cnv_tsv:
+        cnv_tsv.write(cnv_header)
+system(f"gzip -cd {args.cnv} | perl -ane 'next if /^#/ or /DRAGEN:REF/ or not /\tPASS\t/; ($end) = /END=(\\d+)/; @d = split /:/, $F[$#F]; $d[2] = 1 if $d[2] == \".\"; print join(\"\\t\", $F[0], $F[1], $end, $d[1], 20, 0.5, 0.5, \"NONE\", \"NONE\", \"BAF_WEIGHTED\", $F[5], 0.37, $F[1], $end, $d[2], $d[1]-$d[2]),\"\\n\"' >> {tf_cnv}")
+
+tf_segment = f"{CNAFILE}.purple.segment.tsv"
+segment_header = "chromosome\tstart\tend\tgermlineStatus\tbafCount\tobservedBAF\tminorAlleleCopyNumber\tminorAlleleCopyNumberDeviation\tobservedTumorRatio\tobservedNormalRatio\tunnormalisedObservedNormalRatio\tmajorAlleleCopyNumber\tmajorAlleleCopyNumberDeviation\tdeviationPenalty\ttumorCopyNumber\tfittedTumorCopyNumber\tfittedBAF\trefNormalisedCopyNumber\tratioSupport\tsupport\tdepthWindowCount\ttumorBAF\tgcContent\teventPenalty\tminStart\tmaxStart\n"
+with open(tf_segment, "w") as segment_tsv:
+        segment_tsv.write(segment_header)
+system(f"gzip -cd {args.cnv} | perl -ane 'next if /^#/ or /DRAGEN:REF/ or not /\tPASS\t/; ($end) = /END=(\\d+)/; @d = split /:/, $F[$#F]; $d[2] = 1 if $d[2] == \".\"; print join(\"\\t\", $F[0], $F[1], $end, \"DIPLOID\", $d[1], 20, $d[2], $d[2]*0.2, $d[1]-$d[2], $d[2], 1, $d[1]-$d[2], ($d[1]-$d[2])*0.2, 0, $d[1]-$d[2], $d[1]-$d[2], 0.5, 1, 1, 1, $F[5], 1, 0.37, 0, $F[1], $F[1]),\"\\n\"' >> {tf_segment}")
+
+tf_gene = f"{CNAFILE}.purple.cnv.gene.tsv"
+gene_header = "chromosome\tstart\tend\tgene\tminCopyNumber\tmaxCopyNumber\tsomaticRegions\ttranscriptId\tisCanonical\tchromosomeBand\tminRegions\tminRegionStart\tminRegionEnd\tminRegionStartSupport\tminRegionEndSupport\tminRegionMethod\tminMinorAlleleCopyNumber\tdepthWindowCount\n"
+with open(tf_gene, "w") as gene_tsv:
+        gene_tsv.write(gene_header)
+
+# Build the zip
+filenames = [tf_purity, tf_purity_range, tf_cnv, tf_segment, tf_gene]
+
+with zipfile.ZipFile(f"{CNAFILE}.zip", mode="w") as archive:
+        for filename in filenames:
+                archive.write(filename)
+tamor["cnv_file_path"] = f"{CNAFILE}.zip"
 
 # RNA expression data reformatting
-tumor_expr_tpm_tsv = f"{args.outdir}/{args.project}/{args.subject}/rna/{args.subject}_{rna_sample}.rna.quant.sf"
-tf3=tempfile.NamedTemporaryFile(suffix=".tpm.tsv")
-TPMFILE=tf3.name
-tpm_header = "TargetID\tTPM\n"
-with open(TPMFILE, "w") as text_file:
-        text_file.write(tpm_header)
-system(f"tail -n +2 {tumor_expr_tpm_tsv} | perl -ane '$F[0] =~ s/\\.\\d$//; print \"$F[0]\\t$F[3]\\n\"' >> {TPMFILE}")
-# TODO generate cohort from new setting in rna sample metadata file
-COHORT_TPMFILE=tempfile.NamedTemporaryFile(suffix=".cohort.tpm_rna.tsv")
-tamor["cohort_rna_file_path"] = COHORT_TPMFILE
-tamor["rna_file_path"] = TPMFILE
+tumor_expr_fpkm_tsv = f"{args.outdir}/{args.project}/{args.subject}/rna/{args.subject}_{rna_sample}.rna.quant.genes.fpkm.txt"
+tf3=tempfile.NamedTemporaryFile(prefix="djerba", suffix=".fpkm.tsv")
+FPKMFILE=tf3.name
+if os.path.exists(tumor_expr_fpkm_tsv):
+    fpkm_header = "Gene_id\tFoo\tBar\tBaz\tQux\tQuux\tFPKM\n"
+    cohort_fpkm_header = "gene_id"
+    gene2fpkm_per_sample = {}
+    with open(FPKMFILE, "w") as text_file:
+        text_file.write(fpkm_header)
+        with open(tumor_expr_fpkm_tsv, "r") as data_in:
+                tsv_file = csv.reader(decomment(data_in), delimiter="\t")
+                next(tsv_file) # Skip the header line
+                for line in tsv_file:
+                        text_file.write("%s\t\t\t\t\t\t%f\n" % (line[0], float(line[1])))
+                        gene2fpkm_per_sample[line[0]] = []
 
-# RNA fusion reformatting - not active in PCGR quite yet, but ready to go when it is supported
-tumor_rna_fusion_tsv = f"{args.outdir}/{args.project}/{args.subject}/rna/{args.subject}_{rna_sample}.rna.fusion_candidates.features.csv"
-tf4=tempfile.NamedTemporaryFile(suffix=".rna_fusions.tsv")
-RNAFUSIONFILE=tf4.name
-fusion_header = "GeneA\tGeneB\tConfidence\n"
-with open(RNAFUSIONFILE, "w") as text_file:
+    tamor["rna_file_path"] = FPKMFILE
+    # Generate cohort from new setting in rna sample metadata file as a gzip table
+    COHORT_FPKMFILE=tempfile.NamedTemporaryFile(prefix="djerba", suffix=".cohort.fpkm_rna.tsv")
+    with open(COHORT_FPKMFILE.name, "w") as cohort_fpkm_tsv:
+        cohort_fpkm_tsv.write(cohort_fpkm_header+"\n")
+        for cohort_sample, tumor_dna in cohort_sample2tumor_dna.items(): 
+                subj = tumor_dna2subject[tumor_dna]
+                if subj == args.subject: # exclude self from cohort, otherwise Djerba processing issues ensue
+                    continue
+                proj = tumor_dna2project[tumor_dna]
+                cohort_fpkm_header = cohort_fpkm_header + "\t" + cohort_sample 
+                cohort_sample_fpkm_file = f"{args.outdir}/{proj}/{subj}/rna/{subj}_{cohort_sample}.rna.quant.genes.fpkm.txt"
+                with open(cohort_sample_fpkm_file, "r") as data_in:
+                        tsv_file = csv.reader(decomment(data_in), delimiter="\t")
+                        next(tsv_file) # Skip the header line
+                        for line in tsv_file:
+                                gene2fpkm_per_sample[line[0]].append(line[1])
+        for gene,fpkms in gene2fpkm_per_sample.items():
+                if(fpkms):
+                	cohort_fpkm_tsv.write(gene+"\t"+"\t".join(fpkms)+"\n")
+                else:
+                	cohort_fpkm_tsv.write(gene+"\n")
+    system(f"gzip -c {COHORT_FPKMFILE.name} > {COHORT_FPKMFILE.name}.gz")
+    tamor["cohort_rna_file_path"] = COHORT_FPKMFILE.name+".gz"
+
+    # RNA fusion reformatting - not active in PCGR quite yet, but ready to go when it is supported
+    tumor_rna_fusion_tsv = f"{args.outdir}/{args.project}/{args.subject}/rna/{args.subject}_{rna_sample}.rna.fusion_candidates.features.csv"
+    tf4=tempfile.NamedTemporaryFile(prefix="djerba", suffix=".rna_fusions.tsv")
+    RNAFUSIONFILE=tf4.name
+    fusion_header = "GeneA\tGeneB\tConfidence\n"
+    with open(RNAFUSIONFILE, "w") as text_file:
         text_file.write(fusion_header)
-system(f"tail -n +2 {tumor_rna_fusion_tsv} | perl -ane '$confidence = $F[4] =~ /FAIL/ ? \"low\" : \"high\"; ($geneA, $geneB) = $F[0] =~ /(\\S+)--(\\S+)/; print \"$geneA\\t$geneB\\t$confidence\\n\" unless $printed_already{{$F[0]}}++' >> {RNAFUSIONFILE}")
-#TODO: append DNA structural variants to fusion call list where appropriate
-
-# Read the Djerba config.ini template using Jinja2 (same as Snakemake uses) and fill it in.
-INIFILE = f"{args.outdir}/djerba/{args.project}/{args.subject}_{args.tumor}_{args.normal}/config.ini"
-# Configure differently if there is RNA data avilable or not.
-if os.path.getsize(TPMFILE) != len(tpm_header):
-        ini_template_file = "djerba_config_with_rna.ini.template"
-        tamor["tumor_rna"] = rna_sample
+    system(f"tail -n +2 {tumor_rna_fusion_tsv} | perl -ane '$confidence = $F[4] =~ /FAIL/ ? \"low\" : \"high\"; ($geneA, $geneB) = $F[0] =~ /(\\S+)--(\\S+)/; print \"$geneA\\t$geneB\\t$confidence\\n\" unless $printed_already{{$F[0]}}++' >> {RNAFUSIONFILE}")
+    #TODO: append DNA structural variants to fusion call list where appropriate
+    tamor["tumor_rna"] = rna_sample
+    ini_template_file = "djerba_config_with_rna.ini.template"
+    # end if block, rna file exists for the sample
 # No RNA
 else:
-        ini_template_file = "djerba_config_without_rna.ini.template"
+    ini_template_file = "djerba_config_without_rna.ini.template"
 
+# Read the Djerba config.ini template using Jinja2 (same as Snakemake uses) and fill it in.
 environment = Environment(loader=FileSystemLoader("config/"))
 template = environment.get_template(ini_template_file)
 
@@ -172,7 +274,6 @@ with open(INIFILE, mode="w", encoding="utf-8") as message:
         message.write(content)
 
 # Generate Djerba report with all these data
-os.environ["DJERBA_RUN_DIR"] = f"{args.outdir}/djerba/{args.project}/{args.subject}_{args.tumor}_{args.normal}"
 system(f"djerba.py --verbose report --ini {INIFILE} --out-dir {djerba_outdir} --no-archive --pdf")
-
+#system("read wait")
 exit(0)
