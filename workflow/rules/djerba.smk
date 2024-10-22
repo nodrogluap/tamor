@@ -11,7 +11,7 @@ rule setup_djerba_conda_env:
 		"../envs/djerba.yaml"
 	shell:
 		# First remove any existing soft link, in case it exists it could create a problem
-		"rm -f .snakemake/conda/djerba; cd workflow/submodules/djerba && pip install . && cd ../oncokb-annotator && pip install -r requirements/common.txt -r requirements/pip3.txt && cd ../../../ && workflow/scripts/link_djerba_env.sh"
+		"cd workflow/submodules/djerba && pip install . && cd ../oncokb-annotator && pip install -r requirements/common.txt -r requirements/pip3.txt && cd ../../../ && workflow/scripts/link_djerba_env.sh"
 
 # Djerba research report (triaged variants HTML and self-contained PDF files from the Ontario Institute for Cancer Research)
 rule generate_djerba_html:

@@ -1,6 +1,8 @@
 # Tamor
 
-Rapid automated [Personal Cancer Genome Report](https://sigven.github.io/pcgr/) (PCGR) generation using 
+Rapid automated generation of cancer genome mutation reports, starting from FASTQ-formatted sequence files. 
+
+Generates [Personal Cancer Genome Reports](https://sigven.github.io/pcgr/) (PCGR) and [Djerba Reports](https://github.com/oicr-gsi/djerba) using 
 [Illumina Dragen](https://www.illumina.com/products/by-type/informatics-products/dragen-secondary-analysis.html) + 
 [Snakemake](https://snakemake.github.io/), handling both genomic and transcriptomic input data. 
 Catalogues as conforming to [Standardized Snakemake Workflow](https://snakemake.github.io/snakemake-workflow-catalog/#standardized) rules for reproducibility.
@@ -48,7 +50,7 @@ pip install snakemake-executor-plugin-cluster-generic
 2. Download the Tamor code:
 
 ```bash
-git clone https://github.com/nodrogluap/tamor
+git clone --recurse-submodules https://github.com/nodrogluap/tamor
 cd tamor
 ```
 
@@ -77,7 +79,8 @@ This can take a few hours depending on your Internet connection speed, and requi
 Once either the test data or your own (see [Configuration section below](#configuration)) is ready, you can run Snakemake to generate the 
 [BAM](https://en.wikipedia.org/wiki/Binary_Alignment_Map) files, 
 [VCF](https://en.wikipedia.org/wiki/Variant_Call_Format) files, and 
-[CPSR/PCGR reports](https://sigven.github.io/pcgr/index.html).
+[CPSR/PCGR reports](https://sigven.github.io/pcgr/index.html). 
+Generation of Djerba reports is dependent on you providing a valid API token linked to your [registered OncoKB account](https://www.oncokb.org/account/register).
 
 On a single-user system:
 
