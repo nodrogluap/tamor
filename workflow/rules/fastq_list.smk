@@ -47,7 +47,8 @@ def make_sample_fastq_list_csv(wildcards, is_rna, is_tumor, sample_libraries):
                                         if line[1] in sample_libraries:
                                                 # We might have different sample names for the same sample like Li###-lane1
                                                 # and this will cause problems downstream, e.g. when somatic mutation calling
-                                                # and dragen enforces a single sample name in the source BAM. So replace any existing name.
+                                                # and dragen enforces a single sample name in the source BAM. So replace any existing name for both RGSM and RGLB.
+                                                line[1] = target_sample
                                                 line[2] = target_sample
                                                 # We may also have rewritten the .fastq.gz as a .ora file to save room. In that case we need to write the .ora name to the new list
                                                 if not os.path.isfile(line[4]):
