@@ -1,6 +1,8 @@
 # Tamor
 
-Rapid automated [Personal Cancer Genome Report](https://sigven.github.io/pcgr/) (PCGR) generation using 
+Rapid automated generation of cancer genome mutation reports, starting from FASTQ-formatted sequence files. 
+
+Generates [Personal Cancer Genome Reports](https://sigven.github.io/pcgr/) (PCGR) and [Djerba Reports](https://github.com/oicr-gsi/djerba) using 
 [Illumina Dragen](https://www.illumina.com/products/by-type/informatics-products/dragen-secondary-analysis.html) + 
 [Snakemake](https://snakemake.github.io/), handling both genomic and transcriptomic input data. 
 Catalogues as conforming to [Standardized Snakemake Workflow](https://snakemake.github.io/snakemake-workflow-catalog/#standardized) rules for reproducibility.
