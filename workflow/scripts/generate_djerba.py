@@ -10,6 +10,7 @@ import gzip
 import sys
 import datetime
 import zipfile
+import glob
 from pathlib import Path
 from os import system
 # Jinja2 for template-filling the config.ini for Djerba
@@ -18,7 +19,7 @@ from jinja2 import Environment, FileSystemLoader
 from tamor_utils import decomment
 
 parser = argparse.ArgumentParser(
-                    prog='Generate Djerba',
+                    prog='generate_djerba.py',
                     description='A wrapper to reformat SNV, CNV, and RNASeq results from Tamor suited for generation of Djerba variant interpretation reports')
 parser.add_argument("snv")
 parser.add_argument("cnv")
@@ -127,13 +128,24 @@ with open(config["dna_paired_samples_tsv"], 'r') as data_in:
             tumor_dna2project[line[1]] = line[9]
 
 # Somatic small nucleotide variants reformatting
-tf=tempfile.NamedTemporaryFile(prefix="djerba", suffix=".vcf")
-SNVFILE=tf.name
-system(f"gzip -cd {args.snv} | perl -pe 'if(/^##INFO=<ID=DP,/){{print \"##INFO=<ID=TDP,Number=1,Type=Integer,Description=\\\"Read depth of alternative allele in the tumor\\\">\\n##INFO=<ID=TVAF,Number=1,Type=Float,Description=\\\"Alternative allele proportion of reads in the tumor\\\">\\n\"}}($tdp, $tvaf) = /\\t[01][]\\/|][01]:\\d+.?\\d*:\\d+,(\\d+):([0-9]+\\.[0-9]*):\\S+?$/;s/\\tDP=/\\tTDP=$tdp;TVAF=$tvaf;DP=/; s/;SOMATIC//' > {SNVFILE}")
-# Only keeping the original to avoid FileNotFoundError when temp file automatically cleaned up by Snakemake after rule application.
-system(f"bgzip -c {SNVFILE} > {SNVFILE}.gz")
-system(f"tabix {SNVFILE}.gz")
-tamor["maf_file"] = f"{SNVFILE}.gz"
+MAF=tempfile.NamedTemporaryFile(prefix="djerba", suffix=".maf.tsv")
+maf_file=MAF.name
+GNOMAD_VEPFILE=tempfile.NamedTemporaryFile(prefix="djerba", suffix=".maf.tsv")
+# Add gnoMAD MAFs to the VCF so Djerba can run its full analysis downstream 
+vepfiles = glob.glob(f"{args.outdir}/pcgr/{args.project}/{args.subject}_{args.tumor}_{args.normal}/{args.subject}.pcgr.grch38.*.vep.vcf.gz")
+if not vepfiles:
+        print_error_exit("No PCGR-generated VEP file found")
+system(f"vcfanno config/gnomad.vcfanno.conf {vepfiles[0]} > {GNOMAD_VEPFILE.name}")
+
+# Write the MAF header
+with open(maf_file, 'w') as maf_tsv:
+        maf_tsv.write("Variant_Classification\tTumor_Sample_Barcode\tMatched_Norm_Sample_Barcode\tFILTER\tt_depth\tt_alt_count\tn_depth\tn_alt_count\tgnomAD_AF\tBIOTYPE\tHugo_Symbol\tChromosome\tStart_Position\tEnd_Position\tReference_Allele\tAllele\tTUMOR_SEQ_ALLELE2\tgnomAD_AFR_AF\tgnomAD_AMR_AF\tgnomAD_ASJ_AF\tgnomAD_EAS_AF\tgnomAD_FIN_AF\tgnomAD_NFE_AF\tgnomAD_OTH_AF\tgnomAD_SAS_AF")
+
+# Djerba needs a MAF file on input
+system(f"cat {GNOMAD_VEPFILE.name} | perl -F\\t -ane 'BEGIN{{%vep2class=split /\s/s, `cat resources/vep2djerba_classes.txt`}}next if /^#/; $F[0] =~ s/^chr//; if(($alt_depth, $tot_depth, $class, $hugo, $type) = $F[$#F] =~ /TDP=(\d+).*DP=(\d+).*CSQ=.\|(.+?)\|.+?\|(.+?)\|.+?\|.+?\|.+?\|(.+?)\|/){{($afr_af,$amr_af,$asj_af,$eas_af,$fin_af,$nfe_af,$oth_af,$sas_af) = $F[$#F] =~ /;gnomAD_AFR_AF=([0-9.e\-]+);gnomAD_AMR_AF=([0-9.e\-]+);gnomAD_ASJ_AF=([0-9.e\-]+);gnomAD_EAS_AF=([0-9.e\-]+);gnomAD_FIN_AF=([0-9.e\-]+);gnomAD_NFE_AF=([0-9.e\-]+);gnomAD_OTH_AF=([0-9.e\-]+);gnomAD_SAS_AF=([0-9.e\-]+)/; print join(\"\t\", $vep2class{{$class}}, \"{args.tumor}\", \"{args.normal}\", \"PASS\", $tot_depth, $alt_depth, 30, 0, 0, $type, $hugo, $F[0], $F[1], $F[1]+length($F[3])-1, $F[3], $F[4], $F[4], $afr_af,$amr_af,$asj_af,$eas_af,$fin_af,$nfe_af,$oth_af,$sas_af),\"\n\"}}' >> {MAF.name}")
+system(f"gzip -c {maf_file} > {maf_file}.gz")
+maf_file = f"{maf_file}.gz"
+tamor["maf_file"] = maf_file
 
 os.environ["DJERBA_BASE_DIR"] = ".snakemake/conda/djerba/lib/python3.10/site-packages/djerba"
 os.environ["DJERBA_RUN_DIR"] = os.environ["DJERBA_BASE_DIR"] + "/data"
@@ -154,7 +166,7 @@ purity_header = "purity\tploidy\n"
 with open(tf_purity, 'w') as purity_tsv:
         purity_tsv.write(purity_header)
         purity_tsv.write(f"{tumor_purity}\t{tumor_ploidy}\n")
-# The following wioll be used to make QC plots, purity, ploidy, and score in the range [0,1]
+# The following will be used to make QC plots, purity, ploidy, and score in the range [0,1]
 # are used in Djerba's purple_QC_functions.r
 # Dragen reports log probabilities instead of scores but we can just change the sign of the exponent and scale as it's going to percentile rank them
 # Dragen does not provide different ploidy models, so we use its fixed estimate.
@@ -193,6 +205,7 @@ with open(tf_segment, "w") as segment_tsv:
         segment_tsv.write(segment_header)
 system(f"gzip -cd {args.cnv} | perl -ane 'next if /^#/ or /DRAGEN:REF/ or not /\tPASS\t/; ($end) = /END=(\\d+)/; @d = split /:/, $F[$#F]; $d[2] = 1 if $d[2] == \".\"; print join(\"\\t\", $F[0], $F[1], $end, \"DIPLOID\", $d[1], 20, $d[2], $d[2]*0.2, $d[1]-$d[2], $d[2], 1, $d[1]-$d[2], ($d[1]-$d[2])*0.2, 0, $d[1]-$d[2], $d[1]-$d[2], 0.5, 1, 1, 1, $F[5], 1, 0.37, 0, $F[1], $F[1]),\"\\n\"' >> {tf_segment}")
 
+# Not sure it even uses this one?
 tf_gene = f"{CNAFILE}.purple.cnv.gene.tsv"
 gene_header = "chromosome\tstart\tend\tgene\tminCopyNumber\tmaxCopyNumber\tsomaticRegions\ttranscriptId\tisCanonical\tchromosomeBand\tminRegions\tminRegionStart\tminRegionEnd\tminRegionStartSupport\tminRegionEndSupport\tminRegionMethod\tminMinorAlleleCopyNumber\tdepthWindowCount\n"
 with open(tf_gene, "w") as gene_tsv:
@@ -248,7 +261,7 @@ if os.path.exists(tumor_expr_fpkm_tsv):
     system(f"gzip -c {COHORT_FPKMFILE.name} > {COHORT_FPKMFILE.name}.gz")
     tamor["cohort_rna_file_path"] = COHORT_FPKMFILE.name+".gz"
 
-    # RNA fusion reformatting - not active in PCGR quite yet, but ready to go when it is supported
+    # RNA fusion reformatting - TODO
     tumor_rna_fusion_tsv = f"{args.outdir}/{args.project}/{args.subject}/rna/{args.subject}_{rna_sample}.rna.fusion_candidates.features.csv"
     tf4=tempfile.NamedTemporaryFile(prefix="djerba", suffix=".rna_fusions.tsv")
     RNAFUSIONFILE=tf4.name
@@ -275,5 +288,5 @@ with open(INIFILE, mode="w", encoding="utf-8") as message:
 
 # Generate Djerba report with all these data
 system(f"djerba.py --verbose report --ini {INIFILE} --out-dir {djerba_outdir} --no-archive --pdf")
-#system("read wait")
+system("read wait")
 exit(0)
