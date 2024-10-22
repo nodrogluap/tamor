@@ -106,17 +106,25 @@ For the *seventh* column, the list of tissue site numbers for the version of PCG
 ```
 
 ## config/rna_samples.tsv
-Has 5 columns to be specified:
+Has 6 columns to be specified:
 
 ```
-subjectID<tab>tumorRNASampleID<tab>matchedTumorDNASampleID<tab>ProjectID<tab>ImmuneDeconvCancerType
+subjectID<tab>
+tumorRNASampleID<tab>
+matchedTumorDNASampleID<tab>
+ProjectID<tab>
+ImmuneDeconvCancerType<tab>
+CohortNameForExpressionAnalysis
 ```
 
 If you have both normal and tumor RNA samples available, it is critical to list the tumor RNA sample first.  
 The first RNA sample listed in the file is the one that will be included on the PCGR report for ``matchedTumorDNASampleID``,
 and typically you want to report out regarding the tumor RNA.
 
-The last column, [ImmuneDeconv](https://omnideconv.org/immunedeconv/articles/immunedeconv.html)CancerType, is 
+The last column ``CohortNameForExpressionAnalysis`` is used for Djerba cohort reporting, e.g. to identify Z-score and percentile 
+rank outliers genes in this sample compared to others being processed at the same time and nominally of the same cancer/tissue type as defined by the user.
+
+The fifth column, [ImmuneDeconv](https://omnideconv.org/immunedeconv/articles/immunedeconv.html)CancerType, is 
 one of the following (pick what seems closest if no exact match is available):
 
 ```
