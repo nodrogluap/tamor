@@ -15,7 +15,6 @@ report: "report/workflow.rst"
 
 # Roughly in order of rule execution
 include: "rules/resources.smk"
-include: "rules/msi.smk"
 include: "rules/metadata.smk"
 include: "rules/fastq_list.smk"
 include: "rules/bcl_conversion.smk"
@@ -31,7 +30,6 @@ rule all:
 	# Also generate a PCGR user-friendly variant report, which will require the germline variant calls as well in another rule.
 	input:
 		config["ref_fasta"],
-		"resources/msisensor-pro-scan.tsv",
 		expand(config["output_dir"]+"/{project_name}/{subject}/rna/{sample_combo}.rna.quant.genes.hugo.tpm.txt", zip, project_name=get_rna_projects(), subject=get_rna_subjects(), sample_combo=get_rna_sample_keys()),
 		expand(config["output_dir"]+"/{project_name}/{subject}/rna/{sample_combo}.rna.quant.genes.fpkm.txt", zip, project_name=get_rna_projects(), subject=get_rna_subjects(), sample_combo=get_rna_sample_keys()),
 		expand(config["output_dir"]+"/{project_name}/{subject}/rna/{sample_combo}.rna.fusion_candidates.features.csv", zip, project_name=get_rna_projects(), subject=get_rna_subjects(), sample_combo=get_rna_sample_keys()),

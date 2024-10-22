@@ -1,4 +1,5 @@
 #include: "metadata.smk"
+#include: "msi.smk"
 #include: "fastq_list.smk"
 
 configfile: "config/config.yaml"
