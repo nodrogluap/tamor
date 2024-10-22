@@ -33,11 +33,11 @@ attributes = research
 [summary]
 attributes = research
 
-[genomic_landscape]
-attributes = research
-purity = {{ purity }}
-msi_file = {{ msi_file_path }}
-hrd_path = {{ hrd_file_path }}
+#[genomic_landscape]
+#attributes = research
+#purity = {{ purity }}
+#msi_file = {{ msi_file_path }}
+#hrd_path = {{ hrd_file_path }}
 
 [expression_helper]
 attributes = research
