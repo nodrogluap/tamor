@@ -48,7 +48,7 @@ pip install snakemake-executor-plugin-cluster-generic
 2. Download the Tamor code:
 
 ```bash
-git clone https://github.com/nodrogluap/tamor
+git clone --recurse-submodules https://github.com/nodrogluap/tamor
 cd tamor
 ```
 
