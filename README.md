@@ -79,7 +79,8 @@ This can take a few hours depending on your Internet connection speed, and requi
 Once either the test data or your own (see [Configuration section below](#configuration)) is ready, you can run Snakemake to generate the 
 [BAM](https://en.wikipedia.org/wiki/Binary_Alignment_Map) files, 
 [VCF](https://en.wikipedia.org/wiki/Variant_Call_Format) files, and 
-[CPSR/PCGR reports](https://sigven.github.io/pcgr/index.html).
+[CPSR/PCGR reports](https://sigven.github.io/pcgr/index.html). 
+Generation of Djerba reports is dependent on you providing a valid API token linked to your [registered OncoKB account](https://www.oncokb.org/account/register).
 
 On a single-user system:
 
