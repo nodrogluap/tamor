@@ -60,9 +60,9 @@ rule dragen_somatic_snv_sv_and_cnv_calls:
                 has_UMIs = germline_library_info[0]
                 germline_sample_libraries = germline_library_info[1]
                 has_pcr_duplicates = get_tumor_has_pcr_duplicates(wildcards)
-                print("Somatic using UMIs: " + str(has_UMIs))
-                print("Marking somatic PCR duplicates: " + str(has_pcr_duplicates))
-                print("Somatic libraries: " + ", ".join(germline_sample_libraries))
+                print("Using UMIs: " + str(has_UMIs))
+                print("Marking PCR duplicates: " + str(has_pcr_duplicates))
+                print("Germline libraries: " + ", ".join(germline_sample_libraries))
                 this_sample_germline_only_fastq_list_csv = make_sample_fastq_list_csv(wildcards, False, False, germline_sample_libraries)
 
                 tumor_library_info = identify_libraries(False, True, wildcards)
