@@ -67,7 +67,7 @@ rule dragen_somatic_snv_sv_and_cnv_calls:
 
                 tumor_library_info = identify_libraries(False, True, wildcards)
                 if germline_library_info[0] != tumor_library_info[0]:
-                        raise Exception("Tumor and germline libraries for paired samples "+tumor+" and "+normal+" have incompatible UMI status (must both be true or both false), aborting.")
+                        raise Exception("Tumor and germline libraries for paired samples "+wildcards.tumor+" and "+wildcards.normal+" have incompatible UMI status (must both be true or both false), aborting.")
                 tumor_sample_libraries = tumor_library_info[1]
                 print("Tumor libraries: " + ", ".join(tumor_sample_libraries))
                 this_sample_tumor_only_fastq_list_csv = make_sample_fastq_list_csv(wildcards, False, True, tumor_sample_libraries)
