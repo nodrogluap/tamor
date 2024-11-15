@@ -50,6 +50,11 @@ def make_sample_fastq_list_csv(wildcards, is_rna, is_tumor, sample_libraries):
                                                 # and dragen enforces a single sample name in the source BAM. So replace any existing name for both RGSM and RGLB.
                                                 line[1] = target_sample
                                                 line[2] = target_sample
+                                                # Replace old file system paths with /bulk/chgi_analysis
+                                                line[4] = line[4].replace("/tiered/chgi_data/analysis","/bulk/chgi_analysis")
+                                                line[4] = line[4].replace("/export/chgi_data/analysis","/bulk/chgi_analysis")
+                                                line[5] = line[5].replace("/tiered/chgi_data/analysis","/bulk/chgi_analysis")
+                                                line[5] = line[5].replace("/export/chgi_data/analysis","/bulk/chgi_analysis")
                                                 # We may also have rewritten the .fastq.gz as a .ora file to save room. In that case we need to write the .ora name to the new list
                                                 if not os.path.isfile(line[4]):
                                                         orafile = line[4].replace(".fastq.gz",".fastq.ora")

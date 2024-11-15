@@ -117,17 +117,17 @@ def get_tcga_code(wildcards):
         return dna_paired_samples["_".join((wildcards.subject, wildcards.tumor, wildcards.normal))][7]
 
 def get_normal_contains_some_tumor(wildcards):
-        return dna_paired_samples["_".join((wildcards.subject, wildcards.tumor, wildcards.normal))][1]
+        return dna_paired_samples["_".join((wildcards.subject, wildcards.tumor, wildcards.normal))][1] == 'True'
 
 def get_tumor_has_pcr_duplicates(wildcards):
-        return dna_paired_samples["_".join((wildcards.subject, wildcards.tumor, wildcards.normal))][4]
+        return dna_paired_samples["_".join((wildcards.subject, wildcards.tumor, wildcards.normal))][4] == 'True'
 
 # In theory since we record the PCR status of the normal on multiple lines of the config file, we will use the first instance encountered as correct.
 # TODO: enforce PCR status to be the same across all DNA config lines a normal appears on?
 def get_normal_has_pcr_duplicates(wildcards):
 	for key, tuplevalues in dna_paired_samples.items():
 		if key.startswith(wildcards.subject+"_") and key.endswith("_"+wildcards.normal):
-        		return tuplevalues[5]
+        		return tuplevalues[5] == 'True'
 	return False
 
 

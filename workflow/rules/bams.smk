@@ -12,7 +12,7 @@ def get_normal_bam(wildcards):
         return get_file(wildcards.project, wildcards.subject, wildcards.normal, False, ".dna.germline.bam")
 
 def get_tumor_bam(wildcards):
-        return get_file(wildcards.project, wildcards.subject, wildcards.tumor, False, "_"+wildcards.normal+".dna.somatic.bam")
+        return get_file(wildcards.project, wildcards.subject, wildcards.tumor, False, "_"+wildcards.normal+".dna.somatic_tumor.bam")
 
 def get_tumor_rna_bam(wildcards):
         return get_file(wildcards.project, wildcards.subject, wildcards.tumor, True, ".rna.bam")

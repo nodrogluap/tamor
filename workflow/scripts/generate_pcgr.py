@@ -66,7 +66,8 @@ with open(config["dna_paired_samples_tsv"], 'r') as data_in:
 # Somatic small nucleotide variants reformatting
 tf=tempfile.NamedTemporaryFile(suffix=".vcf")
 SNVFILE=tf.name
-system(f"gzip -cd {args.snv} | perl -pe 'if(/^##INFO=<ID=DP,/){{print \"##INFO=<ID=TDP,Number=1,Type=Integer,Description=\\\"Read depth of alternative allele in the tumor\\\">\\n##INFO=<ID=TVAF,Number=1,Type=Float,Description=\\\"Alternative allele proportion of reads in the tumor\\\">\\n\"}}($tdp, $tvaf) = /\\t[01][]\\/|][01]:\\d+.?\\d*:\\d+,(\\d+):([0-9]+\\.[0-9]*):\\S+?$/;s/\\tDP=/\\tTDP=$tdp;TVAF=$tvaf;DP=/; s/;SOMATIC//' > {SNVFILE}")
+# Filtering calls where GT is ./. for both germline and tumour
+system(f"gzip -cd {args.snv} | perl -pe 'if(/^##INFO=<ID=DP,/){{print \"##INFO=<ID=TDP,Number=1,Type=Integer,Description=\\\"Read depth of alternative allele in the tumor\\\">\\n##INFO=<ID=TVAF,Number=1,Type=Float,Description=\\\"Alternative allele proportion of reads in the tumor\\\">\\n\"}}($tdp, $tvaf) = /\\t[01][]\\/|][01]:\\d+.?\\d*:\\d+,(\\d+):([0-9]+\\.[0-9]*):\\S+?$/;s/\\tDP=/\\tTDP=$tdp;TVAF=$tvaf;DP=/; s/;SOMATIC//; next if m(\t\./\.\S*\t\./\.)' > {SNVFILE}")
 # Only keeping the original to avoid FileNotFoundError when temp file automatically cleaned up by Snakemake after rule application.
 system(f"bgzip -c {SNVFILE} > {SNVFILE}.gz")
 system(f"tabix {SNVFILE}.gz")
