@@ -31,10 +31,10 @@ rule dragen_germline_snv_sv_and_cnv_calls:
                 
                 dragen_cmd = "dragen -r "+config["ref_genome"]+" --ora-reference "+config["ref_ora"]+" --enable-map-align true --enable-map-align-output true --enable-bam-indexing true --fastq-list {this_sample_only_fastq_list_csv} --fastq-list-all-samples true --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.normal}.dna.germline --enable-hla true --intermediate-results-dir "+ config["temp_dir"]+" -f"+" --enable-variant-caller true --enable-cnv true --cnv-enable-self-normalization true --enable-sv true"
                 
-                if has_pcr_duplicates == 'True' and not has_UMIs:
+                if has_pcr_duplicates and not has_UMIs:
                         dragen_cmd = dragen_cmd + " --enable-duplicate-marking true"
                 if has_UMIs:
-                        normal_bam = get_normal_bam
+                        normal_bam = get_normal_bam(wildcards)
                         print("Germline sample has UMI's, using bams instead of fastqs as variant calling input")
                         # only run alignment if germline bam does not exist?
                         if(not os.path.exists(normal_bam)):
@@ -92,11 +92,11 @@ rule dragen_somatic_snv_sv_and_cnv_calls:
 
                 dragen_cmd = "dragen -r "+config["ref_genome"]+" --ora-reference "+config["ref_ora"]+" --enable-map-align true --enable-map-align-output true --enable-bam-indexing true --fastq-list {this_sample_germline_only_fastq_list_csv} --fastq-list-all-samples true --tumor-fastq-list {this_sample_tumor_only_fastq_list_csv} --tumor-fastq-list-all-samples true --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic --enable-hla true --intermediate-results-dir "+config["temp_dir"]+" -f"+" --enable-variant-caller true --enable-cnv true --cnv-use-somatic-vc-baf true --cnv-normal-cnv-vcf {input.germline_cnv} --enable-sv true --vc-enable-unequal-ntd-errors=true --vc-enable-trimer-context=true --msi-command tumor-normal --msi-coverage-threshold " + str(config["msi_min_coverage"]) + " --msi-microsatellites-file {input.msi_sites} --enable-hrd true --enable-variant-annotation=true --variant-annotation-data=resources/nirvana --variant-annotation-assembly=GRCh38 --enable-tmb true"
 
-                if has_pcr_duplicates == 'True' and not tumor_has_UMIs:                                                                                                                                                                                                                       
+                if has_pcr_duplicates and not tumor_has_UMIs:                                                                                                                                                                                                                       
                         dragen_cmd = dragen_cmd + " --enable-duplicate-marking true"
 
                 if germline_has_UMIs or tumor_has_UMIs:
-                        tumor_bam = get_tumor_bam
+                        tumor_bam = get_tumor_bam(wildcards)
                         print("UMIs detected, using bams instead of fastqs as variant calling input")
                         # only run alignment if tumor bam does not exist?
                         if(not os.path.exists(tumor_bam)):
