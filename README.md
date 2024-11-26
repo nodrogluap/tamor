@@ -43,7 +43,7 @@ This is recommended by Illumina support, but not part of the Dragen documentatio
 1. Create a mamba or conda environment for the latest Snakemake (8.something) and utilities:
 
 ```bash 
-mamba create -c conda-forge -c bioconda -n snakemake snakemake git git-lfs wget
+mamba create -c conda-forge -c bioconda -n snakemake snakemake git git-lfs wget conda=24.7.1
 mamba activate snakemake
 pip install snakemake-executor-plugin-cluster-generic
 ```
