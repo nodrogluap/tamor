@@ -28,7 +28,7 @@ with open("config/config.yaml", "r") as f:
     config = yaml.safe_load(f)
 
 # Get tumor purity and ploidy estimates from Dragen CNV caller
-tumor_purity = 0
+tumor_purity = 0.1
 tumor_ploidy = 2
 tumor_cnv_vcf = f"{args.outdir}/{args.project}/{args.subject}/{args.subject}_{args.tumor}_{args.normal}.dna.somatic.cnv.vcf.gz"
 # In the VCF headers from Dragen CNV calls, there is something like this:
@@ -39,7 +39,7 @@ with gzip.open(tumor_cnv_vcf, 'rt') as data_in:
     for line in data_in:
         mpurity = re.search("##EstimatedTumorPurity=(\\S+)", line)
         mploidy = re.search("##OverallPloidy=(\\S+)", line)
-        if mpurity:
+        if mpurity and mpurity.group(1) != "NA":
             tumor_purity = mpurity.group(1)
         elif mploidy:
             tumor_ploidy = mploidy.group(1)
@@ -66,8 +66,7 @@ with open(config["dna_paired_samples_tsv"], 'r') as data_in:
 # Somatic small nucleotide variants reformatting
 tf=tempfile.NamedTemporaryFile(suffix=".vcf")
 SNVFILE=tf.name
-# Filtering calls where GT is ./. for both germline and tumour
-system(f"gzip -cd {args.snv} | perl -pe 'if(/^##INFO=<ID=DP,/){{print \"##INFO=<ID=TDP,Number=1,Type=Integer,Description=\\\"Read depth of alternative allele in the tumor\\\">\\n##INFO=<ID=TVAF,Number=1,Type=Float,Description=\\\"Alternative allele proportion of reads in the tumor\\\">\\n\"}}($tdp, $tvaf) = /\\t[01][]\\/|][01]:\\d+.?\\d*:\\d+,(\\d+):([0-9]+\\.[0-9]*):\\S+?$/;s/\\tDP=/\\tTDP=$tdp;TVAF=$tvaf;DP=/; s/;SOMATIC//; next if m(\t\./\.\S*\t\./\.)' > {SNVFILE}")
+system(f"gzip -cd {args.snv} | perl -pe 'if(/^##INFO=<ID=DP,/){{print \"##INFO=<ID=TDP,Number=1,Type=Integer,Description=\\\"Read depth of alternative allele in the tumor\\\">\\n##INFO=<ID=TVAF,Number=1,Type=Float,Description=\\\"Alternative allele proportion of reads in the tumor\\\">\\n\"}}($tdp, $tvaf) = /\\t[01][]\\/|][01]:\\d+.?\\d*:\\d+,(\\d+):([0-9]+\\.[0-9]*):\\S+?$/;s/\\tDP=/\\tTDP=$tdp;TVAF=$tvaf;DP=/; s/;SOMATIC//' > {SNVFILE}")
 # Only keeping the original to avoid FileNotFoundError when temp file automatically cleaned up by Snakemake after rule application.
 system(f"bgzip -c {SNVFILE} > {SNVFILE}.gz")
 system(f"tabix {SNVFILE}.gz")
@@ -78,7 +77,9 @@ CNAFILE=tf2.name
 cna_header = "Chromosome\tStart\tEnd\tnMajor\tnMinor\n"
 with open(CNAFILE, "w") as text_file:
         text_file.write(cna_header)
-system(f"gzip -cd {args.cnv} | perl -ane 'next if /^#/ or not /\tPASS\t/; ($end) = /END=(\\d+)/; @d = split /:/, $F[$#F]; $d[2] = 1 if $d[2] == \".\"; print join(\"\\t\", $F[0], $F[1], $end, $d[1]-$d[2], $d[2]),\"\\n\"' >> {CNAFILE}")
+# Added special case for degenerate diploid CNV calling where fields are different for depth
+system(f"gzip -cd {args.cnv} | perl -ane 'next if /^#/ or not /\tPASS\t/; ($end) = /END=(\\d+)/; @d = split /:/, $F[$#F]; $d[2] = 1 if $d[2] == \".\"; if(/GT:SM:SD:/){{$major=int($d[2]/$d[1]);$minor=int($d[1])}}else{{$major=$d[1]-$d[2];$minor=$d[2]}} print join(\"\\t\", $F[0], $F[1], $end, $major, $minor),\"\\n\"' >> {CNAFILE}")
+system(f"cp {CNAFILE} cnv_debug")
 
 # RNA expression data reformatting
 tumor_expr_tpm_tsv = f"{args.outdir}/{args.project}/{args.subject}/rna/{args.subject}_{rna_sample}.rna.quant.sf"
