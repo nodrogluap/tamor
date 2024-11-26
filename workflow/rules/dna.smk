@@ -30,7 +30,7 @@ rule dragen_germline_snv_sv_and_cnv_calls:
                 print("Germline using UMIs: " + str(has_UMIs))
                 
                 dragen_cmd = "dragen -r "+config["ref_genome"]+" --ora-reference "+config["ref_ora"]+" --enable-map-align true --enable-map-align-output true --enable-bam-indexing true --fastq-list {this_sample_only_fastq_list_csv} --fastq-list-all-samples true --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.normal}.dna.germline --enable-hla true --intermediate-results-dir "+ config["temp_dir"]+" -f"+" --enable-variant-caller true --enable-cnv true --cnv-enable-self-normalization true --enable-sv true"
-                
+
                 if has_pcr_duplicates and not has_UMIs:
                         dragen_cmd = dragen_cmd + " --enable-duplicate-marking true"
                 if has_UMIs:
@@ -107,26 +107,13 @@ rule dragen_somatic_snv_sv_and_cnv_calls:
                         if(not os.path.exists(tumor_bam)):
                                 raise Exception("Missing tumor bam for UMI sample "+wildcards.tumor+" cannot proceed with rule dragen_somatic_snv_sv_and_cnv_calls")
 
-                        # using --vc-enable-umi-solid, unclear what the difference is with --vc-enable-umi-liquid
-                        dragen_cmd = "dragen -r "+config["ref_genome"]+" --enable-map-align false --bam-input {input.germline_bam} --tumor-bam-input "+tumor_bam+" --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic --intermediate-results-dir "+config["temp_dir"]+" -f"+" --enable-variant-caller true --enable-cnv true --cnv-use-somatic-vc-baf true --cnv-normal-cnv-vcf {input.germline_cnv} --enable-sv true --vc-enable-unequal-ntd-errors=true --vc-enable-trimer-context=true --msi-command tumor-normal --msi-coverage-threshold " + str(config["msi_min_coverage"]) + " --msi-microsatellites-file {input.msi_sites} --enable-hrd true --enable-variant-annotation=true --variant-annotation-data=resources/nirvana --variant-annotation-assembly=GRCh38 --enable-tmb true"
+                        dragen_cmd = "dragen -r "+config["ref_genome"]+" --enable-map-align false --bam-input {input.germline_bam} --tumor-bam-input {tumor_bam} --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic --intermediate-results-dir "+config["temp_dir"]+" -f"+" --enable-variant-caller true --enable-cnv true --cnv-use-somatic-vc-baf true --cnv-normal-cnv-vcf {input.germline_cnv} --enable-sv true --vc-enable-unequal-ntd-errors=true --vc-enable-trimer-context=true --msi-command tumor-normal --msi-coverage-threshold " + str(config["msi_min_coverage"]) + " --msi-microsatellites-file {input.msi_sites} --enable-hrd true --enable-variant-annotation=true --variant-annotation-data=resources/nirvana --variant-annotation-assembly=GRCh38 --enable-tmb true"
                         if has_tumor_in_normal:
-                                dragen_cmd = dragen_cmd + ' --vc-enable-umi-liquid'
+                                dragen_cmd = dragen_cmd + ' --vc-enable-umi-liquid true'
                         else:
-                                dragen_cmd = dragen_cmd + ' --vc-enable-umi-solid'
+                                dragen_cmd = dragen_cmd + ' --vc-enable-umi-solid true'
 
                 if has_tumor_in_normal:
                         dragen_cmd = dragen_cmd +  " --sv-enable-liquid-tumor-mode true --sv-tin-contam-tolerance "+str(config["tumor_in_normal_tolerance_proportion"])
 
-                
                 shell(dragen_cmd)
-                
-                shell("mv "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/sv/results/variants/somaticSV.vcf.gz "+
-                            config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.sv.vcf.gz; "+
-                      "mv "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/sv/results/variants/somaticSV.vcf.gz.tbi "+
-                            config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.sv.vcf.gz.tbi")
-                
-                # remove surplus germline bams with misleading names
-                shell("mv "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.bam "+
-                            config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/to_remove/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.germline.bam; "+
-                      "mv "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.bam.bai "+
-                            config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/to_remove/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.germline.bam.bai")
