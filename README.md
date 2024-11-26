@@ -45,7 +45,7 @@ This is recommended by Illumina support, but not part of the Dragen documentatio
 ```bash 
 mamba create -c conda-forge -c bioconda -n snakemake snakemake git git-lfs wget conda=24.7.1
 mamba activate snakemake
-pip install snakemake-executor-plugin-cluster-generic
+pip install snakemake-executor-plugin-slurm
 ```
 2. Download the Tamor code:
 
@@ -92,7 +92,7 @@ Otherwise, on a multi-user system, it is imperative to use a queuing system such
 Once slurm is installed and configured on your Dragen system, Snakemake support for slurm is enabled by invoking like so:
   
 ```bash
-snakemake --use-conda -j 1 --executor cluster-generic --cluster-generic-submit-cmd sbatch
+snakemake --use-conda -j 1 --executor slurm
 ```
 
 Regardless of the invocation method used above, the default outputs are in a directory called ``results/pcgr/projectID/subjectID_tumorSampleID_germlineSampleID``. 
