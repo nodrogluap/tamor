@@ -1,4 +1,21 @@
 [core]
+archive_name = djerba
+archive_url = http://admin:djerba123@10.30.133.78:5984
+attributes =
+configure_priority = 100
+depends_configure =
+depends_extract =
+#document_config = document_config.json
+extract_priority = 100
+render_priority = 100
+report_id = __DJERBA_NULL__
+report_version = 1
+#input_params = input_params.json
+
+[report_title]
+attributes = research
+
+[patient_info]
 
 [input_params_helper]
 assay = WGTS
@@ -12,11 +29,20 @@ sample_type = {{ fresh_frozen }}
 site_of_biopsy = {{ site }}
 study = {{ project }}
 tcgacode = {{ tcgacode }}
-
-[report_title]
 attributes = research
+configure_priority = 10
+depends_configure =
+depends_extract =
+extract_priority = 10
 
 [provenance_helper]
+attributes =
+configure_priority = 50
+depends_configure =
+depends_extract =
+donor = __DJERBA_NULL__
+extract_priority = 50
+project = __DJERBA_NULL__
 provenance_input_path = {{ provenance_file_path }}
 tumour_id = {{ tumor_dna }}
 sample_name_aux = {{ tumor_rna }}
@@ -24,27 +50,77 @@ sample_name_tumour = {{ tumor_dna }}
 normal_id = {{ normal }}
 sample_name_normal =  {{ normal }}
 
-[case_overview]
-attributes = research
+[gene_information_merger]
+attributes = research,supplementary
+configure_priority = 1100
+depends_configure =
+render_priority = 1100
 
 [treatment_options_merger]
+attributes = research,supplementary
+configure_priority = 300
+depends_configure =
+render_priority = 300
+
+[case_overview]
 attributes = research
+assay = WGTS
+assay_description = __DJERBA_NULL__
+attributes = clinical
+configure_priority = 200
+depends_configure = provenance_helper
+depends_extract =
+donor = __DJERBA_NULL__
+extract_priority = 200
+
+[genomic_landscape]
+attributes = research
+purity = {{ purity }}
+msi_file = {{ msi_file_path }}
+hrd_path = {{ hrd_file_path }}
+ctdna_file = {{ snp_count_file_path }}
+oncokb cache = resources/oncokb_cache
+update cache = False
+apply cache = False
+tumour_id = {{ tumor_dna }}
+
+[sample]
+attributes = clinical
+callability = {{ callability_pct }}
+configure_priority = 500
+depends_configure =
+depends_extract =
+extract_priority = 500
+mean_coverage = 100
+oncotree_code = __DJERBA_NULL__
+ploidy = __DJERBA_NULL__
+purity = {{ purity }}
+render_priority = 500
+sample_type = __DJERBA_NULL__
 
 [summary]
 attributes = research
+configure_priority = 400
+depends_configure =
+depends_extract =
+extract_priority = 400
+render_priority = 400
+summary_file = __DJERBA_NULL__
 
-#[genomic_landscape]
-#attributes = research
-#purity = {{ purity }}
-#msi_file = {{ msi_file_path }}
-#hrd_path = {{ hrd_file_path }}
-
-[expression_helper]
+[supplement.body]
 attributes = research
-tcga_data = resources/tcga
-enscon = resources/ensemble_conversion_hg38.txt
-gep_reference = {{ cohort_rna_file_path }}
-rsem_genes_results = {{ rna_file_path }}
+configure_priority = 400
+depends_configure =
+depends_extract =
+extract_priority = 400
+render_priority = 400
+summary_file = __DJERBA_NULL__
+
+[wgts.cnv_purple]
+attributes = research
+oncokb cache = resources/oncokb_cache
+update cache = True 
+purple_zip = {{ cnv_file_path }}
 
 [wgts.snv_indel]
 attributes = research
@@ -52,19 +128,15 @@ oncokb cache = resources/oncokb_cache
 update cache = True
 maf_path = {{ maf_file }}
 
-[wgts.cnv_purple]
-attributes = research
-oncokb cache = resources/oncokb_cache
-update cache = True 
-purple_zip = {{ cnv_file_path }}
- 
 #[fusion]
 #mavis_path = results/PR-CY-SAR-01010032-5715-T1.mavis_summary.tab
 #arriba_path = results/PR-CY-SAR-01010032-5715-T1.arriba_fusions.tsv
 #entrez conv path = resources/entrez_conversion.txt
 #minimum fusion reads = 20
 
-[gene_information_merger]
-
-[supplement.body]
+[expression_helper]
 attributes = research
+tcga_data = resources/tcga
+enscon = resources/ensemble_conversion_hg38.txt
+gep_reference = {{ cohort_rna_file_path }}
+rsem_genes_results = {{ rna_file_path }}
