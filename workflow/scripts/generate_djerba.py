@@ -11,6 +11,7 @@ import sys
 import datetime
 import zipfile
 import glob
+import json
 from pathlib import Path
 from os import system
 # Jinja2 for template-filling the config.ini for Djerba
@@ -57,6 +58,7 @@ tamor["tumor_dna"] = args.tumor
 tamor["normal"] = args.normal
 tamor["date"] = datetime.date.today()
 # TODO
+tamor["callability_pct"] = "NA"
 tamor["cancer_type"] = "NA"
 tamor["fresh_frozen"] = "NA"
 tamor["site"] = "NA"
@@ -72,12 +74,74 @@ tamor["provenance_file_path"] = BLANK_GZIP_FILE+".gz"
 # Biomarker outputs from Dragen for microsatellite instability and homologous recombination deficiency
 msi = tempfile.NamedTemporaryFile(suffix=".txt")
 dragen_msi = f"{args.outdir}/{args.project}/{args.subject}/{args.subject}_{args.tumor}_{args.normal}.dna.somatic.microsat_output.json"
-#TODO transform MSI from Dragen form to that expected by Djerba
+# Transform MSI from Dragen format to that expected by Djerba
 tamor["msi_file_path"] = msi.name
+# The MSI core is the percentage of sampled microsattelite sites that contain unstable copy number.
+# Dragen suggests 20 as an MSI threshold for the TSO500 assay, but TBD for WGS. 
+# Djerba uses 15 with the assumed output of msisensor, so we'll go with that for now.
+# Derba only reads the first line of the msisensor file, which presumably is the highest ranked option.
+# Djerba also has a threshold of 5 for stable, with in between being inconclusive.
+# By default let's say it's inconclusive.
+pct_unstable = 10
+with open(dragen_msi, 'r') as msi_in:
+    data = json.load(msi_in)
+    if data["ResultIsValid"]:
+        pct_unstable = data["PercentageUnstableSites"]
+    with open(msi.name, 'w') as msi_tsv:
+        msi_tsv.write(f"1\t300\t{pct_unstable}\t3.00\n")
+
+# Transform HRD from Dragen format to that expected by Djerba
 hrd = tempfile.NamedTemporaryFile(suffix=".txt")
-#TODO transform HRD from Dragen formt top tht expected by Djerba
 dragen_hrd = f"{args.outdir}/{args.project}/{args.subject}/{args.subject}_{args.tumor}_{args.normal}.dna.somatic.hrdscore.csv"
 tamor["hrd_file_path"] = hrd.name
+snp_count = tempfile.NamedTemporaryFile(suffix=".txt")
+# Djerba expects a probability (from the HRDetect tool), but we have a score. Need to convert the score into either pass or fail, which is 70% for the Djerba plugin.
+#
+# To recapitulate Myriad Genetic's HRD/HR competent status, the threshold is 42 (no joke!), which corresponds to the 95th percentile of 
+# control samples' HRD score. Though evidence shows effectness in some patients with scores down to 33 (doi:10.1007/s10549-023-07046-3) with
+# obviously larger overlap with non-responders to HRD treatment (e.g. cisplatin).
+# This threshold of 42 is the unweighted sum of (per doi:10.1158/1078-0432.CCR-15-2477):
+# TAI [telomeric allelic imbalance], LST [large-scale state transitions], and 
+# LOH [loss of heterozygosity] were calculated as described by Timms et al. [doi:10.1186/s13058-014-0475-x], which includes modifications from the initial reporting of 
+# TAI and LST calculations. For samples analyzed by MIP [SNP microarray] assay, allele intensities from CEL files were used to generate 
+# allelic imbalance profiles. A hidden Markov model (HMM) was used to define regions and breakpoints with these profiles. Allele 
+# specific copy number (ASCN) for each of the regions was determined using an algorithm similar to that described by Popova et al. [doi:10.1158/0008-5472.CAN-12-1470]. 
+# TAI (number of regions of allelic imbalance that extend to one of the subtelomeres but do not cross the centromere) and 
+# LST (number of break points between regions longer than 10 Mb after filtering out regions shorter than 3 Mb) scores were 
+# calculated using the allelic imbalance profiles, while LOH (number of subchromosomal LOH regions longer than 15 Mb) 
+# was calculated using ASCN.
+# Worth noting that the HRD score by this definition is highly dependent on accurate estimate of the tumor purity to generate accurate ASCNs.
+# The Myriad paper does not address this at all, but major effects on HRD classification are noted in [doi: 10.1016/j.tranon.2023.101706]:
+# "In summary, our recently published in silico analysis [doi:10.1038/s41698-022-00276-6] and the study results presented here show a significant influence of tumor purity 
+# and the utilized bioinformatic methods, algorithms and parameters on HRD scores and HRD classification. Since these influences can lead to a 
+# shift of HRD scores and a change of HRD classification that can directly affect patient management, rigorous standardization is critical 
+# and also urges commercial providers of assays used in approval trials to disclose the corresponding preanalytical and bioinformatic settings."
+with open(dragen_hrd, 'r') as hrd_in:
+    csv_reader = csv.reader(hrd_in, delimiter=",")
+    next(csv_reader) # skip header
+    row = next(csv_reader)
+    if int(row[4]) >= 42:
+        p = 0.95
+    else:
+        p = 0.05
+    with open(hrd.name, 'w') as hrd_json:
+        hrd_json.write(f'{{"sample_name": "{args.tumor}",\n' +
+          '"QC": "PASS",\n' +
+          '"hrdetect_call": {{' +
+          '"Probability.w": [{p}, {p}, {p}] }} }}\n')
+
+# Transform SNP count info to that expected by Djerba (just a single number in a file)
+dragen_snv_count = f"{args.outdir}/{args.project}/{args.subject}/{args.subject}_{args.tumor}_{args.normal}.dna.somatic.vc_metrics.csv"
+with open(dragen_snv_count, 'r') as data_in:
+    csv_reader = csv.reader(data_in, delimiter=",")
+    for row in csv_reader:
+        if row[0] == "VARIANT CALLER POSTFILTER" and row[2] == "Total":
+            total_count = row[3]
+            with open(snp_count.name, 'w') as snp_txt:
+                snp_txt.write(total_count)
+
+
+tamor["snp_count_file_path"] = snp_count.name
 
 # Get tumor purity and ploidy estimates from Dragen CNV caller
 tamor["purity"] = 0
@@ -152,7 +216,7 @@ os.environ["DJERBA_RUN_DIR"] = os.environ["DJERBA_BASE_DIR"] + "/data"
 # Somatic copy number variants reformatting, to resemble Purple's output.
 tmpdir = tempfile.TemporaryDirectory(prefix="djerba")
 os.environ["DJERBA_PRIVATE_DIR"] = tmpdir.name
-os.environ["PATH"] = os.environ["PATH"]+":"+os.getcwd()+"/workflow/submodules/oncokb-annotator" # so that Djerba can find OncoKB Annotator
+os.environ["PATH"] = os.environ["PATH"]+":"+os.getcwd()+"/workflow/submodules/oncokb-annotator:"+os.getcwd()+"/workflow/submodules/djerba/src/bin" # so that Djerba can find OncoKB Annotator
 # Djerba is looking for four files in the zip:
 # *purple.purity.range.tsv
 # *purple.cnv.somatic.tsv
