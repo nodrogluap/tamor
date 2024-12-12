@@ -122,3 +122,34 @@ rule dragen_somatic_snv_sv_and_cnv_calls:
                             config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.sv.vcf.gz; "+
                       "mv "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/sv/results/variants/somaticSV.vcf.gz.tbi "+
                             config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.sv.vcf.gz.tbi")
+
+rule dragen_germline_sv_fusions:
+        priority: 98
+        input:
+                germline_sv=config["output_dir"]+'/{project}/{subject}/{subject}_{normal}.dna.germline.sv.vcf.gz'
+        output:
+                dna_fusions=config["output_dir"]+'/{project}/{subject}/{subject}_{normal}.dna.germline.sv.fusion_candidates.features.csv'
+        conda:
+                "../envs/svtools.yaml"
+        shell:
+                """
+                workflow/scripts/annotate_dna_sv.sh {input.germline_sv} {config[temp_dir]} {config[ref_exon_annotations]}
+                workflow/scripts/format_sv_annotations.py {output.dna_fusions} {wildcards.subject} {config[temp_dir]}
+                rm {config[temp_dir]}/temp.sorted*
+                """
+
+rule dragen_somatic_sv_fusions:
+        priority: 95
+        input:
+                config["output_dir"]+'/{project}/{subject}/{subject}_{normal}.dna.germline.sv.fusion_candidates.features.csv',
+                somatic_sv=config["output_dir"]+'/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.sv.vcf.gz'
+        output:
+                dna_fusions=config["output_dir"]+'/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.sv.fusion_candidates.features.csv'
+        conda:
+                "../envs/svtools.yaml"
+        shell:
+                """
+                workflow/scripts/annotate_dna_sv.sh {input.somatic_sv} {config[temp_dir]} {config[ref_exon_annotations]}
+                workflow/scripts/format_sv_annotations.py {output.dna_fusions} {wildcards.subject} {config[temp_dir]}
+                rm {config[temp_dir]}/temp.sorted*
+                """

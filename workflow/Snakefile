@@ -38,5 +38,6 @@ rule all:
 		expand(config["output_dir"]+"/{project_name}/{subject}/{sample_combo}.dna.somatic.cnv.vcf.gz", zip, project_name=get_dna_projects(), subject=get_dna_subjects(), sample_combo=get_dna_sample_keys()),
 		expand(config["output_dir"]+"/{project_name}/{subject}/{sample_combo}.dna.somatic.sv.vcf.gz", zip, project_name=get_dna_projects(), subject=get_dna_subjects(), sample_combo=get_dna_sample_keys()),
 		#expand(config["output_dir"]+"/{project_name}/{subject}/{sample_combo}.dna.germline_hla.hla.tsv", zip, project_name=get_dna_projects(), subject=get_dna_subjects(), sample_combo=get_dna_sample_keys()),
+		expand(config["output_dir"]+"/{project_name}/{subject}/{sample_combo}.dna.somatic.sv.fusion_candidates.features.csv", zip, project_name=get_dna_projects(), subject=get_dna_subjects(), sample_combo=get_dna_sample_keys()),
 		expand(config["output_dir"]+"/pcgr/{project_name}/{sample_combo}/{subject}.pcgr.grch38.html", zip, project_name=get_dna_projects(), subject=get_dna_subjects(), sample_combo=get_dna_sample_keys()),
 		expand(config["output_dir"]+"/djerba/{project_name}/{sample_combo}/{subject}-v1_report.research.html", zip, project_name=get_dna_projects(), subject=get_dna_subjects(), sample_combo=get_dna_sample_keys())
