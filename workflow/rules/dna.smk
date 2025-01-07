@@ -10,7 +10,8 @@ configfile: "config/config.yaml"
 rule dragen_germline_snv_sv_and_cnv_calls:
         priority: 100
         resources:
-                slurm_extra=config["slurm_extra"]
+                runtime=720,
+                mem_mb=256000 
         input:
                 get_normal_dna_sample_fastq_list_csvs
         output:
@@ -57,7 +58,8 @@ rule dragen_germline_snv_sv_and_cnv_calls:
 rule dragen_somatic_snv_sv_and_cnv_calls:
         priority: 98
         resources:
-                slurm_extra=config["slurm_extra"]
+                runtime=720,
+                mem_mb=256000 
         input:
                 get_normal_dna_sample_fastq_list_csvs,
                 get_tumor_dna_sample_fastq_list_csvs,

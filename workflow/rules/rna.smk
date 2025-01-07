@@ -6,7 +6,8 @@ configfile: "config/config.yaml"
 rule dragen_rna_read_mapping_quant_and_fusion_calls:
         priority: 102
         resources:
-                slurm_extra=config["slurm_extra"]
+                runtime = 720,
+                mem_mb = 256000 
         input:
                 get_rna_sample_fastq_list_csvs,
                 config["ref_genome"]+'/anchored_rna',

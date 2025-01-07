@@ -55,5 +55,3 @@ sequencer: "HiSeq"
 
 output_dir: "results"
 
-# If Tamor is being used with a slurm queue, these arguments will be passed on to sbatch
-slurm_extra: "--gres=fpga:1 --mem-per-cpu=0"

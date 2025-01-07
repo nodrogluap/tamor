@@ -4,7 +4,8 @@ configfile: "config/config.yaml"
 # Will be updated if the reference_fasta Snakemake config.yaml value is updated.
 rule generate_microsatellite_locations_from_genome:
         resources:
-                slurm_extra=config["slurm_extra"]
+                runtime=180,
+                mem_mb=40000 
         input:
                 config["ref_fasta"]
         output:

@@ -6,7 +6,8 @@ configfile: "config/config.yaml"
 rule generate_hla_types:
         priority: 0
         resources:
-                slurm_extra=config["slurm_extra"]
+                runtime=720,
+                mem_mb=256000 
         input:
                 normal_bam=get_normal_bam,
                 tumor_bam=get_tumor_bam
