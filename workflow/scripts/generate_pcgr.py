@@ -66,7 +66,7 @@ with open(config["dna_paired_samples_tsv"], 'r') as data_in:
 # Somatic small nucleotide variants reformatting
 tf=tempfile.NamedTemporaryFile(suffix=".vcf")
 SNVFILE=tf.name
-system(f"gzip -cd {args.snv} | perl -pe 'if(/^##INFO=<ID=DP,/){{print \"##INFO=<ID=TDP,Number=1,Type=Integer,Description=\\\"Read depth of alternative allele in the tumor\\\">\\n##INFO=<ID=TVAF,Number=1,Type=Float,Description=\\\"Alternative allele proportion of reads in the tumor\\\">\\n\"}}($tdp, $tvaf) = /\\t[01][]\\/|][01]:\\d+.?\\d*:\\d+,(\\d+):([0-9]+\\.[0-9]*):\\S+?$/;s/\\tDP=/\\tTDP=$tdp;TVAF=$tvaf;DP=/; s/;SOMATIC//' > {SNVFILE}")
+system(f"gzip -cd {args.snv} | perl -ne 'if(/^##INFO=<ID=DP,/){{print \"##INFO=<ID=TDP,Number=1,Type=Integer,Description=\\\"Read depth of alternative allele in the tumor\\\">\\n##INFO=<ID=TVAF,Number=1,Type=Float,Description=\\\"Alternative allele proportion of reads in the tumor\\\">\\n\"}}($tdp, $tvaf) = /\\t[01][\\/|][01]:\\d+.?\\d*:\\d+,(\\d+):([0-9]+\\.[0-9]*):\\S+?$/;s/\\tDP=/\\tTDP=$tdp;TVAF=$tvaf;DP=/; s/;SOMATIC//; next if m(\\t\\./\\.\\S+$); print' > {SNVFILE}")
 # Only keeping the original to avoid FileNotFoundError when temp file automatically cleaned up by Snakemake after rule application.
 system(f"bgzip -c {SNVFILE} > {SNVFILE}.gz")
 system(f"tabix {SNVFILE}.gz")
@@ -79,7 +79,6 @@ with open(CNAFILE, "w") as text_file:
         text_file.write(cna_header)
 # Added special case for degenerate diploid CNV calling where fields are different for depth
 system(f"gzip -cd {args.cnv} | perl -ane 'next if /^#/ or not /\tPASS\t/; ($end) = /END=(\\d+)/; @d = split /:/, $F[$#F]; $d[2] = 1 if $d[2] == \".\"; if(/GT:SM:SD:/){{$major=int($d[2]/$d[1]);$minor=int($d[1])}}else{{$major=$d[1]-$d[2];$minor=$d[2]}} print join(\"\\t\", $F[0], $F[1], $end, $major, $minor),\"\\n\"' >> {CNAFILE}")
-system(f"cp {CNAFILE} cnv_debug")
 
 # RNA expression data reformatting
 tumor_expr_tpm_tsv = f"{args.outdir}/{args.project}/{args.subject}/rna/{args.subject}_{rna_sample}.rna.quant.sf"
