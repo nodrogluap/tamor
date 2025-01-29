@@ -13,8 +13,8 @@ rule dragen_germline_snv_sv_and_cnv_calls:
                 runtime=720,
                 mem_mb=256000 
         input:
-                msi_sites="resources/msisensor-pro-scan.tsv",
-                get_normal_dna_sample_fastq_list_csvs
+                get_normal_dna_sample_fastq_list_csvs,
+                msi_sites="resources/msisensor-pro-scan.tsv"
         output:
                 config["output_dir"]+'/{project}/{subject}/{subject}_{normal}.dna.germline.hard-filtered.vcf.gz',
                 config["output_dir"]+'/{project}/{subject}/{subject}_{normal}.dna.germline.cnv.vcf.gz',
@@ -56,7 +56,7 @@ rule dragen_germline_snv_sv_and_cnv_calls:
                             config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.sv.vcf.gz; "+
                       "mv "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/sv/results/variants/diploidSV.vcf.gz.tbi "+
                             config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.sv.vcf.gz.tbi; "+
-                      "mv "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.microsat_normal.dist "+
+                      "cp "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.microsat_normal.dist "+
                             "resources/dragen_microsat/")
 
 rule dragen_somatic_snv_sv_and_cnv_calls:
