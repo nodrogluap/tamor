@@ -34,6 +34,10 @@ rule generate_pcgr_html:
                        htmlindex="index.html") 
         conda:
                 "../envs/pcgr.yaml"
+        resources:
+        # Allow three hours for a report generation
+                runtime = 180,
+                mem_mb = 50000
         shell:
                 # Wrapper script to reformat inputs and run PCGR, so we can use PCGR's conda env directly.
                 "workflow/scripts/generate_pcgr.py {input.somatic_snv_vcf} {input.somatic_cnv_vcf} " +
