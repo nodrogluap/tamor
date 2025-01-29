@@ -13,12 +13,14 @@ rule dragen_germline_snv_sv_and_cnv_calls:
                 runtime=720,
                 mem_mb=256000 
         input:
+                msi_sites="resources/msisensor-pro-scan.tsv",
                 get_normal_dna_sample_fastq_list_csvs
         output:
                 config["output_dir"]+'/{project}/{subject}/{subject}_{normal}.dna.germline.hard-filtered.vcf.gz',
                 config["output_dir"]+'/{project}/{subject}/{subject}_{normal}.dna.germline.cnv.vcf.gz',
                 config["output_dir"]+'/{project}/{subject}/{subject}_{normal}.dna.germline.sv.vcf.gz',
-                config["output_dir"]+'/{project}/{subject}/{subject}_{normal}.dna.germline.bam'
+                config["output_dir"]+'/{project}/{subject}/{subject}_{normal}.dna.germline.bam',
+                config["output_dir"]+'/{project}/{subject}/{subject}_{normal}.dna.germline.microsat_normal.dist'
         run:
                 has_pcr_duplicates = get_normal_has_pcr_duplicates(wildcards)
                 print("Marking germline PCR duplicates: " + str(has_pcr_duplicates))
@@ -30,7 +32,7 @@ rule dragen_germline_snv_sv_and_cnv_calls:
                 print("Germline libraries: " + ", ".join(sample_libraries))
                 print("Germline using UMIs: " + str(has_UMIs))
                 
-                dragen_cmd = "dragen -r "+config["ref_genome"]+" --ora-reference "+config["ref_ora"]+" --enable-map-align true --enable-map-align-output true --enable-bam-indexing true --fastq-list {this_sample_only_fastq_list_csv} --fastq-list-all-samples true --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.normal}.dna.germline --enable-hla true --intermediate-results-dir "+ config["temp_dir"]+" -f"+" --enable-variant-caller true --enable-cnv true --cnv-enable-self-normalization true --enable-sv true --enable-down-sampler true --down-sampler-coverage 60 --enable-variant-annotation=true --variant-annotation-data=resources/nirvana --variant-annotation-assembly=GRCh38"
+                dragen_cmd = "dragen -r "+config["ref_genome"]+" --ora-reference "+config["ref_ora"]+" --enable-map-align true --enable-map-align-output true --enable-bam-indexing true --fastq-list {this_sample_only_fastq_list_csv} --fastq-list-all-samples true --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.normal}.dna.germline --enable-hla true --intermediate-results-dir "+ config["temp_dir"]+" -f"+" --enable-variant-caller true --enable-cnv true --cnv-enable-self-normalization true --enable-sv true --enable-down-sampler true --down-sampler-coverage 60 --enable-variant-annotation=true --variant-annotation-data=resources/nirvana --variant-annotation-assembly=GRCh38 --msi-command collect-evidence --msi-coverage-threshold " + str(config["msi_min_coverage"]) + " --msi-microsatellites-file {input.msi_sites}"
 
                 if has_pcr_duplicates and not has_UMIs:
                         dragen_cmd = dragen_cmd + " --enable-duplicate-marking true"
@@ -53,7 +55,9 @@ rule dragen_germline_snv_sv_and_cnv_calls:
                 shell("mv "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/sv/results/variants/diploidSV.vcf.gz "+
                             config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.sv.vcf.gz; "+
                       "mv "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/sv/results/variants/diploidSV.vcf.gz.tbi "+
-                            config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.sv.vcf.gz.tbi")
+                            config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.sv.vcf.gz.tbi; "+
+                      "mv "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.microsat_normal.dist "+
+                            "resources/dragen_microsat/")
 
 rule dragen_somatic_snv_sv_and_cnv_calls:
         priority: 98
