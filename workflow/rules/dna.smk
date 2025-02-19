@@ -2,6 +2,7 @@
 #include: "msi.smk"
 #include: "fastq_list.smk"
 import os
+import pandas as pd
 
 configfile: "config/config.yaml"
 
@@ -44,11 +45,11 @@ rule dragen_germline_snv_sv_and_cnv_calls:
                                 dragen_cmd_align = "dragen -r "+config["ref_genome"]+" --ora-reference "+config["ref_ora"]+" --enable-map-align true --enable-map-align-output true --enable-bam-indexing true --fastq-list {this_sample_only_fastq_list_csv} --fastq-list-all-samples true --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.normal}.dna.germline --enable-hla true --intermediate-results-dir "+ config["temp_dir"]+" -f"+" --enable-umi true --umi-correction-scheme=random --umi-min-supporting-reads 1 --umi-min-map-quality 1 --enable-down-sampler true --down-sampler-coverage 60"
                                 shell(dragen_cmd_align)
                         
-                        # check that tumor bam was written then pass dragen command with bams as input
+                        # check that germline bam was written then pass dragen command with bams as input
                         if(not os.path.exists(normal_bam)):
                                 raise Exception("Missing germline bam for UMI sample "+wildcards.germline+" cannot proceed with rule dragen_germline_snv_sv_and_cnv_calls")
                         
-                        dragen_cmd = "dragen -r "+config["ref_genome"]+" --enable-map-align false --bam-input "+normal_bam+" --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.normal}.dna.germline --intermediate-results-dir "+config["temp_dir"]+" -f"+" --enable-variant-caller true --enable-cnv true --cnv-enable-self-normalization true --enable-sv true"+" --vc-enable-umi-germline true --enable-down-sampler true --down-sampler-coverage 60"
+                        dragen_cmd = "dragen -r "+config["ref_genome"]+" --enable-map-align false --bam-input "+normal_bam+" --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.normal}.dna.germline --intermediate-results-dir "+config["temp_dir"]+" -f"+" --enable-variant-caller true --enable-cnv true --cnv-enable-self-normalization true --enable-sv true"+" --vc-enable-umi-germline true --enable-variant-annotation=true --variant-annotation-data=resources/nirvana --variant-annotation-assembly=GRCh38"
                         
                 shell(dragen_cmd)
 
@@ -58,6 +59,40 @@ rule dragen_germline_snv_sv_and_cnv_calls:
                             config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.sv.vcf.gz.tbi; "+
                       "cp "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.microsat_normal.dist "+
                             "resources/dragen_microsat/")
+
+
+
+rule dragen_germline_cnv_and_sv_lowqual_rerun:
+        priority: 99
+        resources:
+                runtime=720,
+                mem_mb=256000
+        input:
+                germline_bam=config["output_dir"]+'/{project}/{subject}/{subject}_{normal}.dna.germline.bam',
+                cnv_metrics=config["output_dir"]+'/{project}/{subject}/{subject}_{normal}.dna.germline.cnv_metrics.csv'
+        output:
+                interval_check=config["output_dir"]+"/{project}/{subject}/{subject}_{normal}.dna.germline.coverage_uniformity_check.csv"
+        run:
+                cnv_df = pd.read_csv(input.cnv_metrics, names=['filter','library','metric','value','percent'])
+                interval_df = cnv_df[cnv_df['metric'] == 'Coverage uniformity']
+                coverage_uniformity = pd.to_numeric(interval_df['value'].item())
+                print(coverage_uniformity)
+                if coverage_uniformity > 0.6:
+                        interval_message = "FAIL: triggered dragen_germline_cnv_and_sv_lowqual_rerun with --cnv-interval-width 5000"
+
+                        dragen_cmd = "dragen -r {config[ref_genome]} --enable-map-align false --bam-input {input.germline_bam} --output-directory {config[output_dir]}/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.normal}.dna.germline --intermediate-results-dir {config[temp_dir]} -f --enable-cnv true --cnv-enable-self-normalization true --enable-sv true --cnv-interval-width 5000"
+                        shell(dragen_cmd)
+                        shell("mv "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/sv/results/variants/diploidSV.vcf.gz "+
+                                    config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.sv.vcf.gz; "+
+                              "mv "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/sv/results/variants/diploidSV.vcf.gz.tbi "+
+                                    config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.sv.vcf.gz.tbi")
+                else:
+                        interval_message = "PASS"
+                interval_df.loc[len(interval_df)] = ['COVERAGE UNIFORMITY CHECK','','Germline uniformity less than 0.6',interval_message,'']
+                interval_df.to_csv(output.interval_check, header=False, index=False)
+
+# should potentially have similar interval increase for somatic, based on average coverage or "Uniformity of coverage (PCT > 0.4*mean) over genome?"
+
 
 rule dragen_somatic_snv_sv_and_cnv_calls:
         priority: 98
@@ -69,7 +104,8 @@ rule dragen_somatic_snv_sv_and_cnv_calls:
                 get_tumor_dna_sample_fastq_list_csvs,
                 germline_cnv=config["output_dir"]+"/{project}/{subject}/{subject}_{normal}.dna.germline.cnv.vcf.gz",
                 msi_sites="resources/msisensor-pro-scan.tsv",
-                germline_bam=config["output_dir"]+'/{project}/{subject}/{subject}_{normal}.dna.germline.bam'
+                germline_bam=config["output_dir"]+"/{project}/{subject}/{subject}_{normal}.dna.germline.bam",
+                germline_check=config["output_dir"]+"/{project}/{subject}/{subject}_{normal}.dna.germline.coverage_uniformity_check.csv"
         output:
                 config["output_dir"]+"/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.cnv.vcf.gz",
                 config["output_dir"]+"/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.hard-filtered.vcf.gz",
