@@ -42,7 +42,7 @@ rule dragen_germline_snv_sv_and_cnv_calls:
                         print("Germline sample has UMI's, using bams instead of fastqs as variant calling input")
                         # only run alignment if germline bam does not exist?
                         if(not os.path.exists(normal_bam)):
-                                dragen_cmd_align = "dragen -r "+config["ref_genome"]+" --ora-reference "+config["ref_ora"]+" --enable-map-align true --enable-map-align-output true --enable-bam-indexing true --fastq-list {this_sample_only_fastq_list_csv} --fastq-list-all-samples true --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.normal}.dna.germline --enable-hla true --intermediate-results-dir "+ config["temp_dir"]+" -f"+" --enable-umi true --umi-correction-scheme=random --umi-min-supporting-reads 1 --umi-min-map-quality 1 --enable-down-sampler true --down-sampler-coverage 60"
+                                dragen_cmd_align = "dragen -r "+config["ref_genome"]+" --ora-reference "+config["ref_ora"]+" --enable-map-align true --enable-map-align-output true --enable-bam-indexing true --fastq-list {this_sample_only_fastq_list_csv} --fastq-list-all-samples true --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.normal}.dna.germline --enable-hla true --intermediate-results-dir "+ config["temp_dir"]+" -f"+" --umi-enable true --umi-correction-scheme=random --umi-min-supporting-reads 1 --umi-min-map-quality 1 --enable-down-sampler true --down-sampler-coverage 60"
                                 shell(dragen_cmd_align)
                         
                         # check that germline bam was written then pass dragen command with bams as input
@@ -77,7 +77,7 @@ rule dragen_germline_cnv_and_sv_lowqual_rerun:
                 interval_df = cnv_df[cnv_df['metric'] == 'Coverage uniformity']
                 coverage_uniformity = pd.to_numeric(interval_df['value'].item())
                 print(coverage_uniformity)
-                if coverage_uniformity > 0.6:
+                if coverage_uniformity > 0.5:
                         interval_message = "FAIL: triggered dragen_germline_cnv_and_sv_lowqual_rerun with --cnv-interval-width 5000"
 
                         dragen_cmd = "dragen -r {config[ref_genome]} --enable-map-align false --bam-input {input.germline_bam} --output-directory {config[output_dir]}/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.normal}.dna.germline --intermediate-results-dir {config[temp_dir]} -f --enable-cnv true --cnv-enable-self-normalization true --enable-sv true --cnv-interval-width 5000"
@@ -88,7 +88,7 @@ rule dragen_germline_cnv_and_sv_lowqual_rerun:
                                     config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.sv.vcf.gz.tbi")
                 else:
                         interval_message = "PASS"
-                interval_df.loc[len(interval_df)] = ['COVERAGE UNIFORMITY CHECK','','Germline uniformity less than 0.6',interval_message,'']
+                interval_df.loc[len(interval_df)] = ['COVERAGE UNIFORMITY CHECK','','Germline uniformity less than 0.5',interval_message,'']
                 interval_df.to_csv(output.interval_check, header=False, index=False)
 
 # should potentially have similar interval increase for somatic, based on average coverage or "Uniformity of coverage (PCT > 0.4*mean) over genome?"
@@ -142,7 +142,7 @@ rule dragen_somatic_snv_sv_and_cnv_calls:
                         print("UMIs detected, using bams instead of fastqs as variant calling input")
                         # only run alignment if tumor bam does not exist?
                         if(not os.path.exists(tumor_bam)):
-                                dragen_cmd_align = "dragen -r "+config["ref_genome"]+" --ora-reference "+config["ref_ora"]+" --enable-map-align true --enable-map-align-output true --enable-bam-indexing true --tumor-fastq-list {this_sample_tumor_only_fastq_list_csv} --tumor-fastq-list-all-samples true --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic --enable-hla true --intermediate-results-dir "+config["temp_dir"]+" -f"+" --enable-umi true --umi-correction-scheme=random --umi-min-supporting-reads 1 --umi-min-map-quality 1"
+                                dragen_cmd_align = "dragen -r "+config["ref_genome"]+" --ora-reference "+config["ref_ora"]+" --enable-map-align true --enable-map-align-output true --enable-bam-indexing true --tumor-fastq-list {this_sample_tumor_only_fastq_list_csv} --tumor-fastq-list-all-samples true --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic --enable-hla true --intermediate-results-dir "+config["temp_dir"]+" -f"+" --umi-enable true --umi-correction-scheme=random --umi-min-supporting-reads 1 --umi-min-map-quality 1"
                                 shell(dragen_cmd_align)
 
                         # check that tumor bam was written then pass dragen command with bams as input
