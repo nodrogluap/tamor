@@ -25,8 +25,8 @@ for resource_name, spec in resource_dict.items():
         subprocess.run(["mv", local_path+".part", local_path])
         # Post-process as required
         if len(spec) == 3:
-            spec[3].append(local_path)
-            subprocess.run(spec[3])
+            spec[2].append(local_path)
+            subprocess.run(spec[2])
 
 # Illumina Annotation Engine (used for Tumor Mutational Burden reporting) has its own downloading system, in a standard place on Dragen servers
 if(not os.path.exists("nirvana")):
