@@ -1,7 +1,7 @@
 configfile: "config/config.yaml"
 
 # Generate the TSV file of a genome sites Dragen will look for variation in length between tumor and normal.  
-# Will be updated if the reference_fasta Snakemake config.yaml value is updated.
+# Will be updated if the ref_fasta Snakemake config.yaml value is updated.
 rule generate_microsatellite_locations_from_genome:
         resources:
                 runtime=180,
