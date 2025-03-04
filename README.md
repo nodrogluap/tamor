@@ -54,6 +54,20 @@ git clone --recurse-submodules https://github.com/nodrogluap/tamor
 cd tamor
 ```
 
+3. OPTIONAL. Tamor builds on a number of awesome existing bioinformatics software packages, which in turn depend on *lots* of other packages.
+We have tried to alleviate the pain involved in resolving these dependencies by using 'pinned' conda package lists for Linux. 
+*But* there is some chance that your default conda setup is incompatible with these pins. 
+If you run into conda errors while running Tamor for the first time, please try using the following ``~/.condarc`` file:
+
+```yaml
+channels:
+  - bioconda
+  - r
+  - defaults
+  - conda-forge
+channel_priority: flexible
+```
+
 # Testing
 
 Tamor follows the Snakemake [Distribution and Reproducibility](https://snakemake.readthedocs.io/en/stable/snakefiles/deployment.html) guidelines, so files are located in standardized locations.
