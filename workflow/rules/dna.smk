@@ -1,5 +1,5 @@
 #include: "metadata.smk"
-#include: "msi.smk"
+include: "msi.smk"
 #include: "fastq_list.smk"
 import os
 import pandas as pd
