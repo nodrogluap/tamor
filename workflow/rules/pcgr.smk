@@ -21,8 +21,8 @@ rule generate_pcgr_html:
 	# Priority must be higher than Djerba, as Djerba needs the VEP VCF output from this command (not explicit due to randomnness in the VEP file name) 
         priority: 20
         input:
-                cspr = config["output_dir"]+'/{project}/{subject}/{normal}.cpsr.grch38.classification.tsv.gz',
-                cspr_yaml = config["output_dir"]+'/{project}/{subject}/{normal}.cpsr.grch38.conf.yaml',
+                cpsr = config["output_dir"]+'/{project}/{subject}/{normal}.cpsr.grch38.classification.tsv.gz',
+                cpsr_yaml = config["output_dir"]+'/{project}/{subject}/{normal}.cpsr.grch38.conf.yaml',
                 somatic_snv_vcf = config["output_dir"]+'/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.hard-filtered.vcf.gz',
                 somatic_cnv_vcf = config["output_dir"]+'/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.cnv.vcf.gz',
                 pcgrr_env = ".snakemake/conda/pcgrr/bin/Rscript"
@@ -48,7 +48,7 @@ rule generate_pcgr_html:
                 "; ln -s {output.html} `dirname {output.html}`/index.html"
 
 # Germline cancer susceptibility reporting
-rule generate_cpsr_json:
+rule generate_cpsr:
         input:
                 germline_snv_vcf = config["output_dir"]+'/{project}/{subject}/{subject}_{normal}.dna.germline.hard-filtered.vcf.gz'
         output:
@@ -63,6 +63,6 @@ rule generate_cpsr_json:
         shell:
                 # The MAF threshold of 0.1 avoids failure of the script when there are too many variants to report (100K's), should not exclude any really
                 # useful susceptibility reporting. Use of global allele frequency hopefully also mitigates SNP count inflation in non-European subjects.
-                "cpsr --input_vcf {input.germline_snv_vcf} --vep_dir ./resources --pop_gnomad global --refdata_dir ./resources --output_dir {output_dir}/{wildcards.project}/{wildcards.subject} --genome_assembly grch38 --panel_id 0 --sample_id {wildcards.normal} --secondary_findings --classify_all --maf_upper_threshold 0.1 --force_overwrite"
+                "cpsr --input_vcf {input.germline_snv_vcf} --vep_dir ./resources --pop_gnomad global --refdata_dir ./resources --output_dir "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --genome_assembly grch38 --panel_id 0 --sample_id {wildcards.normal} --secondary_findings --classify_all --maf_upper_threshold 0.1 --force_overwrite"
 
 
