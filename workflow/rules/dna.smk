@@ -63,7 +63,7 @@ rule dragen_germline_snv_sv_and_cnv_calls:
 
 
 
-rule dragen_germline_cnv_and_sv_lowqual_rerun:
+rule dragen_germline_cnv_and_sv_lowqual_check_and_mitigate:
         priority: 99
         resources:
                 runtime=720,
@@ -79,7 +79,7 @@ rule dragen_germline_cnv_and_sv_lowqual_rerun:
                 coverage_uniformity = pd.to_numeric(interval_df['value'].item())
                 print(coverage_uniformity)
                 if coverage_uniformity > 0.5:
-                        interval_message = "FAIL: triggered dragen_germline_cnv_and_sv_lowqual_rerun with --cnv-interval-width 5000"
+                        interval_message = "FAIL: triggered dragen_germline_cnv_and_sv_lowqual_check_and_mitigate with --cnv-interval-width 5000"
 
                         dragen_cmd = "dragen -r {config[ref_genome]} --enable-map-align false --bam-input {input.germline_bam} --output-directory {config[output_dir]}/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.normal}.dna.germline --intermediate-results-dir {config[temp_dir]} -f --enable-cnv true --cnv-enable-self-normalization true --enable-sv true --cnv-interval-width 5000"
                         shell(dragen_cmd)
