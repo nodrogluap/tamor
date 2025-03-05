@@ -1,6 +1,8 @@
 # script to visualize germline and somatic cnv calls and supporting BAFs/depth data for a moh sample 
 # mamba env export -n karyoploter > workflow/envs/karyoploter.yaml
 
+### TODO switch to include non-pass cnv calls?
+### TODO add tumor purity annotation
 ### TODO add .dna.germline.improper.pairs.bw and .dna.somatic.tumor.improper.pairs.bw counts
 ### TODO add .dna.germline.seg.called.merged; .dna.somatic.baf.seg; .dna.somatic.seg; .dna.somatic.seg.tumorDepths
 ### see https://help.dragen.illumina.com/product-guides/dragen-v4.3/dragen-dna-pipeline/cnv-calling/cnv-output
@@ -176,15 +178,17 @@ kpAddLabels(kp, labels="Somatic BAF", r0=0.26, r1=0.4, data.panel = 1, srt=90, p
 # Add label for somatic VAF
 kpAddLabels(kp, labels="Mean VAF", r0=0.26, r1=0.4, data.panel = 1, srt=90, pos=3, label.margin = 0.02, col="#FF0000B3")
 
-# Calculate and plot rolling mean VAF of somatic SNV's (30 is a nice bin size but breaks if fewer in chr)  
+# Calculate and plot rolling mean VAF of somatic SNV's (30 is a nice bin size)  
 for(chr in seqlevels(kp$genome)) {
-  chr.dp <- sort(keepSeqlevels(x = tumor.vaf.gr, value = chr, pruning.mode = "coarse"))
-  if (length(chr.dp) > 30) {
-    rmean <- rollmean(chr.dp$BAF, k = 30, align = "center")  
-    kpLines(kp, chr=chr, x=start(chr.dp)[1:(length(chr.dp))], y=rmean, col="#FF000099", r0=0.26, r1=0.4)
-  } else {
-    rmean <- rollmean(chr.dp$BAF, k = length(chr.dp), align = "center")
-    kpLines(kp, chr=chr, x=start(chr.dp)[1:(length(chr.dp))], y=rmean, col="#FF000099", r0=0.26, r1=0.4)
+  if (chr %in% seqlevels(tumor.vaf.gr)) {
+    chr.dp <- sort(keepSeqlevels(x = tumor.vaf.gr, value = chr, pruning.mode = "coarse"))
+    if (length(chr.dp) > 30) {
+      rmean <- rollmean(chr.dp$BAF, k = 30, align = "center")  
+      kpLines(kp, chr=chr, x=start(chr.dp)[1:(length(chr.dp))], y=rmean, col="#FF000099", r0=0.26, r1=0.4)
+    } else {
+      rmean <- rollmean(chr.dp$BAF, k = length(chr.dp), align = "center")
+      kpLines(kp, chr=chr, x=start(chr.dp)[1:(length(chr.dp))], y=rmean, col="#FF000099", r0=0.26, r1=0.4)
+    }
   }
 }
 
