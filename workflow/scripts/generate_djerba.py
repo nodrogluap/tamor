@@ -126,9 +126,9 @@ with open(dragen_hrd, 'r') as hrd_in:
         p = 0.05
     with open(hrd.name, 'w') as hrd_json:
         hrd_json.write(f'{{"sample_name": "{args.tumor}",\n' +
-          '"QC": "PASS",\n' +
-          '"hrdetect_call": {{' +
-          '"Probability.w": [{p}, {p}, {p}] }} }}\n')
+          f'"QC": "PASS",\n' +
+          f'"hrdetect_call": {{' +
+          f'"Probability.w": [{p}, {p}, {p}] }} }}\n')
 
 # Transform SNP count info to that expected by Djerba (just a single number in a file)
 dragen_snv_count = f"{args.outdir}/{args.project}/{args.subject}/{args.subject}_{args.tumor}_{args.normal}.dna.somatic.vc_metrics.csv"
@@ -157,7 +157,12 @@ with gzip.open(tumor_cnv_vcf, 'rt') as data_in:
         mploidy = re.search("##OverallPloidy=(\\S+)", line)
         if mpurity:
             tumor_purity = mpurity.group(1)
-            tamor["purity"] = mpurity.group(1)
+            if tumor_purity == "NA":
+                print ("Tumor purity is NA for %s, setting to 0.1" % (args.tumor))
+                tumor_purity = 0.1
+                tamor["purity"] = 0.1
+            else:
+                tamor["purity"] = mpurity.group(1)
         elif mploidy:
             tumor_ploidy = mploidy.group(1)
 
@@ -166,21 +171,28 @@ with gzip.open(tumor_cnv_vcf, 'rt') as data_in:
 rna_sample = ""
 rna_cohort = ""
 cohort_sample2tumor_dna = {} 
+tumor_dna2subject = {}
+tumor_dna2project = {}
 with open(config["rna_paired_samples_tsv"], 'r') as data_in:
     tsv_file = csv.reader(decomment(data_in), delimiter="\t")
     for line in tsv_file:
+        # We're using the first RNA sample in the file that corresponds to the tumor DNA given on the command line.
+        # This is noted in the config dir README.md, in case you havve tumor and normal RNA sample for a case, put the tumor sample first.
         if line[0] == args.subject and line[2] == args.tumor:
             rna_sample = line[1]
             rna_cohort = line[5]
             break
 print ("RNA cohort for %s is %s" % (rna_sample, rna_cohort))
 with open(config["rna_paired_samples_tsv"], 'r') as data_in:
+    tsv_file = csv.reader(decomment(data_in), delimiter="\t")
+    for line in tsv_file:
         if rna_sample and line[5] == rna_cohort:
             cohort_sample2tumor_dna[line[1]] = line[2]
+            tumor_dna2subject[line[2]] = line[0]
+            tumor_dna2project[line[2]] = line[3]
+            print ("RNA cohort includes RNA sample %s" % (line[1]))
 
 # There may not be an RNA sample associated with the DNA sample (yet), and that's okay.
-tumor_dna2subject = {}
-tumor_dna2project = {}
 with open(config["dna_paired_samples_tsv"], 'r') as data_in:
     tsv_file = csv.reader(decomment(data_in), delimiter="\t")
     for line in tsv_file:
@@ -304,7 +316,6 @@ if os.path.exists(tumor_expr_fpkm_tsv):
     # Generate cohort from new setting in rna sample metadata file as a gzip table
     COHORT_FPKMFILE=tempfile.NamedTemporaryFile(prefix="djerba", suffix=".cohort.fpkm_rna.tsv")
     with open(COHORT_FPKMFILE.name, "w") as cohort_fpkm_tsv:
-        cohort_fpkm_tsv.write(cohort_fpkm_header+"\n")
         for cohort_sample, tumor_dna in cohort_sample2tumor_dna.items(): 
                 subj = tumor_dna2subject[tumor_dna]
                 if subj == args.subject: # exclude self from cohort, otherwise Djerba processing issues ensue
@@ -316,7 +327,11 @@ if os.path.exists(tumor_expr_fpkm_tsv):
                         tsv_file = csv.reader(decomment(data_in), delimiter="\t")
                         next(tsv_file) # Skip the header line
                         for line in tsv_file:
-                                gene2fpkm_per_sample[line[0]].append(line[1])
+                                if line[0] not in gene2fpkm_per_sample:
+                                    gene2fpkm_per_sample[line[0]] = [line[1]]
+                                else:
+                                    gene2fpkm_per_sample[line[0]].append(line[1])
+        cohort_fpkm_tsv.write(cohort_fpkm_header+"\n")
         for gene,fpkms in gene2fpkm_per_sample.items():
                 if(fpkms):
                 	cohort_fpkm_tsv.write(gene+"\t"+"\t".join(fpkms)+"\n")

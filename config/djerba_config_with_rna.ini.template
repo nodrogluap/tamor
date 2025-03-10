@@ -66,37 +66,36 @@ render_priority = 300
 attributes = research
 assay = WGTS
 assay_description = __DJERBA_NULL__
-attributes = clinical
 configure_priority = 200
 depends_configure = provenance_helper
 depends_extract =
 donor = __DJERBA_NULL__
 extract_priority = 200
 
-[genomic_landscape]
-attributes = research
-purity = {{ purity }}
-msi_file = {{ msi_file_path }}
-hrd_path = {{ hrd_file_path }}
-ctdna_file = {{ snp_count_file_path }}
-oncokb cache = resources/oncokb_cache
-update cache = False
-apply cache = False
-tumour_id = {{ tumor_dna }}
+#[genomic_landscape]
+#attributes = research
+#purity = {{ purity }}
+#msi_file = {{ msi_file_path }}
+#hrd_path = {{ hrd_file_path }}
+#ctdna_file = {{ snp_count_file_path }}
+#oncokb cache = resources/oncokb_cache
+#update cache = False
+#apply cache = False
+#tumour_id = {{ tumor_dna }}
 
-[sample]
-attributes = clinical
-callability = {{ callability_pct }}
-configure_priority = 500
-depends_configure =
-depends_extract =
-extract_priority = 500
-mean_coverage = 100
-oncotree_code = __DJERBA_NULL__
-ploidy = __DJERBA_NULL__
-purity = {{ purity }}
-render_priority = 500
-sample_type = __DJERBA_NULL__
+#[sample]
+#attributes = clinical
+#callability = {{ callability_pct }}
+#configure_priority = 500
+#depends_configure =
+#depends_extract =
+#extract_priority = 500
+#mean_coverage = 100
+#oncotree_code = __DJERBA_NULL__
+#ploidy = __DJERBA_NULL__
+#purity = {{ purity }}
+#render_priority = 500
+#sample_type = __DJERBA_NULL__
 
 [summary]
 attributes = research
@@ -105,7 +104,7 @@ depends_configure =
 depends_extract =
 extract_priority = 400
 render_priority = 400
-summary_file = __DJERBA_NULL__
+#summary_file = __DJERBA_NULL__
 
 [supplement.body]
 attributes = research
@@ -114,13 +113,13 @@ depends_configure =
 depends_extract =
 extract_priority = 400
 render_priority = 400
-summary_file = __DJERBA_NULL__
+#summary_file = __DJERBA_NULL__
 
-[wgts.cnv_purple]
-attributes = research
-oncokb cache = resources/oncokb_cache
-update cache = True 
-purple_zip = {{ cnv_file_path }}
+#[wgts.cnv_purple]
+#attributes = research
+#oncokb cache = resources/oncokb_cache
+#update cache = True 
+#purple_zip = {{ cnv_file_path }}
 
 [wgts.snv_indel]
 attributes = research
