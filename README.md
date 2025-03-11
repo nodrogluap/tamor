@@ -114,6 +114,19 @@ The most relevant document may be the self-contained Web page ``subjectID.pcgr.g
 
 ![Screenshot of a sample Personal Cancer Genome Report, Quarto version](docs/pcgr_screenshot.png)
 
+## Quality Control
+An evolving assortment of tables and plots for quality control of your samples and Dragen analysis can be generated using the [Datavzrd](https://datavzrd.github.io/) plugin for Snakemake:
+
+```bash
+# Parse and aggregate all the stats from Dragen's assorted *_metrics.csv files into a new file called resources/metrics/dragen.tsv
+snakemake --use-conda -j 1 resources/metrics/dragen.tsv
+# Generate tables and plots using this data, with output to the folder results/datavzrd/dragen_metrics
+snakemake --use-conda -j 1 results/datavzrd/dragen_metrics
+```
+The Datavzrd results will be available by pointing your browser to the file called ``results/datavzrd/dragen_metrics/index.html``. 
+The set of tables and plots can be [configured and customized](https://datavzrd.github.io/docs/configuration.html) by editing the config file ``resources/datavzrd/dragen_plots_and_tables.yaml``.
+
+## Reports
 After a successful workflow run, additional reporting information (including provenance) can be aggregated into a self-contained HTML report using 
 Snakemake's automated workflow reporting tool:
 
