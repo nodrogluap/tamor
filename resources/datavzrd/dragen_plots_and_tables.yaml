@@ -1,0 +1,35 @@
+__use_yte__: true
+
+name: Dragen Metrics
+
+datasets:
+  metrics:
+    path: ?input.table
+    separator: "\t"
+
+views:
+  dragen_metrics_table:
+    dataset: metrics
+    desc: Overview Table of Metrics
+    render-table:
+      columns:
+        project:
+          plot:
+            heatmap:
+              scale: ordinal
+              color-scheme: category20
+              
+  coverage_vs_runtime:
+    dataset: metrics
+    desc: Run time vs normal median autosomal coverage
+    render-plot:
+      spec : |
+        {
+          "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+          "mark": {"type": "circle", "tooltip": true},
+          "encoding": {
+            "x": {"field": "Normal RUN TIME Total runtime", "type": "quantitative"},
+            "y": {"field": "Normal PLOIDY ESTIMATION Autosomal median coverage", "type": "quantitative"},
+            "color": {"field": "project", "type": "nominal"}
+          }
+        }
