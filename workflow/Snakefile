@@ -24,6 +24,8 @@ include: "rules/dna.smk"
 include: "rules/karyoploter.smk"
 include: "rules/pcgr.smk"
 include: "rules/djerba.smk"
+include: "rules/metrics.smk"
+include: "rules/datavzrd.smk"
 
 rule all:
 	# Download reference data if not found on the system.
