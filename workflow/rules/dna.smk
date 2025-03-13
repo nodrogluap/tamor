@@ -24,6 +24,19 @@ rule dragen_germline_snv_sv_and_cnv_calls:
                 config["output_dir"]+'/{project}/{subject}/{subject}_{normal}.dna.germline.microsat_normal.dist',
                 config["output_dir"]+'/{project}/{subject}/{subject}_{normal}.dna.germline.cnv_metrics.csv'
         run:
+                # Must remove any existing files that dragen chmod's to global write to avoid chmoderror if old file had different owner
+                shell ("rm -f "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.bam "
+                        +config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.cnv.excluded_intervals.bed.gz "
+                        +config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.cnv.vcf.gz "
+                        +config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.cnv_sv.vcf.gz "
+                        +config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.hard-filtered.vcf.gz "
+                        +config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.ploidy.vcf.gz "
+                        +config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.target.counts.gc-corrected.gz "
+                        +config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.target.counts.gz "
+                        +config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.targeted.vcf.gz "
+                        +config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.tn.tsv.gz "
+                        +config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.vcf.gz")
+
                 has_pcr_duplicates = get_normal_has_pcr_duplicates(wildcards)
                 print("Marking germline PCR duplicates: " + str(has_pcr_duplicates))
 
@@ -113,6 +126,19 @@ rule dragen_somatic_snv_sv_and_cnv_calls:
                 config["output_dir"]+"/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.sv.vcf.gz",
                 config["output_dir"]+"/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic_tumor.bam"
         run:
+                # Must remove any existing files that dragen chmod's to global write to avoid chmoderror if old file had different owner
+                shell ("rm -f "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.cnv.excluded_intervals.bed.gz "
+                        +config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.cnv.vcf.gz "
+                        +config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.hard-filtered.vcf.gz "
+                        +config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.ploidy.vcf.gz "
+                        +config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.tn.tsv.gz "
+                        +config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.tumor.baf.bedgraph.gz "
+                        +config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.tumor.ballele.counts.gz "
+                        +config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.tumor.target.counts.gc-corrected.gz "
+                        +config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.tumor.target.counts.gz "
+                        +config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.vcf.gz "
+                        +config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic_tumor.bam")
+
                 has_pcr_duplicates = get_tumor_has_pcr_duplicates(wildcards)
                 print("Marking PCR duplicates: " + str(has_pcr_duplicates))
 
