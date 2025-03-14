@@ -144,6 +144,8 @@ The results generated here for gene expression comparison are in part based upon
 Somatic variants are filtered against a subset of the [gnoMAD database](https://gnomad.broadinstitute.org/), 
 which is included in this repository.
 
-This project is being developed in support of the [Terry Fox Research Institute](https://www.tfri.ca/)'s 
-[Marathon of Hope Cancer Care Network](https://www.marathonofhopecancercentres.ca/) activities within the 
-[Prairie Cancer Research Consortium](https://www.marathonofhopecancercentres.ca/our-network/consortium/prairies-cancer-research-consortium).
+This project is being developed at the [Centre for Health Genomics and Informatics](https://cumming.ucalgary.ca/research/cat/health-genomics/home) 
+within the [University of Calgary's](https://www.ucalgary.ca/) [Cumming School of Medicine](https://cumming.ucalgary.ca/), 
+in support of the [Prairie Cancer Research Consortium](https://www.marathonofhopecancercentres.ca/our-network/consortium/prairies-cancer-research-consortium) (PR2C). 
+PR2C is the regional activity hub of the [Terry Fox Research Institute](https://www.tfri.ca/)'s 
+[Marathon of Hope Cancer Care Network](https://www.marathonofhopecancercentres.ca/).
