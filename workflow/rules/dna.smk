@@ -44,6 +44,8 @@ rule dragen_germline_snv_sv_and_cnv_calls:
                 has_UMIs = library_info[0]
                 sample_libraries = library_info[1]
                 this_sample_only_fastq_list_csv = make_sample_fastq_list_csv(wildcards, False, False, sample_libraries)
+                dragen_ora_cmd = check_fastq_list_compression_formats(this_sample_only_fastq_list_csv)
+                shell(dragen_ora_cmd)
                 print("Germline libraries: " + ", ".join(sample_libraries))
                 print("Germline using UMIs: " + str(has_UMIs))
                 
@@ -127,7 +129,7 @@ rule dragen_somatic_snv_sv_and_cnv_calls:
                 config["output_dir"]+"/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic_tumor.bam"
         run:
                 # Must remove any existing files that dragen chmod's to global write to avoid chmoderror if old file had different owner
-                shell ("rm -f "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.cnv.excluded_intervals.bed.gz "
+                shell("rm -f "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.cnv.excluded_intervals.bed.gz "
                         +config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.cnv.vcf.gz "
                         +config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.hard-filtered.vcf.gz "
                         +config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.ploidy.vcf.gz "
@@ -149,6 +151,8 @@ rule dragen_somatic_snv_sv_and_cnv_calls:
                 germline_has_UMIs = germline_library_info[0]
                 germline_sample_libraries = germline_library_info[1]
                 this_sample_germline_only_fastq_list_csv = make_sample_fastq_list_csv(wildcards, False, False, germline_sample_libraries)
+                dragen_ora_cmd = check_fastq_list_compression_formats(this_sample_germline_only_fastq_list_csv)
+                shell(dragen_ora_cmd)
                 print("Germline libraries: " + ", ".join(germline_sample_libraries))
                 print("Germline using UMIs: " + str(germline_has_UMIs))
                 
@@ -156,6 +160,8 @@ rule dragen_somatic_snv_sv_and_cnv_calls:
                 tumor_has_UMIs = tumor_library_info[0]
                 tumor_sample_libraries = tumor_library_info[1]
                 this_sample_tumor_only_fastq_list_csv = make_sample_fastq_list_csv(wildcards, False, True, tumor_sample_libraries)
+                dragen_ora_cmd = check_fastq_list_compression_formats(this_sample_tumor_only_fastq_list_csv)
+                shell(dragen_ora_cmd)
                 print("Tumor libraries: " + ", ".join(tumor_sample_libraries))
                 print("Tumor using UMIs: " + str(tumor_has_UMIs))
 

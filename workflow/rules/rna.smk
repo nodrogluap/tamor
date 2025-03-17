@@ -20,6 +20,8 @@ rule dragen_rna_read_mapping_quant_and_fusion_calls:
                 sample_libraries = library_info[1]
                 print("RNA sample libraries: " + ",".join(sample_libraries))	
                 this_sample_only_fastq_list_csv = make_sample_fastq_list_csv(wildcards, True, True, sample_libraries)
+                dragen_ora_cmd = check_fastq_list_compression_formats(this_sample_only_fastq_list_csv)
+                shell(dragen_ora_cmd)
                 # must remove existing RNA bam because of dragen chmoderror if not file owner
                 shell("rm -f {output_dir}/{project}/{subject}/rna/{subject}_{sample}.bam; "+
                         "dragen -r "+config["ref_genome"]+" --ora-reference "+config["ref_ora"]+
