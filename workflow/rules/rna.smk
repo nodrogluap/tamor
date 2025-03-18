@@ -20,8 +20,7 @@ rule dragen_rna_read_mapping_quant_and_fusion_calls:
                 sample_libraries = library_info[1]
                 print("RNA sample libraries: " + ",".join(sample_libraries))	
                 this_sample_only_fastq_list_csv = make_sample_fastq_list_csv(wildcards, True, True, sample_libraries)
-                dragen_ora_cmd = check_fastq_list_compression_formats(this_sample_only_fastq_list_csv)
-                shell(dragen_ora_cmd)
+                temporary_decompressed_sample_fastq_list = harmonize_fastq_compression_formats(this_sample_only_fastq_list_csv)
                 # must remove existing RNA bam because of dragen chmoderror if not file owner
                 shell("rm -f {output_dir}/{project}/{subject}/rna/{subject}_{sample}.bam; "+
                         "dragen -r "+config["ref_genome"]+" --ora-reference "+config["ref_ora"]+
@@ -33,6 +32,8 @@ rule dragen_rna_read_mapping_quant_and_fusion_calls:
                 # If there are no fusion gene candidates, no output files are created. In this case, created a blank one so we don't rerun this analysis or fail out due to lack of output file.
                 if not Path(output.csv).is_file():
                         shell("touch {output.csv}")
+                # Cleanup step to remove any temporary fastq.gz files if mixed ora/gz compression input
+                cleanup_decompressed_temporary_fastqs(temporary_decompressed_sample_fastq_list, this_sample_only_fastq_list_csv)
 
 rule annotate_rna_genes:
         priority: 101
