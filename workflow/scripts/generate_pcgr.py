@@ -42,7 +42,7 @@ with gzip.open(tumor_cnv_vcf, 'rt') as data_in:
         mpurity = re.search("##EstimatedTumorPurity=(\\S+)", line)
         mploidy = re.search("##OverallPloidy=(\\S+)", line)
         if mpurity and mpurity.group(1) != "NA":
-            tumor_purity = mpurity.group(1)
+            tumor_purity = float(mpurity.group(1))
         elif mploidy:
             tumor_ploidy = mploidy.group(1)
 
@@ -65,10 +65,18 @@ with open(config["dna_paired_samples_tsv"], 'r') as data_in:
             tumor_site = line[6]
             break
 
+# Set a floor on tumor variant allele frequency to be included in the PCGR reports.
+tvaf_threshold = 0
+if isinstance(config["reporting_min_proportion"], float) or isinstance(config["reporting_min_proportion"], int):
+    if config["reporting_min_proportion"] < 0 or config["reporting_min_proportion"] > 1:
+        print("WARNING: config.yaml file value for reporting_min_proportion is out of range [0,1], using 0 by default")
+    else:
+        tvaf_threshold = config["reporting_min_proportion"]*tumor_purity
+
 # Somatic small nucleotide variants reformatting
 tf=tempfile.NamedTemporaryFile(suffix=".vcf")
 SNVFILE=tf.name
-system(f"gzip -cd {args.snv} | perl -ne 'if(/^##INFO=<ID=DP,/){{print \"##INFO=<ID=TDP,Number=1,Type=Integer,Description=\\\"Read depth of alternative allele in the tumor\\\">\\n##INFO=<ID=TVAF,Number=1,Type=Float,Description=\\\"Alternative allele proportion of reads in the tumor\\\">\\n\"}}($tdp, $tvaf) = /\\t[01][\\/|][01]:\\d+.?\\d*:\\d+,(\\d+):([0-9]+\\.?[0-9]*):\\S+?$/;s/\\tDP=/\\tTDP=$tdp;TVAF=$tvaf;DP=/; s/;SOMATIC//; next if m(\\t\\.[/|]\\.\\S+$); print' > {SNVFILE}")
+system(f"gzip -cd {args.snv} | perl -ne 'if(/^##INFO=<ID=DP,/){{print \"##INFO=<ID=TDP,Number=1,Type=Integer,Description=\\\"Read depth of alternative allele in the tumor\\\">\\n##INFO=<ID=TVAF,Number=1,Type=Float,Description=\\\"Alternative allele proportion of reads in the tumor\\\">\\n\"}}($tdp, $tvaf) = /\\t[01][\\/|][01]:\\d+.?\\d*:\\d+,(\\d+):([0-9]+\\.?[0-9]*):\\S+?$/;s/\\tDP=/\\tTDP=$tdp;TVAF=$tvaf;DP=/; s/;SOMATIC//; next if m(\\t\\.[/|]\\.\\S+$) or $tvaf and $tvaf < {tvaf_threshold}; print' > {SNVFILE}")
 # Only keeping the original to avoid FileNotFoundError when temp file automatically cleaned up by Snakemake after rule application.
 system(f"bgzip -c {SNVFILE} > {SNVFILE}.gz")
 system(f"tabix {SNVFILE}.gz")
