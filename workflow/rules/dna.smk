@@ -44,8 +44,7 @@ rule dragen_germline_snv_sv_and_cnv_calls:
                 has_UMIs = library_info[0]
                 sample_libraries = library_info[1]
                 this_sample_only_fastq_list_csv = make_sample_fastq_list_csv(wildcards, False, False, sample_libraries)
-                dragen_ora_cmd = check_fastq_list_compression_formats(this_sample_only_fastq_list_csv)
-                shell(dragen_ora_cmd)
+                temporary_decompressed_sample_fastq_list = harmonize_fastq_compression_formats(this_sample_only_fastq_list_csv)
                 print("Germline libraries: " + ", ".join(sample_libraries))
                 print("Germline using UMIs: " + str(has_UMIs))
                 
@@ -68,7 +67,8 @@ rule dragen_germline_snv_sv_and_cnv_calls:
                         dragen_cmd = "dragen -r "+config["ref_genome"]+" --enable-map-align false --bam-input "+normal_bam+" --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.normal}.dna.germline --intermediate-results-dir "+config["temp_dir"]+" -f"+" --enable-variant-caller true --enable-cnv true --cnv-enable-self-normalization true --enable-sv true"+" --vc-enable-umi-germline true --enable-variant-annotation=true --variant-annotation-data=resources/nirvana --variant-annotation-assembly=GRCh38"
                         
                 shell(dragen_cmd)
-
+                # Cleanup step to remove any temporary fastq.gz files if mixed ora/gz compression input
+                cleanup_decompressed_temporary_fastqs(temporary_decompressed_sample_fastq_list, this_sample_only_fastq_list_csv)
                 shell("mv "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/sv/results/variants/diploidSV.vcf.gz "+
                             config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.sv.vcf.gz; "+
                       "mv "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/sv/results/variants/diploidSV.vcf.gz.tbi "+
@@ -151,8 +151,7 @@ rule dragen_somatic_snv_sv_and_cnv_calls:
                 germline_has_UMIs = germline_library_info[0]
                 germline_sample_libraries = germline_library_info[1]
                 this_sample_germline_only_fastq_list_csv = make_sample_fastq_list_csv(wildcards, False, False, germline_sample_libraries)
-                dragen_ora_cmd = check_fastq_list_compression_formats(this_sample_germline_only_fastq_list_csv)
-                shell(dragen_ora_cmd)
+                temporary_decompressed_germline_fastq_list = harmonize_fastq_compression_formats(this_sample_germline_only_fastq_list_csv)
                 print("Germline libraries: " + ", ".join(germline_sample_libraries))
                 print("Germline using UMIs: " + str(germline_has_UMIs))
                 
@@ -160,8 +159,7 @@ rule dragen_somatic_snv_sv_and_cnv_calls:
                 tumor_has_UMIs = tumor_library_info[0]
                 tumor_sample_libraries = tumor_library_info[1]
                 this_sample_tumor_only_fastq_list_csv = make_sample_fastq_list_csv(wildcards, False, True, tumor_sample_libraries)
-                dragen_ora_cmd = check_fastq_list_compression_formats(this_sample_tumor_only_fastq_list_csv)
-                shell(dragen_ora_cmd)
+                temporary_decompressed_tumor_fastq_list = harmonize_fastq_compression_formats(this_sample_tumor_only_fastq_list_csv)
                 print("Tumor libraries: " + ", ".join(tumor_sample_libraries))
                 print("Tumor using UMIs: " + str(tumor_has_UMIs))
 
@@ -188,7 +186,9 @@ rule dragen_somatic_snv_sv_and_cnv_calls:
                         dragen_cmd = dragen_cmd +  " --sv-enable-liquid-tumor-mode true --sv-tin-contam-tolerance "+str(config["tumor_in_normal_tolerance_proportion"])
 
                 shell(dragen_cmd)
-                
+                # Cleanup step to remove any temporary fastq.gz files if mixed ora/gz compression input
+                cleanup_decompressed_temporary_fastqs(temporary_decompressed_germline_fastq_list, this_sample_germline_only_fastq_list_csv)
+                cleanup_decompressed_temporary_fastqs(temporary_decompressed_tumor_fastq_list, this_sample_tumor_only_fastq_list_csv)
                 shell("mv "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/sv/results/variants/somaticSV.vcf.gz "+
                             config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.sv.vcf.gz; "+
                       "mv "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/sv/results/variants/somaticSV.vcf.gz.tbi "+
