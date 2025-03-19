@@ -13,7 +13,7 @@ except OSError:
 print("INFO: Changed working directory to 'resources'")
 
 resource_dict = {
-        "internal_pcgr": ["http://insilico.hpc.uio.no/pcgr/pcgr_ref_data.20250221.grch38.tgz", "data/grch38", "tar", "xzf"],
+        "internal_pcgr": ["http://insilico.hpc.uio.no/pcgr/pcgr_ref_data.20250314.grch38.tgz", "data/grch38", "tar", "xzf"],
         "internal_vep": ["https://ftp.ensembl.org/pub/release-113/variation/indexed_vep_cache/homo_sapiens_vep_113_GRCh38.tar.gz","homo_sapiens/113_GRCh38", "tar", "xzf"],
         "ref_exon_annotations": ["https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_46/gencode.v46.chr_patch_hapl_scaff.annotation.gtf.gz", "gencode.v46.chr_patch_hapl_scaff.annotation.gtf.gz"],
         "ref_genome": ["https://s3.amazonaws.com/webdata.illumina.com/downloads/software/dragen/resource-files/hg38-alt_masked.cnv.graph.hla.rna-9-r3.0-1.tar", "kmer_cnv.bin", "tar", "xf"],
