@@ -63,6 +63,7 @@ rule generate_cpsr:
         shell:
                 # The MAF threshold of 0.1 avoids failure of the script when there are too many variants to report (100K's), should not exclude any really
                 # useful susceptibility reporting. Use of global allele frequency hopefully also mitigates SNP count inflation in non-European subjects.
-                "cpsr --input_vcf {input.germline_snv_vcf} --vep_dir ./resources --pop_gnomad global --refdata_dir ./resources --output_dir "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --genome_assembly grch38 --panel_id 0 --sample_id {wildcards.normal} --secondary_findings --classify_all --maf_upper_threshold 0.1 --force_overwrite"
+		# Skipping separate standalone HTML generation as the reporting is going to be part of the integrated PCGR page generation.
+                "cpsr --input_vcf {input.germline_snv_vcf} --pop_gnomad global --no_html --clinvar_report_noncancer --vep_dir ./resources --refdata_dir ./resources --output_dir "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --genome_assembly grch38 --panel_id 0 --sample_id {wildcards.normal} --secondary_findings --maf_upper_threshold 0.1 --force_overwrite --pgx_findings"
 
 
