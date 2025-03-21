@@ -73,7 +73,7 @@ While OncoTree codes are preferred, Tamor will also attempt to uniquely map code
 [HemeOnc](https://dataverse.harvard.edu/dataverse/HemOnc) systems.
 
 ## config/rna_samples.tsv
-Has 6 columns to be specified:
+Has 5 columns to be specified:
 
 ```
 subjectID<tab>
