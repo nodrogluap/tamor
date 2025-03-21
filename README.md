@@ -99,15 +99,17 @@ Generation of Djerba reports is dependent on you providing a valid API token lin
 On a single-user system:
 
 ```bash
-snakemake --use-conda -j 1
+snakemake --use-conda -j 1 --keep-incomplete
 ```
 
 Otherwise, on a multi-user system, it is imperative to use a queuing system such as slurm to submit only one job at a time to Dragen v4.x. 
 Once slurm is installed and configured on your Dragen system, Snakemake support for slurm is enabled by invoking like so:
   
 ```bash
-snakemake --use-conda -j 1 --executor slurm
+snakemake --use-conda -j 1 --executor slurm --keep-incomplete
 ```
+
+*While not strictly necessary, the ``--keep-incomplete`` option avoids Snakemake automatically deleting all your output BAM files, VCF files, etc. in case Dragen fails post-analysis due to its automatic file permission setting issues or other rather inconsequential activities performed after Dragen has counted the run as successful (i.e. incurred license usage).*
 
 Regardless of the invocation method used above, the default outputs are in a directory called ``results/pcgr/projectID/subjectID_tumorSampleID_germlineSampleID``. 
 The most relevant document may be the self-contained Web page ``subjectID.pcgr.grch38.html``.
