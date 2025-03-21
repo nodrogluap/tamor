@@ -9,5 +9,5 @@ rule dragen_bcl_conversion:
         output:
                 config["analysis_dir"]+'/primary/'+config["sequencer"]+'/{run}/Reports/fastq_list.csv'
         shell:
-                "bcl-convert --force --sample-sheet {input.csv} --bcl-input-directory "+config["bcl_dir"]+'/'+config["sequencer"]+'/{wildcards.run} --output-directory '+config["analysis_dir"]+'/primary/'+config["sequencer"]+'/{wildcards.run}'
+                "dragen --bcl-conversion-only true --force --sample-sheet {input.csv} --bcl-input-directory "+config["bcl_dir"]+'/'+config["sequencer"]+'/{wildcards.run} --output-directory '+config["analysis_dir"]+'/primary/'+config["sequencer"]+'/{wildcards.run}'
 
