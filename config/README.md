@@ -6,7 +6,7 @@ Cases are organized into logical units: Projects (a.k.a. cohorts), that have Sub
 
 Cases from the same cohort will be outputted into the same output folder, for organizational purposes.
 
-A Subject must have at least one normal/germline sample. 
+A Subject must have at least one normal/germline sample. We may expand to support tumor-only analysis in the future.
 
 A Subject can have one or more tumor samples (e.g. primary and refractory).
 Each tumor must have a DNA sample, and optionally an RNA sample. 
@@ -33,7 +33,7 @@ Tamor's default config has the input lists of paired tumor-normal samples (with 
 These TSVs are the main config files that you will need to edit to run your own samples through the workflow.
 
 ## config/dna_samples.tsv
-Has 10 columns to be specified:
+Has 8 columns to be specified:
 
 ```
 subjectID<tab>
@@ -42,9 +42,7 @@ TrueOrFalseTumorHasPCRDuplicates<tab>
 germlineSampleID<tab>
 TrueOrFalseGermlineHasPCRDuplicates<tab>
 TrueOrFalse_germline_contains_some_tumor<tab>
-PCGRTissueSiteNumber<tab>
 OncoTreeCode<tab>
-TCGACode<tab>
 ProjectID
 ```
 
@@ -57,7 +55,7 @@ The ``subjectID``, ``tumorSampleID`` and ``germlineSampleID`` must:
 The *third* and *fifth* column tell Dragen whether to consider (in tumor and germline respectively) as PCR duplicates read pairs that map to the same start and end in the reference genome. 
 If you used a PCR-free library prep, set this to ``False``, otherwise set it to ``True``.
 
-The *tenth* column is a unique project ID to which the subject belongs. For example if you have two cohorts of lung and breast cancer, 
+The *eighth* column is a unique project ID to which the subject belongs. For example if you have two cohorts of lung and breast cancer, 
 assigning individuals to two projects would be logical. 
 All project output files go into their own output folders, even if they were sequenced together on the same Illumina sequencing runs.
 
@@ -65,45 +63,14 @@ The *sixth* column of the paired input sample TSV file is usually ``False``, unl
 a poor quality histology section from a tumor, in which case use ``True``. This instructs Dragen to consider low frequency variants 
 in the germline sample to still show up as somatic variants in the tumor analysis output (see default of 0.05 under ``tumor_in_normal_tolerance_proportion`` in ``config.yaml``)
 
-For the *eighth* column OncoTree codes for cancer types can be found here: <https://oncotree.mskcc.org/>
-
-For the *ninth* column The Cancer Genome Atlas codes can be found here: <https://gdc.cancer.gov/resources-tcga-users/tcga-code-tables/tcga-study-abbreviations>
-
-For the *seventh* column, the list of tissue site numbers for the version of PCGR included here is:
-
-```
-                        0  = Any
-                        1  = Adrenal Gland
-                        2  = Ampulla of Vater
-                        3  = Biliary Tract
-                        4  = Bladder/Urinary Tract
-                        5  = Bone
-                        6  = Breast
-                        7  = Cervix
-                        8  = CNS/Brain
-                        9  = Colon/Rectum
-                        10 = Esophagus/Stomach
-                        11 = Eye
-                        12 = Head and Neck
-                        13 = Kidney
-                        14 = Liver
-                        15 = Lung
-                        16 = Lymphoid
-                        17 = Myeloid
-                        18 = Ovary/Fallopian Tube
-                        19 = Pancreas
-                        20 = Peripheral Nervous System
-                        21 = Peritoneum
-                        22 = Pleura
-                        23 = Prostate
-                        24 = Skin
-                        25 = Soft Tissue
-                        26 = Testis
-                        27 = Thymus
-                        28 = Thyroid
-                        29 = Uterus
-                        30 = Vulva/Vagina
-```
+For the *seventh* column, the type of cancer the tumor represent must be coded. This is preferably an OncoTree code. Those codes can be found here: <https://oncotree.mskcc.org/> 
+This informtion will be used to customize some parts of the variant, gene expression, and immune profiling reports. 
+If no cancer type information is available at all, you can use the top-level code in OncoTree: "TISSUE".
+While OncoTree codes are preferred, Tamor will also attempt to uniquely map codes from the 
+[ICD-O](https://www.who.int/standards/classifications/other-classifications/international-classification-of-diseases-for-oncology), 
+[NCIt](https://evsexplore.semantics.cancer.gov/evsexplore/welcome?terminology=ncit), 
+[UMLS](https://www.nlm.nih.gov/research/umls/index.html) and 
+[HemeOnc](https://dataverse.harvard.edu/dataverse/HemOnc) systems.
 
 ## config/rna_samples.tsv
 Has 6 columns to be specified:
@@ -113,7 +80,6 @@ subjectID<tab>
 tumorRNASampleID<tab>
 matchedTumorDNASampleID<tab>
 ProjectID<tab>
-ImmuneDeconvCancerType<tab>
 CohortNameForExpressionAnalysis
 ```
 
@@ -123,44 +89,6 @@ and typically you want to report out regarding the tumor RNA.
 
 The last column ``CohortNameForExpressionAnalysis`` is used for Djerba cohort reporting, e.g. to identify Z-score and percentile 
 rank outliers genes in this sample compared to others being processed at the same time and nominally of the same cancer/tissue type as defined by the user.
-
-The fifth column, [ImmuneDeconv](https://omnideconv.org/immunedeconv/articles/immunedeconv.html)CancerType, is 
-one of the following (pick what seems closest if no exact match is available):
-
-```
-                        acc  = Adrenocortical carcinoma
-                        blca = Bladder Urothelial Carcinoma
-                        lgg  = Brain Lower Grade Glioma
-                        brca = Breast invasive carcinoma
-                        cesc = Cervical squamous cell carcinoma and endocervical adenocarcinoma
-                        chol = Cholangiocarcinoma
-                        coad = Colon adenocarcinoma
-                        esca = Esophageal carcinoma
-                        gbm  = Glioblastoma multiforme
-                        hnsc = Head and Neck squamous cell carcinoma
-                        kich = Kidney Chromophobe
-                        kirc = Kidney renal clear cell carcinoma
-                        kirp = Kidney renal papillary cell carcinoma
-                        lihc = Liver hepatocellular carcinoma
-                        luad = Lung adenocarcinoma
-                        lusc = Lung squamous cell carcinoma
-                        dlbc = Lymphoid Neoplasm Diffuse Large B-cell Lymphoma
-                        meso = Mesothelioma
-                        ov   = Ovarian serous cystadenocarcinoma
-                        paad = Pancreatic adenocarcinoma
-                        pcpg = Pheochromocytoma and Paraganglioma
-                        prad = Prostate adenocarcinoma
-                        read = Rectum adenocarcinoma
-                        sarc = Sarcoma
-                        skcm = Skin Cutaneous Melanoma
-                        stad = Stomach adenocarcinoma
-                        tgct = Testicular Germ Cell Tumors
-                        thym = Thymoma
-                        thca = Thyroid carcinoma
-                        ucec = Uterine Corpus Endometrial Carcinoma
-                        uvm  = Uveal Melanoma
-                        ucs  = Uterine Carcinosarcoma
-```
 
 ## Samplesheets
 These sample sheets are the only other metadata to which Tamor has access. Place all the 
