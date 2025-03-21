@@ -1,0 +1,59 @@
+Oncotree	TGCA	PCGR	Description Oncotree/TGCA
+AML	LAML	17	Acute Myeloid Leukemia
+AMPULLA_OF_VATER	TCGA_ALL_TUMOR	2	Ampulla of Vater
+MYELOID	TCGA_ALL_TUMOR	17	Other myeloid cancers
+ADRENAL_GLAND	ACC	1	Adrenocortical carcinoma
+BLADDER	BLCA	4	Bladder Urothelial Carcinoma
+BONE	TCGA_ALL_TUMOR	5	Bone
+ENCG	LGG	8	Encapsulated Glioma / Brain Lower Grade Glioma
+BREAST	BRCA	6	Breast / invasive carcinoma
+CERVIX	CESC	7	Cervical squamous cell carcinoma and endocervical adenocarcinoma
+IPN	CHOL	3	Cholangiocarcinoma
+BILIARY_TRACT	TCGA_ALL_TUMOR	3	Other biliary tract cancers
+CML	LCML	17	Chronic Myelogenous Leukemia
+COAD	COAD	9	Colon adenocarcinoma
+BOWEL	TCGA_ALL_TUMOR	9	Other gastrointenstinal cancers
+ESCA	ESCA	10	Esophageal carcinoma
+STOMACH	TCGA_ALL_TUMOR	10	Other esophageal and stomach cancers
+GB	GBM	8	Glioblastoma / multiforme
+BRAIN	TCGA_ALL_TUMOR	8	Other brain or central nervous system cancers
+HEAD_NECK	HNSC	12	Head and Neck / squamous cell carcinoma
+CHRCC	KICH	13	Kidney Chromophobe
+CCRCC	KIRC	13	Kidney renal clear cell carcinoma
+PRCC	KIRP	13	Kidney renal papillary cell carcinoma
+KIDNEY	TCGA_ALL_TUMOR	13	Other Renal Carcinomas and Sarcomas
+LIVER	LIHC	14	Liver / hepatocellular carcinoma
+LAIS	LUAD	15	Lung adenocarcinoma (in situ)
+LUAS	LUSC	15	Lung squamous cell carcinoma
+LUNG	TCGA_ALL_TUMOR	15	Other lung cancers
+MBN	DLBC	16	Mature B-cell Neoplasms / Lymphoid Neoplasm Diffuse Large B-cell Lymphoma
+LYMPH	TCGA_ALL_TUMOR	16	Other lymphoid cancers
+PLEURA	MESO	22	Mesothelioma (pleural)
+TISSUE	TCGA_ALL_TUMOR	0	Cancer
+OTHER	MISC	0	Miscellaneous cancers, Not Otherwise Specified
+SOC	OV	18	Ovarian serous cystadenocarcinoma
+OVARY	TCGA_ALL_TUMOR	18	Other ovarian and fallopian tube cancers
+PENIS	TCGA_ALL_TUMOR	0	Penile cancers
+PNS	TCGA_ALL_TUMOR	20	Peripheral Nervous System cancers
+PERITONEUM	TCGA_ALL_TUMOR	21	Peritoneal cancers
+PAAD	PAAD	19	Pancreatic adenocarcinoma
+PANCREAS	TCGA_ALL_TUMOR	19	Other pancreatic cancers
+PHC	PCPG	1	Pheochromocytoma
+PGNG	PCPG	25	Paraganglioma
+PRAD	PRAD	23	Prostate adenocarcinoma
+PROSTATE	TCGA_ALL_TUMOR	23	Other prostate cancers
+READ	READ	9	Rectum adenocarcinoma
+SOFT_TISSUE	SARC	25	Sarcoma
+SKCM	SKCM	24	Skin Cutaneous Melanoma
+SKIN	TCGA_ALL_TUMOR	24	Other skin cancers
+STAD	STAD	10	Stomach adenocarcinoma
+TESTIS	TGCT	26	Testicular / Germ Cell Tumors
+THYM	THYM	27	Thymoma
+THYMUS	TCGA_ALL_TUMOR	27	Other thymic cancers
+THYROID	THCA	28	Thyroid carcinoma
+UCS	UCS	29	Uterine Carcinosarcoma
+UEC	UCEC	29	Uterine Corpus Endometrial Carcinoma
+UTERUS	TCGA_ALL_TUMOR	29	Other uterine cancers
+UM	UVM	11	Uveal Melanoma
+EYE	TCGA_ALL_TUMOR	11	Other eye cancers
+VULVA	TCGA_ALL_TUMOR	30	Vulvar and vaginal cancers
