@@ -22,7 +22,7 @@ rule dragen_rna_read_mapping_quant_and_fusion_calls:
                 this_sample_only_fastq_list_csv = make_sample_fastq_list_csv(wildcards, True, True, sample_libraries)
                 temporary_decompressed_sample_fastq_list = harmonize_fastq_compression_formats(this_sample_only_fastq_list_csv)
                 # must remove existing RNA bam because of dragen chmoderror if not file owner
-                shell("rm -f {output_dir}/{project}/{subject}/rna/{subject}_{sample}.bam; "+
+                shell("rm -f "+config["output_dir"]+"/{project}/{subject}/rna/{subject}_{sample}.rna.bam; "+
                         "dragen -r "+config["ref_genome"]+" --ora-reference "+config["ref_ora"]+
 			" --fastq-list {this_sample_only_fastq_list_csv} --fastq-list-all-samples true --intermediate-results-dir "+config["temp_dir"]+
 			" --output-dir "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/rna" +
