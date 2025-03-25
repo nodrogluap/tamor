@@ -1,0 +1,90 @@
+#!/usr/bin/env python
+
+import argparse
+import csv
+import sys
+import yaml
+from rdflib import URIRef, Graph
+from rdflib.namespace import RDF
+
+parser = argparse.ArgumentParser(
+                    prog='oncotree2tcga',		
+                    description='Convert an OncoTree cancer type notation term into a PCGR code')
+parser.add_argument("project")
+parser.add_argument("subject")
+parser.add_argument("tumor")
+parser.add_argument("normal")
+parser.add_argument("output_filename")
+args = parser.parse_args()
+
+def decomment(csvfile):
+    for row in csvfile:
+         raw = row.split('#')[0].strip()
+         if raw: yield raw
+
+search_term = "TISSUE" # Most generic as default
+with open("config/config.yaml", "r") as f:
+    config = yaml.safe_load(f)
+with open(config["dna_paired_samples_tsv"], 'r') as data_in:
+    tsv_file = csv.reader(decomment(data_in), delimiter="\t")
+    for line in tsv_file:
+        if line[0] == args.subject and line[1] == args.tumor and line[3] == args.normal and line[7] == args.project:
+             search_term = line[6]
+
+# Create an RDF Knowledge Graph
+graph = Graph()
+
+# Parse in the local RDF file cache of the OncoTree cancer type taxonomy 
+graph.parse("resources/oncotree-taxonomy-2021-11-02.rdf")
+
+oncotree2tcga = {}
+with open("resources/oncotree2other_codes.tsv", 'r') as data_in:
+    next(data_in) # skip header line
+    tsv_file = csv.reader(decomment(data_in), delimiter="\t")
+    for line in tsv_file:
+        oncotree2tcga[line[0]] = line[2]
+# Roll up the given oncotree code to a self or parent that has a PCGR mapping.
+if search_term in oncotree2tcga.keys():
+    with open(args.output_filename, 'w') as output_file:
+        output_file.write("%s"%oncotree2tcga[search_term])
+    exit(0)
+
+# Need to climb the hierarchy to find a match
+tumor_type = URIRef("http://data.mskcc.org/ontologies/oncotree#Tumor_Type")
+skos_notation = URIRef("http://www.w3.org/2004/02/skos/core#notation")
+skos_broader = URIRef("http://www.w3.org/2004/02/skos/core#broader")
+
+# Make a catalog of subject we can map to PCGR
+mapped_tumor_types = {}
+for subject, predicate, obj in graph:
+    if predicate == skos_notation:
+        if str(obj) in oncotree2tcga.keys():
+            #print (f"Adding {obj} as {subject}")
+            mapped_tumor_types[str(subject)] = str(obj)
+
+# Find the term that was requested
+candidate_subject = ""
+for subject, predicate, obj in graph:
+    #print (f"{subject}, {predicate}, {obj}")
+    if predicate == skos_notation:
+        if str(obj) == search_term:
+            #print (f"Found object {obj} while looking for {search_term}, with predicate {predicate} and subject {subject}: ")
+            candidate_subject = subject
+            break
+
+if candidate_subject == "":
+    print("FATAL: Could not find OncoTree code "+search_term, file=sys.stderr)
+    exit(1)
+
+# Ascend the taxonomy until we have a mappable term.
+while str(candidate_subject) not in mapped_tumor_types.keys():
+    for subj, predicate2, obj2 in graph:
+        if predicate2 == skos_broader and subj == candidate_subject:
+            #print(f"{subj} -> {obj2}")
+            candidate_subject = obj2
+            break
+
+with open(args.output_filename, 'w') as output_file:
+    output_file.write("%s"%oncotree2tcga[mapped_tumor_types[str(candidate_subject)]])
+exit(0)
+
