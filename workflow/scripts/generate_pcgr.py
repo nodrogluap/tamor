@@ -15,6 +15,7 @@ from tamor_utils import decomment
 parser = argparse.ArgumentParser(
                     prog='Generate PCGR',
                     description='A wrapper to reformat SNV, CNV, and RNASeq results from Tamor suited for generation of PCGR variant interpretation reports')
+parser.add_argument("tumor_site_file")
 parser.add_argument("cpsr")
 parser.add_argument("cpsr_yaml")
 parser.add_argument("snv")
@@ -28,6 +29,10 @@ args = parser.parse_args()
 
 with open("config/config.yaml", "r") as f:
     config = yaml.safe_load(f)
+
+tumor_site = 0 # Most generic as default
+with open(args.tumor_site_file, "r") as f:
+    tumor_site = f.read()
 
 # Get tumor purity and ploidy estimates from Dragen CNV caller
 tumor_purity = 0.1
@@ -56,14 +61,6 @@ with open(config["rna_paired_samples_tsv"], 'r') as data_in:
             rna_sample = line[1]
             break
 # There may not be an RNA sample associated with the DNA sample (yet), and that's okay.
-
-tumor_site = 0 # 0 = "Any" in PCGR parlance
-with open(config["dna_paired_samples_tsv"], 'r') as data_in:
-    tsv_file = csv.reader(decomment(data_in), delimiter="\t")
-    for line in tsv_file:
-        if line[0] == args.subject and line[1] == args.tumor and line[3] == args.normal and line[9] == args.project:
-            tumor_site = line[6]
-            break
 
 # Set a floor on tumor variant allele frequency to be included in the PCGR reports.
 tvaf_threshold = 0

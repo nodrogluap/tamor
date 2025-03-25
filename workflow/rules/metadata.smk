@@ -105,7 +105,7 @@ def get_rna_sample_keys():
         return list(rna_paired_samples.keys())
 
 def get_dna_projects():
-        return [tuple[3] for tuple in dna_paired_samples.values()]
+        return [tuple[7] for tuple in dna_paired_samples.values()]
 
 def get_dna_subjects():
         return [tuple[0] for tuple in dna_paired_samples.values()]

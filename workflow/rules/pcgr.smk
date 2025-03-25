@@ -17,11 +17,11 @@ def generate_pcgr_labels(wildcards):
 
 rule lookup_pcgr_code_from_oncotree:
 	input:
-		'../../resources/oncotree-taxonomy-2021-11-02.rdf',
-		'../../resources/oncotree2other_codes.tsv',
-		'../../resources/ontology_mappings.txt'
+		'resources/oncotree-taxonomy-2021-11-02.rdf',
+		'resources/oncotree2other_codes.tsv',
+		'resources/ontology_mappings.txt'
 	output:
-		site_file = config["output_dir"]+"/pcgr/{project}/{subject}/{subject}_{tumor}_{normal}.pcgr.tumor_site_code.txt"
+		site_file = config["output_dir"]+"/{project}/{subject}/{subject}_{tumor}_{normal}.pcgr.tumor-site-code.txt"
 	conda:
 		"../envs/oncotree_remapper.yaml"
 	resources:
@@ -29,19 +29,20 @@ rule lookup_pcgr_code_from_oncotree:
 		runtime = 5,
 		mem_mb = 50000
 	shell:
-		"workflow/scripts/oncotree2pcgr {project} {subject} {tumor} {normal} {output.site_file}"
+		"workflow/scripts/oncotree2pcgr {wildcards.project} {wildcards.subject} {wildcards.tumor} {wildcards.normal} {output.site_file}"
 
 # Personal Cancer Genome Report (user-friendly triaged variants self-contained Web page)
 # The Web page name is limited by PCGR to 35 characters, so we have the full subject-tumor-normal unique combo in the dir name only.
 rule generate_pcgr_html:
-	# Priority must be higher than Djerba, as Djerba needs the VEP VCF output from this command (not explicit due to randomnness in the VEP file name) 
+	# Priority must be higher than Djerba, as Djerba needs the VEP VCF output from this command (not explicit 
+	# due to randomness in the VEP file name) 
         priority: 20
         input:
                 cpsr = config["output_dir"]+'/{project}/{subject}/{normal}.cpsr.grch38.classification.tsv.gz',
                 cpsr_yaml = config["output_dir"]+'/{project}/{subject}/{normal}.cpsr.grch38.conf.yaml',
                 somatic_snv_vcf = config["output_dir"]+'/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.hard-filtered.vcf.gz',
                 somatic_cnv_vcf = config["output_dir"]+'/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.cnv.vcf.gz',
-                tumor_site_code_file = config["output_dir"]+'/pcgr/{project}/{subject}/{subject}_{tumor}_{normal}.pcgr.tumor_site_code.txt',
+                tumor_site_code_file = config["output_dir"]+'/{project}/{subject}/{subject}_{tumor}_{normal}.pcgr.tumor-site-code.txt',
                 pcgrr_env = ".snakemake/conda/pcgrr/bin/Rscript"
         output:
                 html=config["output_dir"]+'/pcgr/{project}/{subject}_{tumor}_{normal}/{subject}.pcgr.grch38.html',
@@ -59,7 +60,7 @@ rule generate_pcgr_html:
                 mem_mb = 50000
         shell:
                 # Wrapper script to reformat inputs and run PCGR, so we can use PCGR's conda env directly.
-                "workflow/scripts/generate_pcgr.py `cat {input.tumor_site_code_file}` {input.cpsr} {input.cpsr_yaml} {input.somatic_snv_vcf} {input.somatic_cnv_vcf} " +
+                "workflow/scripts/generate_pcgr.py {input.tumor_site_code_file} {input.cpsr} {input.cpsr_yaml} {input.somatic_snv_vcf} {input.somatic_cnv_vcf} " +
                 # DNA sample spec
                 config["output_dir"]+ " {wildcards.project} {wildcards.subject} {wildcards.tumor} {wildcards.normal}" +
                 "; ln -s {output.html} `dirname {output.html}`/index.html"
