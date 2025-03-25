@@ -64,7 +64,7 @@ a poor quality histology section from a tumor, in which case use ``True``. This 
 in the germline sample to still show up as somatic variants in the tumor analysis output (see default of 0.05 under ``tumor_in_normal_tolerance_proportion`` in ``config.yaml``)
 
 For the *seventh* column, the type of cancer the tumor represent must be coded. This is preferably an OncoTree code. Those codes can be found here: <https://oncotree.mskcc.org/> 
-This informtion will be used to customize some parts of the variant, gene expression, and immune profiling reports. 
+This information will be used to customize some parts of the variant, gene expression, and immune profiling reports. 
 If no cancer type information is available at all, you can use the top-level code in OncoTree: "TISSUE".
 While OncoTree codes are preferred, Tamor will also attempt to uniquely map codes from the 
 [ICD-O](https://www.who.int/standards/classifications/other-classifications/international-classification-of-diseases-for-oncology), 

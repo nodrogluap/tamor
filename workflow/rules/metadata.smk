@@ -4,9 +4,15 @@ import glob
 dna_paired_samples = {}
 rna_paired_samples = {}
 
-# The format of the paired DNA samples file is tab-delimited, with subject ID in the zeroth column, tumor sample name in first column, then matched normal in the second. 
-# Additional columns are metadata: Boolean indicating if some tumor is expected in the normal sample, and a number representing the tumor site 
-# as per PCGR guidelines (see README.md for details), then finally project name in the last column.
+# DNA config file format:
+# subjectID<tab>
+# tumorSampleID<tab>
+# TrueOrFalseTumorHasPCRDuplicates<tab>
+# germlineSampleID<tab>
+# TrueOrFalseGermlineHasPCRDuplicates<tab>
+# TrueOrFalse_germline_contains_some_tumor<tab>
+# OncoTreeCode<tab>
+# ProjectID
 with open(config["dna_paired_samples_tsv"], 'r') as data_in:
         tsv_file = csv.reader(decomment(data_in), delimiter="\t")
         for line in tsv_file:
@@ -19,7 +25,7 @@ with open(config["dna_paired_samples_tsv"], 'r') as data_in:
                 if '_' in line[2]:
                         raise NameError("Germline sample name cannot contain any underscores ('_'), please revise "+line[2])
                 dna_paired_samples_key = "_".join((line[0],line[1],line[3]))
-                dna_paired_samples[dna_paired_samples_key] = [line[0],line[5],line[6],line[9],line[2],line[4],line[7],line[8]]
+                dna_paired_samples[dna_paired_samples_key] = line
 
 with open(config["rna_paired_samples_tsv"], 'r') as data_in:
         tsv_file = csv.reader(decomment(data_in), delimiter="\t")
@@ -28,7 +34,7 @@ with open(config["rna_paired_samples_tsv"], 'r') as data_in:
                 rna_paired_samples[rna_paired_samples_key] = [line[0],line[1],line[3]]
 
 def dna_paired_sample_keys():
-                dna_paired_samples.keys()
+        dna_paired_samples.keys()
 
 def dna_paired_sample_values():
         dna_paired_samples.values()
@@ -99,7 +105,7 @@ def get_rna_sample_keys():
         return list(rna_paired_samples.keys())
 
 def get_dna_projects():
-        return [tuple[3] for tuple in dna_paired_samples.values()]
+        return [tuple[7] for tuple in dna_paired_samples.values()]
 
 def get_dna_subjects():
         return [tuple[0] for tuple in dna_paired_samples.values()]
@@ -107,27 +113,21 @@ def get_dna_subjects():
 def get_dna_sample_keys():
         return list(dna_paired_samples.keys())
 
-def get_tumor_site(wildcards):
-        return dna_paired_samples["_".join((wildcards.subject, wildcards.tumor, wildcards.normal))][2]
-
 def get_oncotree_code(wildcards):
         return dna_paired_samples["_".join((wildcards.subject, wildcards.tumor, wildcards.normal))][6]
 
-def get_tcga_code(wildcards):
-        return dna_paired_samples["_".join((wildcards.subject, wildcards.tumor, wildcards.normal))][7]
-
 def get_normal_contains_some_tumor(wildcards):
-        return dna_paired_samples["_".join((wildcards.subject, wildcards.tumor, wildcards.normal))][1] == 'True'
+        return dna_paired_samples["_".join((wildcards.subject, wildcards.tumor, wildcards.normal))][5] == 'True'
 
 def get_tumor_has_pcr_duplicates(wildcards):
-        return dna_paired_samples["_".join((wildcards.subject, wildcards.tumor, wildcards.normal))][4] == 'True'
+        return dna_paired_samples["_".join((wildcards.subject, wildcards.tumor, wildcards.normal))][2] == 'True'
 
 # In theory since we record the PCR status of the normal on multiple lines of the config file, we will use the first instance encountered as correct.
 # TODO: enforce PCR status to be the same across all DNA config lines a normal appears on?
 def get_normal_has_pcr_duplicates(wildcards):
 	for key, tuplevalues in dna_paired_samples.items():
 		if key.startswith(wildcards.subject+"_") and key.endswith("_"+wildcards.normal):
-        		return tuplevalues[5] == 'True'
+        		return tuplevalues[4] == 'True'
 	return False
 
 

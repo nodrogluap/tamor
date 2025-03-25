@@ -1,0 +1,7 @@
+name: oncotree_remapper
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - rdflib
+  - pyyaml

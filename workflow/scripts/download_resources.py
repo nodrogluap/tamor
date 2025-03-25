@@ -20,7 +20,7 @@ resource_dict = {
         "ref_ora": ["https://s3.amazonaws.com/webdata.illumina.com/downloads/software/dragen/resource-files/misc/oradata_homo_sapiens.tar", "oradata_homo_sapiens", "tar", "xf"],
         "ref_fasta": ["http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa", "GRCh38_full_analysis_set_plus_decoy_hla.fa"],
         "oncotree_mappings": ["https://raw.githubusercontent.com/cBioPortal/oncotree/refs/heads/master/scripts/ontology_to_ontology_mapping_tool/ontology_mappings.txt", "oncotree_ontology_mappings.txt"],
-        "oncotree_hierarchy": ["https://github.com/cBioPortal/oncotree/blob/master/resources/rdf/oncotree-taxonomy-2021-11-02.rdf", "oncotree-taxonomy-2021-11-02.rdf"]
+        "oncotree_hierarchy": ["https://raw.githubusercontent.com/cBioPortal/oncotree/refs/heads/master/resources/rdf/oncotree-taxonomy-2021-11-02.rdf", "oncotree-taxonomy-2021-11-02.rdf"]
 }
 for resource_name, spec in resource_dict.items():
     if(not os.path.exists(spec[1])):

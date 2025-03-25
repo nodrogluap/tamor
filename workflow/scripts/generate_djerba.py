@@ -22,6 +22,7 @@ from tamor_utils import decomment
 parser = argparse.ArgumentParser(
                     prog='generate_djerba.py',
                     description='A wrapper to reformat SNV, CNV, and RNASeq results from Tamor suited for generation of Djerba variant interpretation reports')
+parser.add_argument("tcga_code_file")
 parser.add_argument("snv")
 parser.add_argument("cnv")
 parser.add_argument("outdir")
@@ -70,6 +71,9 @@ BLANK_GZIP_FILE=to_gzip.name
 # TODO cleanup .gz
 system(f"gzip -c {BLANK_GZIP_FILE} > {BLANK_GZIP_FILE}.gz")
 tamor["provenance_file_path"] = BLANK_GZIP_FILE+".gz"
+
+with open(args.tcga_code_file, 'r') as data_in:
+    tamor["tcgacode"] = data_in.read()
 
 # Biomarker outputs from Dragen for microsatellite instability and homologous recombination deficiency
 msi = tempfile.NamedTemporaryFile(suffix=".txt")
@@ -180,13 +184,13 @@ with open(config["rna_paired_samples_tsv"], 'r') as data_in:
         # This is noted in the config dir README.md, in case you havve tumor and normal RNA sample for a case, put the tumor sample first.
         if line[0] == args.subject and line[2] == args.tumor:
             rna_sample = line[1]
-            rna_cohort = line[5]
+            rna_cohort = line[4]
             break
 print ("RNA cohort for %s is %s" % (rna_sample, rna_cohort))
 with open(config["rna_paired_samples_tsv"], 'r') as data_in:
     tsv_file = csv.reader(decomment(data_in), delimiter="\t")
     for line in tsv_file:
-        if rna_sample and line[5] == rna_cohort:
+        if rna_sample and line[4] == rna_cohort:
             cohort_sample2tumor_dna[line[1]] = line[2]
             tumor_dna2subject[line[2]] = line[0]
             tumor_dna2project[line[2]] = line[3]
@@ -198,7 +202,6 @@ with open(config["dna_paired_samples_tsv"], 'r') as data_in:
     for line in tsv_file:
         if line[0] == args.subject and line[1] == args.tumor and line[3] == args.normal and line[9] == args.project:
             tamor["oncotree"] = line[7]
-            tamor["tcgacode"] = line[8]
         if line[1] in cohort_sample2tumor_dna.values():
             tumor_dna2subject[line[1]] = line[0]
             tumor_dna2project[line[1]] = line[9]
