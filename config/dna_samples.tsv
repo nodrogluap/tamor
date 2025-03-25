@@ -1,36 +1,3 @@
 # Columns: <subject> <tumor dna> <tumor is PCR'ed> <normal dna> <normal is PCR'ed> <normal_contains_tumor> <pcgr_tumor_site_number> <onco_tree_code> <TCGA_code> <project>
 # OncoTree codes for cancer types can be found here: https://oncotree.mskcc.org/
-# TCGA codes can be found here: https://gdc.cancer.gov/resources-tcga-users/tcga-code-tables/tcga-study-abbreviations
-# The list of tumor site numbers for the version of PCGR included here is:
-#                       0  = Any
-#                       1  = Adrenal Gland
-#                       2  = Ampulla of Vater
-#                       3  = Biliary Tract
-#                       4  = Bladder/Urinary Tract
-#                       5  = Bone
-#                       6  = Breast
-#                       7  = Cervix
-#                       8  = CNS/Brain
-#                       9  = Colon/Rectum
-#                       10 = Esophagus/Stomach
-#                       11 = Eye
-#                       12 = Head and Neck
-#                       13 = Kidney
-#                       14 = Liver
-#                       15 = Lung
-#                       16 = Lymphoid
-#                       17 = Myeloid
-#                       18 = Ovary/Fallopian Tube
-#                       19 = Pancreas
-#                       20 = Peripheral Nervous System
-#                       21 = Peritoneum
-#                       22 = Pleura
-#                       23 = Prostate
-#                       24 = Skin
-#                       25 = Soft Tissue
-#                       26 = Testis
-#                       27 = Thymus
-#                       28 = Thyroid
-#                       29 = Uterus
-#                       30 = Vulva/Vagina
-PR-TEST-CLL-SAMN08512283	PR-TEST-CLL-SAMN08512283-SRR6702602-T	False	PR-TEST-CLL-SAMN08512283-SRR6702602-N	False	True	16	CLLSLL	DLBC	PR-TEST-CLL
+PR-TEST-CLL-SAMN08512283	PR-TEST-CLL-SAMN08512283-SRR6702602-T	False	PR-TEST-CLL-SAMN08512283-SRR6702602-N	False	True	CLLSLL	PR-TEST-CLL
