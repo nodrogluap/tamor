@@ -1,0 +1,11 @@
+name: qiagen_ipa_api 
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - requests
+  - requests-oauthlib
+  - pandas
+  - pyyaml
+  - tqdm
+  - lynx
