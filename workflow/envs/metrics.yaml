@@ -1,0 +1,10 @@
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python  =3.12.9
+  - ipykernel =6.29
+  - notebook =7.2
+  - pip:
+    - pyyaml
+    - pandas
