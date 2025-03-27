@@ -9,7 +9,7 @@ from rdflib.namespace import RDF
 
 parser = argparse.ArgumentParser(
                     prog='oncotree2tcga',		
-                    description='Convert an OncoTree cancer type notation term into a PCGR code')
+                    description='Convert an OncoTree cancer type notation term into a TCGA code')
 parser.add_argument("project")
 parser.add_argument("subject")
 parser.add_argument("tumor")
