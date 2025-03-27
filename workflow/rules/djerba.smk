@@ -38,6 +38,7 @@ rule generate_djerba_html:
 		tcga_code_file = config["output_dir"]+"/{project}/{subject}/{subject}_{tumor}_{normal}.tcga.tumor-site-code.txt",
 		djerba_env = ".snakemake/conda/djerba/bin/djerba.py"
 	output:
+		rna_outfile = config["output_dir"]+"/djerba/{project}/{subject}_{tumor}_{normal}/data_expression_zscores_tcga.txt",
 		html=config["output_dir"]+'/djerba/{project}/{subject}_{tumor}_{normal}/{subject}-v1_report.research.html',
 		rep=report(directory(config["output_dir"]+'/djerba/{project}/{subject}_{tumor}_{normal}'),
 		       caption="../report/djerba_caption.rst",
