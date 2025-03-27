@@ -1,10 +1,13 @@
 # Tamor
 
-Rapid automated generation of cancer genome mutation reports, starting from FASTQ-formatted sequence files. 
+Rapid automated generation of cancer genome mutation reports. About 6 hours starting from input FASTQ files for a single case (100x tumor, 40x normal, 100M read RNA). 
 
 Generates [Personal Cancer Genome Reports](https://sigven.github.io/pcgr/) (PCGR) and [Djerba Reports](https://github.com/oicr-gsi/djerba) using 
 [Illumina Dragen](https://www.illumina.com/products/by-type/informatics-products/dragen-secondary-analysis.html) + 
-[Snakemake](https://snakemake.github.io/), handling both genomic and transcriptomic input data. 
+[Snakemake](https://snakemake.github.io/). 
+Can also automatically upload variants/outliers and launch [Qiagen IPA](https://digitalinsights.qiagen.com/products-overview/discovery-insights-portfolio/analysis-and-visualization/qiagen-ipa/features-analyze-with-ipa/) 
+core analysis for those with an IPA license or trial.
+
 Catalogues as conforming to [Standardized Snakemake Workflow](https://snakemake.github.io/snakemake-workflow-catalog/#standardized) rules for reproducibility.
 
 # tl;dr
