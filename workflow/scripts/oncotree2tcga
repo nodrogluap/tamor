@@ -43,7 +43,7 @@ with open("resources/oncotree2other_codes.tsv", 'r') as data_in:
     tsv_file = csv.reader(decomment(data_in), delimiter="\t")
     for line in tsv_file:
         oncotree2tcga[line[0]] = line[2]
-# Roll up the given oncotree code to a self or parent that has a PCGR mapping.
+# Roll up the given oncotree code to a self or parent that has a TCGA mapping.
 if search_term in oncotree2tcga.keys():
     with open(args.output_filename, 'w') as output_file:
         output_file.write("%s"%oncotree2tcga[search_term])
@@ -54,7 +54,7 @@ tumor_type = URIRef("http://data.mskcc.org/ontologies/oncotree#Tumor_Type")
 skos_notation = URIRef("http://www.w3.org/2004/02/skos/core#notation")
 skos_broader = URIRef("http://www.w3.org/2004/02/skos/core#broader")
 
-# Make a catalog of subject we can map to PCGR
+# Make a catalog of subject we can map to TCGA
 mapped_tumor_types = {}
 for subject, predicate, obj in graph:
     if predicate == skos_notation:
