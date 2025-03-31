@@ -3,6 +3,9 @@
 # If a token is not provided, Djerba reports will not be generated.
 oncokb_api_token_file: "config/oncokb_api_key.txt"
 
+# Indicate whether Tamor should try to login to Qiagen's Ingenuity Pathway Analysis portal to generate pathway analyses (requires a paid IPA license).
+upload_to_ipa: False
+
 # Where to write temporary intermediate outputs used internally by Dragen (preferably an SSD or other very fast storage).
 temp_dir: "/staging/tmp"
 
