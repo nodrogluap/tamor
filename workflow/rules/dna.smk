@@ -56,8 +56,10 @@ rule dragen_germline_snv_sv_and_cnv_calls:
                         dragen_cmd = dragen_cmd + " --enable-duplicate-marking true"
                 if has_UMIs:
                         umi_correction_flag = "--umi-correction-scheme=random"
-                        if "umi_whitelist" in config:
-                                umi_correction_flag = "--umi-nonrandom-whitelist "+config["umi_whitelist"]
+                        if "umi_correction_table" in config:
+                                umi_correction_flag = "--umi-library-type nonrandom-duplex --umi-correction-table " + config["umi_correction_table"]
+                        elif "umi_whitelist" in config:
+                                umi_correction_flag = "--umi-library-type nonrandom-duplex --umi-nonrandom-whitelist "+config["umi_whitelist"]
                         normal_bam = get_normal_bam(wildcards)
                         print("Germline sample has UMI's, using bams instead of fastqs as variant calling input")
                         # only run alignment if germline bam does not exist?
@@ -176,8 +178,10 @@ rule dragen_somatic_snv_sv_and_cnv_calls:
 
                 if germline_has_UMIs or tumor_has_UMIs:
                         umi_correction_flag = "--umi-correction-scheme=random"
-                        if "umi_whitelist" in config:
-                                umi_correction_flag = "--umi-nonrandom-whitelist "+config["umi_whitelist"]
+                        if "umi_correction_table" in config:
+                                umi_correction_flag = "--umi-library-type nonrandom-duplex --umi-correction-table " + config["umi_correction_table"]
+                        elif "umi_whitelist" in config:
+                                umi_correction_flag = "--umi-library-type nonrandom-duplex --umi-nonrandom-whitelist "+config["umi_whitelist"]
                         tumor_bam = get_tumor_bam(wildcards)
                         print("UMIs detected, using bams instead of fastqs as variant calling input")
                         # only run alignment if tumor bam does not exist?
