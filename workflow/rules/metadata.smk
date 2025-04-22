@@ -33,17 +33,6 @@ with open(config["rna_paired_samples_tsv"], 'r') as data_in:
                 rna_paired_samples_key = "_".join((line[0],line[1]))
                 rna_paired_samples[rna_paired_samples_key] = [line[0],line[1],line[3]]
 
-def dna_paired_sample_keys():
-        dna_paired_samples.keys()
-
-def dna_paired_sample_values():
-        dna_paired_samples.values()
-
-def rna_paired_sample_keys():
-        rna_paired_samples.keys()
-
-def rna_paired_sample_values():
-        rna_paired_samples.values()
 
 # Return a tuple of two:
 # Boolean as to whether this library should get the Unique Molecular Indices treatment, using info from the SampleSheet.csv
@@ -95,26 +84,6 @@ def identify_libraries(is_rna, is_tumor, wildcards):
                         #       raise NameError("Missing Sample_ID column in Illumina samplesheet "+samplesheet)
         return sample_has_UMIs, list(set(sample_libraries)) # dedup
 
-def get_rna_projects():
-        return [tuple[2] for tuple in rna_paired_samples.values()]
-
-def get_rna_subjects():
-        return [tuple[0] for tuple in rna_paired_samples.values()]
-
-def get_rna_sample_keys():
-        return list(rna_paired_samples.keys())
-
-def get_dna_projects():
-        return [tuple[7] for tuple in dna_paired_samples.values()]
-
-def get_dna_subjects():
-        return [tuple[0] for tuple in dna_paired_samples.values()]
-
-def get_dna_sample_keys():
-        return list(dna_paired_samples.keys())
-
-def get_oncotree_code(wildcards):
-        return dna_paired_samples["_".join((wildcards.subject, wildcards.tumor, wildcards.normal))][6]
 
 def get_normal_contains_some_tumor(wildcards):
         return dna_paired_samples["_".join((wildcards.subject, wildcards.tumor, wildcards.normal))][5] == 'True'

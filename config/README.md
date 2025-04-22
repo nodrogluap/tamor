@@ -30,20 +30,20 @@ By default the genome index and annotation files, as well as the PCGR data bundl
 This is where ``workflow/scripts/download_resources.py`` puts those files.
 
 Tamor's default config has the input lists of paired tumor-normal samples (with minimal metadata, described below) in files called ``config/dna_samples.tsv`` and ``config/rna_samples.tsv``.
-These TSVs are the main config files that you will need to edit to run your own samples through the workflow.
+These TSVs are the main config files that you will need to edit to run your own samples through the workflow. Config files are internally validated for completeness based on ``workflow/schemas/dna_sample_config.schema.yaml`` and ``workflow/schemas/rna_sample_config.schema.yaml``.
 
 ## config/dna_samples.tsv
-Has 8 columns to be specified:
+Has 8 columns to be specified with column names:
 
 ```
 subjectID<tab>
 tumorSampleID<tab>
-TrueOrFalseTumorHasPCRDuplicates<tab>
+trueOrFalseTumorHasPCRDuplicates<tab>
 germlineSampleID<tab>
-TrueOrFalseGermlineHasPCRDuplicates<tab>
-TrueOrFalse_germline_contains_some_tumor<tab>
-OncoTreeCode<tab>
-ProjectID
+trueOrFalseGermlineHasPCRDuplicates<tab>
+trueOrFalseGermlineContainsSomeTumor<tab>
+oncoTreeCode<tab>
+projectID
 ```
 
 The ``subjectID``, ``tumorSampleID`` and ``germlineSampleID`` must:
@@ -73,21 +73,21 @@ While OncoTree codes are preferred, Tamor will also attempt to uniquely map code
 [HemeOnc](https://dataverse.harvard.edu/dataverse/HemOnc) systems.
 
 ## config/rna_samples.tsv
-Has 5 columns to be specified:
+Has 5 columns to be specified with column names:
 
 ```
 subjectID<tab>
 tumorRNASampleID<tab>
 matchedTumorDNASampleID<tab>
-ProjectID<tab>
-CohortNameForExpressionAnalysis
+projectID<tab>
+cohortNameForExpressionAnalysis
 ```
 
 If you have both normal and tumor RNA samples available, it is critical to list the tumor RNA sample first.  
 The first RNA sample listed in the file is the one that will be included on the PCGR report for ``matchedTumorDNASampleID``,
 and typically you want to report out regarding the tumor RNA.
 
-The last column ``CohortNameForExpressionAnalysis`` is used for Djerba cohort reporting, e.g. to identify Z-score and percentile 
+The last column ``cohortNameForExpressionAnalysis`` is used for Djerba cohort reporting, e.g. to identify Z-score and percentile 
 rank outliers genes in this sample compared to others being processed at the same time and nominally of the same cancer/tissue type as defined by the user.
 
 ## Samplesheets
@@ -106,7 +106,7 @@ with a corresponding Illumina Experiment Manager samplesheet ``resources/spreads
 sheet to find the correspondence between Sample_Name and Sample ID for each sequencing library, also analysis for DNA samples differs from that for RNA 
 samples, so the sample sheet must also contain a ``Sample_Project`` column. Sample projects with names that contain "RNA" in them will be processed as such, 
 all others are assumed to be DNA. The ``Sample_Project`` is not used for any other purpose than distinguishing RNA and DNA, and does not need to be the 
-same as the ProjectIDs listed in the ``config`` folder files.
+same as the projectIDs listed in the ``config`` folder files.
 
 The samplesheet is also used to determine if Unique Molecular Indices were used to generate the sequencing libraries, which requires different handling in Dragen during genotyping downstream.
 

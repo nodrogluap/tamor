@@ -5,6 +5,7 @@ import csv
 from pathlib import Path
 import glob
 
+from snakemake.utils import validate
 from scripts.tamor_utils import decomment
 
 # Site-specific config, most changes would be made in that file rather than this one.
@@ -27,6 +28,23 @@ include: "rules/djerba.smk"
 include: "rules/metrics.smk"
 include: "rules/datavzrd.smk"
 
+# read and validate the provided dna sample config file
+dna_sample_config_tsv = (
+    pd.read_csv(config["dna_paired_samples_tsv"], sep="\t", 
+	dtype={"subjectID": str, "tumorSampleID": str, "germlineSampleID": str, "projectID": str},
+	comment='#').set_index(["tumorSampleID"], drop=False)
+)
+validate(dna_sample_config_tsv, schema="schemas/dna_sample_config.schema.yaml")
+
+# read and validate the provided rna sample config file
+rna_sample_config_tsv = (
+    pd.read_csv(config["rna_paired_samples_tsv"], sep="\t", 
+	dtype={"subjectID": str, "tumorRNASampleID": str, "projectID": str},
+	comment='#').set_index(["tumorRNASampleID"], drop=False)
+)
+validate(rna_sample_config_tsv, schema="schemas/rna_sample_config.schema.yaml")
+
+
 rule all:
 	# Download reference data if not found on the system.
 	# Generate a Dragen somatic mutation analysis for each pair for tumor-normal listed in the DNA pairs file.
@@ -34,14 +52,14 @@ rule all:
 	# Also generate a PCGR user-friendly variant report, which will require the germline variant calls as well in another rule.
 	input:
 		config["ref_fasta"],
-		expand(config["output_dir"]+"/{project_name}/{subject}/rna/{sample_combo}.rna.quant.genes.hugo.tpm.txt", zip, project_name=get_rna_projects(), subject=get_rna_subjects(), sample_combo=get_rna_sample_keys()),
-		expand(config["output_dir"]+"/{project_name}/{subject}/rna/{sample_combo}.rna.quant.genes.fpkm.txt", zip, project_name=get_rna_projects(), subject=get_rna_subjects(), sample_combo=get_rna_sample_keys()),
-		expand(config["output_dir"]+"/{project_name}/{subject}/rna/{sample_combo}.rna.fusion_candidates.features.csv", zip, project_name=get_rna_projects(), subject=get_rna_subjects(), sample_combo=get_rna_sample_keys()),
-		expand(config["output_dir"]+"/{project_name}/{subject}/{sample_combo}.dna.somatic.hard-filtered.vcf.gz", zip, project_name=get_dna_projects(), subject=get_dna_subjects(), sample_combo=get_dna_sample_keys()),
-		expand(config["output_dir"]+"/{project_name}/{subject}/{sample_combo}.dna.somatic.cnv.vcf.gz", zip, project_name=get_dna_projects(), subject=get_dna_subjects(), sample_combo=get_dna_sample_keys()),
-		expand(config["output_dir"]+"/{project_name}/{subject}/{sample_combo}.dna.somatic.sv.vcf.gz", zip, project_name=get_dna_projects(), subject=get_dna_subjects(), sample_combo=get_dna_sample_keys()),
-		#expand(config["output_dir"]+"/{project_name}/{subject}/{sample_combo}.dna.germline_hla.hla.tsv", zip, project_name=get_dna_projects(), subject=get_dna_subjects(), sample_combo=get_dna_sample_keys()),
-		expand(config["output_dir"]+"/{project_name}/{subject}/{sample_combo}.cnv_plot.jpeg", zip, project_name=get_dna_projects(), subject=get_dna_subjects(), sample_combo=get_dna_sample_keys()),
-		expand(config["output_dir"]+"/{project_name}/{subject}/{sample_combo}.dna.somatic.sv.fusion_candidates.features.csv", zip, project_name=get_dna_projects(), subject=get_dna_subjects(), sample_combo=get_dna_sample_keys()),
-		expand(config["output_dir"]+"/pcgr/{project_name}/{sample_combo}/{subject}.pcgr.grch38.html", zip, project_name=get_dna_projects(), subject=get_dna_subjects(), sample_combo=get_dna_sample_keys()),
-		expand(config["output_dir"]+"/djerba/{project_name}/{sample_combo}/{subject}-v1_report.research.html", zip, project_name=get_dna_projects(), subject=get_dna_subjects(), sample_combo=get_dna_sample_keys())
+		expand(config["output_dir"]+"/{project}/{subject}/rna/{subject}_{rna}.rna.quant.genes.hugo.tpm.txt", zip, project=rna_sample_config_tsv["projectID"], subject=rna_sample_config_tsv["subjectID"], rna=rna_sample_config_tsv["tumorRNASampleID"]),
+		expand(config["output_dir"]+"/{project}/{subject}/rna/{subject}_{rna}.rna.quant.genes.fpkm.txt", zip, project=rna_sample_config_tsv["projectID"], subject=rna_sample_config_tsv["subjectID"], rna=rna_sample_config_tsv["tumorRNASampleID"]),
+		expand(config["output_dir"]+"/{project}/{subject}/rna/{subject}_{rna}.rna.fusion_candidates.features.csv", zip, project=rna_sample_config_tsv["projectID"], subject=rna_sample_config_tsv["subjectID"], rna=rna_sample_config_tsv["tumorRNASampleID"]),
+		expand(config["output_dir"]+"/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.hard-filtered.vcf.gz", zip, project=dna_sample_config_tsv["projectID"], subject=dna_sample_config_tsv["subjectID"], tumor=dna_sample_config_tsv["tumorSampleID"], normal=dna_sample_config_tsv["germlineSampleID"]),
+		expand(config["output_dir"]+"/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.cnv.vcf.gz", zip, project=dna_sample_config_tsv["projectID"], subject=dna_sample_config_tsv["subjectID"], tumor=dna_sample_config_tsv["tumorSampleID"], normal=dna_sample_config_tsv["germlineSampleID"]),
+		expand(config["output_dir"]+"/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.sv.vcf.gz", zip, project=dna_sample_config_tsv["projectID"], subject=dna_sample_config_tsv["subjectID"], tumor=dna_sample_config_tsv["tumorSampleID"], normal=dna_sample_config_tsv["germlineSampleID"]),
+		#expand(config["output_dir"]+"/{project}/{subject}/{subject}_{normal}.dna.germline_hla.hla.tsv", zip, project=dna_sample_config_tsv["projectID"], subject=dna_sample_config_tsv["subjectID"], normal=dna_sample_config_tsv["germlineSampleID"]),
+		expand(config["output_dir"]+"/{project}/{subject}/{subject}_{tumor}_{normal}.cnv_plot.jpeg", zip, project=dna_sample_config_tsv["projectID"], subject=dna_sample_config_tsv["subjectID"], tumor=dna_sample_config_tsv["tumorSampleID"], normal=dna_sample_config_tsv["germlineSampleID"]),
+		expand(config["output_dir"]+"/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.sv.fusion_candidates.features.csv", zip, project=dna_sample_config_tsv["projectID"], subject=dna_sample_config_tsv["subjectID"], tumor=dna_sample_config_tsv["tumorSampleID"], normal=dna_sample_config_tsv["germlineSampleID"]),
+		expand(config["output_dir"]+"/pcgr/{project}/{subject}_{tumor}_{normal}/{subject}.pcgr.grch38.html", zip, project=dna_sample_config_tsv["projectID"], subject=dna_sample_config_tsv["subjectID"], tumor=dna_sample_config_tsv["tumorSampleID"], normal=dna_sample_config_tsv["germlineSampleID"]),
+		expand(config["output_dir"]+"/djerba/{project}/{subject}_{tumor}_{normal}/{subject}-v1_report.research.html", zip, project=dna_sample_config_tsv["projectID"], subject=dna_sample_config_tsv["subjectID"], tumor=dna_sample_config_tsv["tumorSampleID"], normal=dna_sample_config_tsv["germlineSampleID"])

@@ -1,0 +1,41 @@
+$schema: "http://json-schema.org/draft-06/schema#"
+
+description: an entry in the DNA sample config file for a tamor run
+properties:
+  subjectID:
+    type: string
+    description: unique patient identifier
+  tumorSampleID:
+    type: string
+    description: tumor DNA sample identifier for the patient
+  trueOrFalseTumorHasPCRDuplicates:
+    type: boolean
+    default: false
+    description: boolean that indicates if tumor sample had PCR in library prep
+  germlineSampleID:
+    type: string
+    description: matched normal DNA sample identifier for the patient
+  trueOrFalseGermlineHasPCRDuplicates:
+    type: boolean
+    default: false
+    description: boolean that indicates if normal sample had PCR in library prep
+  trueOrFalseGermlineContainsSomeTumor:
+    type: boolean
+    default: false
+    description: boolean that indicates if germline sample may contain some circulating tumor cells
+  oncoTreeCode:
+    type: string
+    description: OncoTree code for cancer type
+  projectID:
+    type: string
+    description: MOHCCN abbreviation of the cohort
+
+required:
+  - subjectID
+  - tumorSampleID
+  - trueOrFalseTumorHasPCRDuplicates
+  - germlineSampleID
+  - trueOrFalseGermlineHasPCRDuplicates
+  - trueOrFalseGermlineContainsSomeTumor
+  - oncoTreeCode
+  - projectID

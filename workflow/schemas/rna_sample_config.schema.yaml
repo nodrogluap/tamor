@@ -1,0 +1,27 @@
+$schema: "http://json-schema.org/draft-06/schema#"
+
+description: an entry in the DNA sample config file for a tamor run
+properties:
+  subjectID:
+    type: string
+    description: unique patient identifier
+  tumorRNASampleID:
+    type: string
+    description: tumor RNA sample identifier for the patient 
+  matchedTumorDNASampleID:
+    type: string
+    description: matched tumor DNA sample identifier for the patient (tumorSampleID in dna schema)
+  projectID:
+    type: string
+    description: MOHCCN abbreviation of the cohort
+  cohortNameForExpressionAnalysis:
+    type: string
+    description: Top-level tissue type based on OncoTree code used for PCA groupings
+
+
+required:
+  - subjectID
+  - tumorRNASampleID
+  - matchedTumorDNASampleID
+  - projectID
+  - cohortNameForExpressionAnalysis
