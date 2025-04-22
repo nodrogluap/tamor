@@ -1,0 +1,21 @@
+This assay combines two comprehensive next generation sequencing assays: a DNA-based whole
+genome sequencing (WGS) assay and an RNA-based whole transcriptome sequencing (WTS) assay.
+Whole Genome libraries were prepared using Illumina DNA PCR-Free Tagmentation for fresh-frozen
+tumor and normal (typically buffy coat) samples. Whole Genome libraries for FFPE samples were prepared using
+NEB Ultra II with FFPE repair. Only tumor WGS libraries designated as UMI-processed were generated using 
+IDT xGen cfDNA and FFPE Library Prep.
+Whole transcriptome libraries were prepared from fresh-frozen tissues using the Illumina Ribo-Zero
+Plus rRNA Depletion Kit + Illumina cDNA Synthesis and RNA Prep. Whole transcriptome libraries
+for FFPE samples were prepared using Illumina RNA Prep with Enrichment.
+Paired-end 2x150bp sequencing was performed on an Illumina NovaSeq6000 for all libraries with
+a target of 100x tumor genome coverage, 40x normal genome coverage, and 100M read-pairs for RNASeq.
+Reads were graph-aligned to GRCh38 as the Illumina DRAGEN Multigenome Graph Reference hg38 (alt-masked_graph+cnv+hla+rna_v3)
+using the Dragen Complete Suite v4.2.8.
+Dragen was used to perform germline (normal) variant calls, somatic variant calls (Small Nucleotide Variants, 
+Copy Number Variants, and Structural Variants), Tumor Mutational Burden analysis (using Nirvana functional 
+annotations), Microsatellite Instability analysis (using msisensor-pro identified microsatellite sites in 
+the provided reference genome), Homologuous Recombination Deficiency analysis (per Myriad methdology), 
+Human Leukocyte Antigen type calls (tumor and normal), transcript and gene-level RNA sequence quantification, 
+and RNA-based gene fusion detection. GenCode v46 transcript models were used as input to transcript 
+quantification, and functional predictions were annotated using Ensembl Variant Effect Predictor v113.
+Assay results were collated into the report document by OICR's Djerba (1.7.5) using PR2C Tamor Snakemake pipeline.
