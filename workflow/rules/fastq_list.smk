@@ -88,28 +88,29 @@ def harmonize_fastq_compression_formats(sample_fastq_list_csv, paired_sample_fas
         if 'ora' in (','.join(all_fastqs)) and 'gz' in (','.join(all_fastqs)):
                 print(f"The DRAGEN map-align fastq inputs have a mix of gz and ora compressed files. DRAGEN requires all input fastqs share the same compression format.")
                 for fastq_list_csv in input_fastq_list_csvs:
-                        with open(fastq_list_csv+'.bak', 'r') as original_file:
-                                fastq_list = original_file.read().splitlines() 
-                        with open(fastq_list_csv, 'w') as updated_file:
-                                with open(fastq_list_csv+'.decompressed', 'w') as decomp_file:
-                                        for i in fastq_list:
-                                                # decompress where needed
-                                                if 'ora' in i:
-                                                        ora_fastq1 = i.split(',')[4]
-                                                        ora_fastq2 = i.split(',')[5]
-                                                        fastq_dir = os.path.dirname(ora_fastq1)
-                                                        print("Must decompress ora fastqs before map-align step:\n", ora_fastq1, ora_fastq2)
-                                                        dragen_ora_cmd = f"dragen --enable-map-align false --ora-input {ora_fastq1} {ora_fastq2} --enable-ora true --ora-decompress true --ora-reference {config["ref_ora"]} --output-directory {fastq_dir} --force"
-                                                        shell(dragen_ora_cmd)
-                                                        # update path in sample fastq_list.csv
-                                                        i = i.replace("fastq.ora","fastq.gz")
-                                                        updated_file.write(i+'\n')
-                                                        # save paths of temporarily decompressed files to list for removal after alignment
-                                                        ora_fastq1 = ora_fastq1.replace("fastq.ora","fastq.gz")
-                                                        ora_fastq2 = ora_fastq2.replace("fastq.ora","fastq.gz")
-                                                        decomp_file.write(ora_fastq1+'\n'+ora_fastq2+'\n')
-                                                else:
-                                                        updated_file.write(i+'\n')
+                        if fastq_list_csv is not None:
+                                with open(fastq_list_csv+'.bak', 'r') as original_file:
+                                        fastq_list = original_file.read().splitlines() 
+                                with open(fastq_list_csv, 'w') as updated_file:
+                                        with open(fastq_list_csv+'.decompressed', 'w') as decomp_file:
+                                                for i in fastq_list:
+                                                        # decompress where needed
+                                                        if 'ora' in i:
+                                                                ora_fastq1 = i.split(',')[4]
+                                                                ora_fastq2 = i.split(',')[5]
+                                                                fastq_dir = os.path.dirname(ora_fastq1)
+                                                                print("Must decompress ora fastqs before map-align step:\n", ora_fastq1, ora_fastq2)
+                                                                dragen_ora_cmd = f"dragen --enable-map-align false --ora-input {ora_fastq1} {ora_fastq2} --enable-ora true --ora-decompress true --ora-reference {config["ref_ora"]} --output-directory {fastq_dir} --force"
+                                                                shell(dragen_ora_cmd)
+                                                                # update path in sample fastq_list.csv
+                                                                i = i.replace("fastq.ora","fastq.gz")
+                                                                updated_file.write(i+'\n')
+                                                                # save paths of temporarily decompressed files to list for removal after alignment
+                                                                ora_fastq1 = ora_fastq1.replace("fastq.ora","fastq.gz")
+                                                                ora_fastq2 = ora_fastq2.replace("fastq.ora","fastq.gz")
+                                                                decomp_file.write(ora_fastq1+'\n'+ora_fastq2+'\n')
+                                                        else:
+                                                                updated_file.write(i+'\n')
         else:
                 print(f"All DRAGEN map-align fastq inputs have the same compression format")
 
