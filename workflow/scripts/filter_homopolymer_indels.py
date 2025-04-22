@@ -163,7 +163,7 @@ with open(tmpfile.name, 'wt') as new_vcf:
                     if float(info[1]) < args.informative_fraction:
                         # See if it's in a homopolymer.
                         if homopolymer_insertion(fields[0], int(fields[1]), fields[3], fields[4]):
-                            fields[6] = "possible_insertion_polymerase_slippage"
+                            fields[6] = "possible_polymerase_slippage"
                         else:
                             fields[6] = "PASS"
                     else:
