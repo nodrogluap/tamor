@@ -1,0 +1,9 @@
+name: filtertools
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - biopython
+  - tabix
+  - intervaltree
