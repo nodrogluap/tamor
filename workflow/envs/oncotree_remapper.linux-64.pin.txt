@@ -1,0 +1,31 @@
+# This file may be used to create an environment using:
+# $ conda create --name <env> --file <this file>
+# platform: linux-64
+@EXPLICIT
+https://conda.anaconda.org/conda-forge/linux-64/_libgcc_mutex-0.1-conda_forge.tar.bz2#d7c89558ba9fa0495403155b64376d81
+https://conda.anaconda.org/conda-forge/noarch/ca-certificates-2025.1.31-hbd8a1cb_1.conda#e74273d9fc5ab633d613cde474b55157
+https://conda.anaconda.org/conda-forge/linux-64/libgomp-14.2.0-h767d61c_2.conda#06d02030237f4d5b3d9a7e7d348fe3c6
+https://conda.anaconda.org/conda-forge/linux-64/ncurses-5.9-10.tar.bz2#385305fdf1ea5dabff1fd7a1f5e1e115
+https://conda.anaconda.org/conda-forge/linux-64/sqlite-3.13.0-1.tar.bz2#a54fc6054a2271c92ba43b857c83c39a
+https://conda.anaconda.org/conda-forge/linux-64/tk-8.5.19-2.tar.bz2#041db79eedb299869eedf875c4c1de47
+https://conda.anaconda.org/conda-forge/linux-64/_openmp_mutex-4.5-2_gnu.tar.bz2#73aaf86a425cc6e73fcf236a5a46396d
+https://conda.anaconda.org/conda-forge/linux-64/readline-6.2-0.tar.bz2#c97d7e19a7b229c0838cb66fa3bf8f7c
+https://conda.anaconda.org/conda-forge/linux-64/libgcc-14.2.0-h767d61c_2.conda#ef504d1acbd74b7cc6849ef8af47dd03
+https://conda.anaconda.org/conda-forge/linux-64/libgcc-ng-14.2.0-h69a702a_2.conda#a2222a6ada71fb478682efe483ce0f92
+https://conda.anaconda.org/conda-forge/linux-64/libzlib-1.2.13-h4ab18f5_6.conda#27329162c0dc732bcf67a4e0cd488125
+https://conda.anaconda.org/conda-forge/linux-64/openssl-1.0.2u-h516909a_0.tar.bz2#e9043fbb5bb2c4a2b41a37e05d2ec2ec
+https://conda.anaconda.org/conda-forge/linux-64/xz-5.2.6-h166bdaf_0.tar.bz2#2161070d867d1b1204ea749c8eec4ef0
+https://conda.anaconda.org/conda-forge/linux-64/yaml-0.2.5-h7f98852_2.tar.bz2#4cb3ad778ec2d5a7acbdf254eb1c42ae
+https://conda.anaconda.org/conda-forge/linux-64/zlib-1.2.13-h4ab18f5_6.conda#559d338a4234c2ad6e676f460a093e67
+https://conda.anaconda.org/conda-forge/linux-64/python-3.4.5-2.tar.bz2#b8d2fe5a2b05c34b0015791052a424b1
+https://conda.anaconda.org/conda-forge/linux-64/certifi-2017.1.23-py34_0.tar.bz2#8974cc584690f1ba7b77fb1a8a51a293
+https://conda.anaconda.org/conda-forge/noarch/pyparsing-2.4.7-pyh9f0ad1d_0.tar.bz2#626c4f20d5bf06dcec9cf2eaa31725c7
+https://conda.anaconda.org/conda-forge/linux-64/pyyaml-3.12-py34_0.tar.bz2#4a8f7d76d5ec3799ffe4a65800d346c3
+https://conda.anaconda.org/conda-forge/noarch/six-1.16.0-pyh6c4a22f_0.tar.bz2#e5f25f8dbc060e9a8d912e432202afc2
+https://conda.anaconda.org/conda-forge/noarch/webencodings-0.5.1-pyhd8ed1ab_2.conda#daf5160ff9cde3a468556965329085b9
+https://conda.anaconda.org/conda-forge/noarch/wheel-0.37.1-pyhd8ed1ab_0.tar.bz2#1ca02aaf78d9c70d9a81a3bed5752022
+https://conda.anaconda.org/conda-forge/noarch/html5lib-1.1-pyh9f0ad1d_0.tar.bz2#b2355343d6315c892543200231d7154a
+https://conda.anaconda.org/conda-forge/noarch/isodate-0.6.0-py_1.tar.bz2#ed67bac5a0224c66cbc0b58ffe7ebd47
+https://conda.anaconda.org/conda-forge/linux-64/setuptools-32.3.1-py34_0.tar.bz2#8358f223d420b100033ef7cba7c3eab5
+https://conda.anaconda.org/conda-forge/noarch/pip-20.3.4-pyhd8ed1ab_0.tar.bz2#a9f505dda2243420dc8e8681cda95be8
+https://conda.anaconda.org/bioconda/linux-64/rdflib-4.2.2-py34_0.tar.bz2#b885f9fdae9a286669552cca0a6cb281
