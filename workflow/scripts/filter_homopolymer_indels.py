@@ -19,6 +19,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument("informative_fraction", type=float, choices=[Range(0.0, 1.0)])
 parser.add_argument("vcf") #assume it's gzip'ed
 parser.add_argument("reference_fasta")
+parser.add_argument("output_metrics")
 args = parser.parse_args()
 
 # Some polymerases used during PCR-based library preparation can slip in homopolymer regions with a low frequency.
@@ -33,6 +34,10 @@ args = parser.parse_args()
 # in the VCF under consideration for filtering are in/at the edge of homopolymer regions.
 genome_dict = SeqIO.index(args.reference_fasta, "fasta")
 
+total_orig_del_pass = 0
+total_orig_ins_pass = 0
+total_del_filtered = 0
+total_ins_filtered = 0
 current_chr = ""
 current_seq = ""
 # Load new seq as appropriate
@@ -68,6 +73,8 @@ def update_location(chr, pos, ref):
     return True
 
 def filter_multiallelic_homopolymer_variants(chr, pos, lines):
+    global total_del_filtered
+    global total_ins_filtered
     if len(lines) < 2: # not multi-allelic
         return
     if not update_location(chr, pos, lines[0].split("\t")[3]):
@@ -81,6 +88,12 @@ def filter_multiallelic_homopolymer_variants(chr, pos, lines):
             if fields[6] == "PASS":
                 fields[6] = "possible_polymerase_slippage"
                 lines[i] = "\t".join(fields)
+                if len(fields[3]) == 1 and len(fields[4]) > 1:
+                    total_ins_filtered = total_ins_filtered + 1
+                elif len(fields[3]) > 1 and len(fields[4]) == 1:
+                    total_del_filtered = total_del_filtered + 1
+                # else it's an indel or SNP
+
 
 
 def homopolymer_insertion(chr, pos, ref, alt):
@@ -127,6 +140,17 @@ with open(tmpfile.name, 'wt') as new_vcf:
                 print (line, file=new_vcf)
                 continue
 
+            # Undo any existing filter (which may have had different criteria).
+            if fields[6] == "possible_polymerase_slippage":
+                fields[6] = "PASS"
+            # Count the candidate sites.
+            if fields[6] == "PASS":
+                if len(fields[3]) == 1 and len(fields[4]) > 1:
+                    total_orig_ins_pass = total_orig_ins_pass + 1
+                elif len(fields[3]) > 1 and len(fields[4]) == 1:
+                    total_orig_del_pass = total_orig_del_pass + 1
+                # else it's an indel or SNP
+
             # Only apply our new filter if the variant is an insertion, and either it isn't already filtered by some other criteria, or needs to be re-evaluated 
             # for slippage (e.g. different threshold may have been used). 
             fields = line.split("\t")
@@ -164,6 +188,7 @@ with open(tmpfile.name, 'wt') as new_vcf:
                         # See if it's in a homopolymer.
                         if homopolymer_insertion(fields[0], int(fields[1]), fields[3], fields[4]):
                             fields[6] = "possible_polymerase_slippage"
+                            total_ins_filtered = total_ins_filtered + 1
                         else:
                             fields[6] = "PASS"
                     else:
@@ -173,5 +198,9 @@ with open(tmpfile.name, 'wt') as new_vcf:
         filter_multiallelic_homopolymer_variants(buffered_chr, buffered_pos, buffered_lines)
         print ("\n".join(buffered_lines), file=new_vcf)
     
+with open(args.output_metrics, "wt") as metrics:
+        print("VARIANT CALLER POSTFILTER CUSTOM,,Insertions filter changed PASS to possible_polymerase_slippage,"+str(total_ins_filtered)+","+str(total_ins_filtered/total_orig_ins_pass), file=metrics)
+        print("VARIANT CALLER POSTFILTER CUSTOM,,Deletions filter changed PASS to possible_polymerase_slippage,"+str(total_del_filtered)+","+str(total_del_filtered/total_orig_del_pass), file=metrics)
+
 # Replace the old VCF with the new one, including the bgzip compression and tabix indexing, and md5sum (using md5sum-lite from the default base conda install)
 system(f"bgzip -c {tmpfile.name} > {args.vcf}; tabix {args.vcf}; md5sum-lite {args.vcf} > {args.vcf}.md5sum")

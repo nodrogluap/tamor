@@ -12,6 +12,7 @@ parser = argparse.ArgumentParser(
                     description='A wrapper to change the FILTER status of copy number variants in a Dragen gzip VCF file from PASS to catalogued_false_positive if they overlap a blacklisted region and are not much bigger than it')
 parser.add_argument("blacklist_bed")
 parser.add_argument("cnv_vcf") #assume it's gzip'ed
+parser.add_argument("output_metrics")
 args = parser.parse_args()
 
 blacklist_tree = IntervalTree()
@@ -31,6 +32,7 @@ tmpfile = tempfile.NamedTemporaryFile()
 chr_pos_to_filter = {} # PASS -> catalogued_false_positive, based onoverlap with black list 
 chr_pos_to_pass = {} # if reprocessing a previously filtered VCF with a new blacklist, may need to explicitly set PASS for some CNVs.
 # Treat the VCF as a TSV file.
+original_total_pass_cnvs = 0
 with gzip.open(args.cnv_vcf, 'rt') as f:
     for line_num,line in enumerate(f, start=1):
         if line.startswith("#"): # header
@@ -41,6 +43,7 @@ with gzip.open(args.cnv_vcf, 'rt') as f:
             raise Exception('Expected 10 tab-delimited columns but found ' + str(len(fields)) + " at "+args.vcf+":"+str(line_num))
         if fields[6] != "PASS" and fields[6] != "catalogued_false_positive":
             continue # not being filtered by us
+        original_total_pass_cnvs = original_total_pass_cnvs + 1
 
         # Looks something like DRAGEN:GAIN:chr1:7699646-12859821
         cnv_spec = fields[2].split(":")
@@ -64,6 +67,8 @@ with gzip.open(args.cnv_vcf, 'rt') as f:
                     
 # No need to modify the CNV file, so script the rest of the script
 if len(chr_pos_to_filter) == 0:
+    with open(args.output_metrics, "wt") as metrics:
+        print("CNV FALSE POSITIVE FILTERING,,Filter changed PASS to catalogued_false_positive,0,0.0", file=metrics)
     sys.exit(0)
 
 # Open the temporary text output file for writing.
@@ -96,6 +101,9 @@ with open(tmpfile.name, 'wt') as new_vcf:
                 print("\t".join(fields), file=new_vcf)
             else: # as-is
                 print(line, file=new_vcf)
+
+with open(args.output_metrics, "wt") as metrics:
+    print("CNV FALSE POSITIVE FILTERING,,Filter changed PASS to catalogued_false_positive,"+str(len(chr_pos_to_filter))+","+str(len(chr_pos_to_filter)/original_total_pass_cnvs), file=metrics)
     
 # Replace the old VCF with the new one, including the bgzip compression and tabix indexing, and md5sum (using md5sum-lite from the default base conda install)
 system(f"bgzip -c {tmpfile.name} > {args.cnv_vcf}; tabix {args.cnv_vcf}; md5sum-lite {args.cnv_vcf} > {args.cnv_vcf}.md5sum")
