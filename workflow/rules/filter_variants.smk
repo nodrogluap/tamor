@@ -9,12 +9,12 @@ rule filter_somatic_variants:
                 runtime=120,
                 mem_mb=50000
         input:
-                snv_file=config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.hard-filtered.vcf.gz",
-                cnv_file=config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.cnv.vcf.gz"
+                snv_file=config["output_dir"]+"/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.hard-filtered.vcf.gz",
+                cnv_file=config["output_dir"]+"/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.cnv.vcf.gz"
         output:
                 # The input VCF files are edited in-place, but we note the execution of this filtering with the metrics files.
-                snv_metrics_file=config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.snv_filter_metrics.csv",
-                cnv_metrics_file=config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.cnv_filter_metrics.csv"
+                snv_metrics_file=config["output_dir"]+"/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.snv_filter_metrics.csv",
+                cnv_metrics_file=config["output_dir"]+"/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.cnv_filter_metrics.csv"
         conda:
                 "../envs/filtertools.yaml"
         shell:
