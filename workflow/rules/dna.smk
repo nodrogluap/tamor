@@ -82,10 +82,6 @@ rule dragen_germline_snv_sv_and_cnv_calls:
                             config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.sv.vcf.gz.tbi; "+
                       "cp "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.microsat_normal.dist "+
                             "resources/dragen_microsat/")
-		# Add UMI prep polymerase slippage correction if enabled
-                if has_UMIs and "umi_slippage_support_informative_fraction" in config:
-                         shell("workflow/scripts/filter_indels_by_informative_read_fraction.py "+config["umi_slippage_support_informative_fraction"]+" "+config["output_dir"]+
-                               "/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.hard-filtered.vcf.gz")
 
 rule dragen_germline_cnv_and_sv_lowqual_check_and_mitigate:
         priority: 99
@@ -209,11 +205,6 @@ rule dragen_somatic_snv_sv_and_cnv_calls:
                             config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.sv.vcf.gz.tbi")
                 # The following BAM is essentially redundant with the dna.germline.bam from the previous rule, delete to save space.
                 shell("rm -f "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.bam")
-
-		# Add UMI prep polymerase slippage correction if enabled
-                if tumor_has_UMIs and "umi_slippage_support_informative_fraction" in config:
-                         shell("workflow/scripts/filter_indels_by_informative_read_fraction.py "+config["umi_slippage_support_informative_fraction"]+" "+config["output_dir"]+
-                               "/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.hard-filtered.vcf.gz")
 
 rule dragen_germline_sv_fusions:
         priority: 98
