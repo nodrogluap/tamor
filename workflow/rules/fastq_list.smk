@@ -130,9 +130,8 @@ def cleanup_decompressed_temporary_fastqs(sample_fastq_list_csv, paired_sample_f
                                                 # remove any temporary gz fastqs
                                                 print(f"Removing temporarily decompessed ora fastqs in {fastq_list_csv}.decompressed")
                                                 shell(f"rm {to_remove}")
-                                        else:
-                                                # or remove the empty file
-                                                shell(f"rm {fastq_list_csv}.decompressed")
+                                # remove the decompressed file list
+                                shell(f"rm {fastq_list_csv}.decompressed")
 
 def get_sample_fastq_list_csvs(wildcards, is_rna, is_tumor):
         library_info = identify_libraries(is_rna, is_tumor, wildcards)
