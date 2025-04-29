@@ -19,7 +19,7 @@ umi_whitelist: "resources/umi_whitelists/IDT_xGen_Prism.txt"
 # This fraction of reads at an insertion site must either support the reference or alt allele to remain PASS filter.
 # The default value generally has less of an effect on the detection of cases of microsatellite instability, which have predominantly deletion variants and 
 # informative fraction closer to 1.
-umi_slippage_support_informative_fraction = 0.97
+umi_slippage_support_informative_fraction: 0.97
 
 # Minimum coverage for MicroSatellite Instability calculation
 msi_min_coverage: 20
