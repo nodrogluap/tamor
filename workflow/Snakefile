@@ -28,6 +28,7 @@ include: "rules/djerba.smk"
 include: "rules/metrics.smk"
 include: "rules/datavzrd.smk"
 include: "rules/qiagen_ipa.smk"
+include: "rules/filter_variants.smk"
 
 # read and validate the provided dna sample config file
 dna_sample_config_tsv = (
