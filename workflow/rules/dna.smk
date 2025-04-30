@@ -57,7 +57,8 @@ rule dragen_germline_snv_sv_and_cnv_calls:
                 if has_UMIs:
                         umi_correction_flag = "--umi-correction-scheme=random"
                         if "umi_correction_table" in config:
-                                umi_correction_flag = "--umi-library-type nonrandom-duplex --umi-correction-table " + config["umi_correction_table"]
+                                table = os.path.abspath(config["umi_correction_table"])
+                                umi_correction_flag = "--umi-library-type nonrandom-duplex --umi-correction-table " + table
                         elif "umi_whitelist" in config:
                                 umi_correction_flag = "--umi-library-type nonrandom-duplex --umi-nonrandom-whitelist "+config["umi_whitelist"]
                         normal_bam = get_normal_bam(wildcards)
@@ -82,6 +83,8 @@ rule dragen_germline_snv_sv_and_cnv_calls:
                             config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.sv.vcf.gz.tbi; "+
                       "cp "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.microsat_normal.dist "+
                             "resources/dragen_microsat/")
+
+
 
 rule dragen_germline_cnv_and_sv_lowqual_check_and_mitigate:
         priority: 99
@@ -177,15 +180,17 @@ rule dragen_somatic_snv_sv_and_cnv_calls:
                 if germline_has_UMIs or tumor_has_UMIs:
                         umi_correction_flag = "--umi-correction-scheme=random"
                         if "umi_correction_table" in config:
-                                umi_correction_flag = "--umi-library-type nonrandom-duplex --umi-correction-table " + config["umi_correction_table"]
+                                table = os.path.abspath(config["umi_correction_table"])
+                                umi_correction_flag = "--umi-library-type nonrandom-duplex --umi-correction-table " + table
                         elif "umi_whitelist" in config:
-                                umi_correction_flag = "--umi-library-type nonrandom-duplex --umi-nonrandom-whitelist "+config["umi_whitelist"]
+                                umi_correction_flag = "--umi-library-type nonrandom-duplex --umi-nonrandom-whitelist `pwd`/"+config["umi_whitelist"]
                         tumor_bam = get_tumor_bam(wildcards)
                         print("UMIs detected, using bams instead of fastqs as variant calling input")
                         # only run alignment if tumor bam does not exist?
-                        if(not os.path.exists(tumor_bam)):
-                                dragen_cmd_align = "dragen -r "+config["ref_genome"]+" --ora-reference "+config["ref_ora"]+" --enable-map-align true --enable-map-align-output true --enable-bam-indexing true --tumor-fastq-list {this_sample_tumor_only_fastq_list_csv} --tumor-fastq-list-all-samples true --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic --enable-hla true --intermediate-results-dir "+config["temp_dir"]+" -f"+" --umi-enable true {umi_correction_flag} --umi-min-supporting-reads 1 --umi-min-map-quality 1"
-                                shell(dragen_cmd_align)
+                        #if(not os.path.exists(tumor_bam)):
+                        dragen_cmd_align = "dragen -r "+config["ref_genome"]+" --ora-reference "+config["ref_ora"]+" --enable-map-align true --enable-map-align-output true --enable-bam-indexing true --tumor-fastq-list {this_sample_tumor_only_fastq_list_csv} --tumor-fastq-list-all-samples true --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic --enable-hla true --intermediate-results-dir "+config["temp_dir"]+" -f --umi-enable true {umi_correction_flag} --umi-min-supporting-reads 1 --umi-min-map-quality 1"
+                        print(dragen_cmd_align)
+                        shell(dragen_cmd_align)
 
                         # check that tumor bam was written then pass dragen command with bams as input
                         if(not os.path.exists(tumor_bam)):
