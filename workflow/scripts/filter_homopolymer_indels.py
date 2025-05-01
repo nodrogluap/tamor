@@ -140,6 +140,12 @@ with open(tmpfile.name, 'wt') as new_vcf:
                 print (line, file=new_vcf)
                 continue
 
+            # Only apply our new filter if the variant is an insertion, and either it isn't already filtered by some other criteria, or needs to be re-evaluated 
+            fields = line.split("\t")
+            # for slippage (e.g. different threshold may have been used). 
+            if len(fields) != 11:
+                raise Exception('Expected 11 tab-delimited columns but found ' + str(len(fields)) + " at "+args.vcf+":"+str(line_num))
+
             # Undo any existing filter (which may have had different criteria).
             if fields[6] == "possible_polymerase_slippage":
                 fields[6] = "PASS"
@@ -151,11 +157,6 @@ with open(tmpfile.name, 'wt') as new_vcf:
                     total_orig_del_pass = total_orig_del_pass + 1
                 # else it's an indel or SNP
 
-            # Only apply our new filter if the variant is an insertion, and either it isn't already filtered by some other criteria, or needs to be re-evaluated 
-            # for slippage (e.g. different threshold may have been used). 
-            fields = line.split("\t")
-            if len(fields) != 11:
-                raise Exception('Expected 11 tab-delimited columns but found ' + str(len(fields)) + " at "+args.vcf+":"+str(line_num))
             if len(fields[3]) != 1 or len(fields[4]) == 1 or (',' in fields[4]) or (fields[6] != "PASS" and fields[6] != "possible_polymerase_slippage"):
                 if buffered_chr == fields[0] and buffered_pos == int(fields[1]):
                     buffered_lines.append(line)
