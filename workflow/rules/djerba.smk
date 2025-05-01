@@ -11,7 +11,7 @@ rule setup_djerba_conda_env:
 		"../envs/djerba.yaml"
 	shell:
 		# First remove any existing soft link, in case it exists it could create a problem
-		"cd workflow/submodules/djerba && pip install . && cd ../oncokb-annotator && pip install -r requirements/common.txt -r requirements/pip3.txt && cd ../../../ && workflow/scripts/link_djerba_env.sh"
+		"cd workflow/submodules/djerba && pip install . && cd ../oncokb-annotator && pip install -r requirements/common.txt && cd ../../../ && workflow/scripts/link_djerba_env.sh"
 
 rule lookup_tcga_code_from_oncotree:
 	input:
