@@ -25,3 +25,4 @@ dependencies:
   - vcfanno
   - jinja2
   - r-base64enc
+  - pycairo
