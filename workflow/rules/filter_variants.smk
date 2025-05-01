@@ -22,6 +22,5 @@ rule filter_somatic_variants:
                 # Add CNV well-characterized false positive filtering.
                 """
                 workflow/scripts/filter_homopolymer_indels.py {config[umi_slippage_support_informative_fraction]} {input.snv_file} {config[ref_fasta]} {output.snv_metrics_file}
-                ;
                 workflow/scripts/filter_false_positive_cnvs.py resources/dragen_cnv_blacklist.bed {input.cnv_file} {output.cnv_metrics_file}
                 """
