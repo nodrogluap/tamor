@@ -26,3 +26,4 @@ dependencies:
   - jinja2
   - r-base64enc
   - pycairo
+  - kiwisolver>=1.3.1
