@@ -7,5 +7,5 @@ rule download_resource_files:
 		config["ref_fasta"],
 		"resources/oncotree-taxonomy-2021-11-02.rdf",
 		"resources/ontology_mappings.txt",
-	run:
+	shell:
 		"workflow/scripts/download_resources.py"
