@@ -1,0 +1,4 @@
+# Ignore everything in this directory, it should be automically created upon git checkout of the code, but will only contain transient cache files for Djerba execution.
+*
+# Except this file
+!.gitignore
