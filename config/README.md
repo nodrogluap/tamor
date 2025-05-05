@@ -53,7 +53,7 @@ Uncommenting the ``set_output_group`` and ``set_output_umask`` lines in ``config
 will allow read/write by the owner and designated group, but give no permissions to others.
 
 ## DNA Sample Metadata
-The ``config/dna_samples.tsv`` file as 8 columns to be specified with column names:
+The ``config/dna_samples.tsv`` file has 8 columns to be specified with column names:
 
 ```
 subjectID<tab>
@@ -158,7 +158,7 @@ that includes a "U" value. By default, random UMIs are assumed. To specify a non
 
 ## Variant Blacklists
 
-Some false positive variants may be recurrent across analyzes. To reduce the reporting of likely false-positive resiults, default list of variants to change 
+Some false positive variants may be recurrent across analyzes. To reduce the reporting of likely false-positive results, default list of variants to change 
 from PASS to filtered in output VCFs have been included in Tamor, based on commonalities found in hundreds of tumor-normal cases analyzed at the University of Calgary's CSM 
 Centre for Health Genomics and Informatics. These can be customized by editing the ``dragen_cnv_blacklist.bed`` and ``dragen_snv_blacklist.txt`` files for copy number and 
 small nucleotide variants respectively.
