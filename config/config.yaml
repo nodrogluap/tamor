@@ -9,6 +9,11 @@ upload_to_ipa: False
 # Where to write temporary intermediate outputs used internally by Dragen (preferably an SSD or other very fast storage).
 temp_dir: "/staging/tmp"
 
+# For data sharing purposes, it can be useful to automatically set group ownership and permissions of Tamor output to match soemthing useful on the shared Linux system.
+# If these settings are uncomment, Tamor will attempt to honour the settings, but will not propagate any failures in the attempt to do so.
+# set_output_group: tamor_users
+# set_output_umask: 0660
+
 # For samples where SampleSheet contains UMI OverrideCycle setting:
 # What UMI scheme is being used (if random UMIs are used, comment out this setting). 
 # Common values could be IDT xGen Prism or Illumina TrueSight Oncology (resources files for both are included in Tamor).
