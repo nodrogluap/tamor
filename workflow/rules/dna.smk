@@ -84,6 +84,14 @@ rule dragen_germline_snv_sv_and_cnv_calls:
                       "cp "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.microsat_normal.dist "+
                             "resources/dragen_microsat/")
 
+                if "set_output_group" in config:
+                        shell("chgrp -R -f " + config["set_output_group"] + " " + config["output_dir"]+"/{wildcards.project}/{wildcards.subject}")
+                if "set_output_umask" in config:
+                        new_octal_perms = 0o666 ^ int(config["set_output_umask"], 8) # bitwise-xor of two octal representation numbers
+                        shell("find " + config["output_dir"]+"/{wildcards.project}/{wildcards.subject} -type f -exec chmod -f -user $USER " +new_octal_perms+" {} \\;")
+                        new_octal_perms = 0o777 ^ int(config["set_output_umask"], 8)
+                        shell("find " + config["output_dir"]+"/{wildcards.project}/{wildcards.subject} -type d -exec chmod -f -user $USER " +new_octal_perms+" {} \\;")
+
 
 
 rule dragen_germline_cnv_and_sv_lowqual_check_and_mitigate:
@@ -114,6 +122,15 @@ rule dragen_germline_cnv_and_sv_lowqual_check_and_mitigate:
                         interval_message = "PASS"
                 interval_df.loc[len(interval_df)] = ['COVERAGE UNIFORMITY CHECK','','Germline uniformity less than 0.5',interval_message,'']
                 interval_df.to_csv(output.interval_check, header=False, index=False)
+
+                if "set_output_group" in config:
+                        shell("chgrp -R -f " + config["set_output_group"] + " " + config["output_dir"]+"/{wildcards.project}/{wildcards.subject}")
+                if "set_output_umask" in config:
+                        new_octal_perms = 0o666 ^ int(config["set_output_umask"], 8) # bitwise-xor of two octal representation numbers
+                        shell("find " + config["output_dir"]+"/{wildcards.project}/{wildcards.subject} -type f -exec chmod -f -user $USER " +new_octal_perms+" {} \\;")
+                        new_octal_perms = 0o777 ^ int(config["set_output_umask"], 8)
+                        shell("find " + config["output_dir"]+"/{wildcards.project}/{wildcards.subject} -type d -exec chmod -f -user $USER " +new_octal_perms+" {} \\;")
+
 
 # should potentially have similar interval increase for somatic, based on average coverage or "Uniformity of coverage (PCT > 0.4*mean) over genome?"
 
@@ -210,6 +227,13 @@ rule dragen_somatic_snv_sv_and_cnv_calls:
                             config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.sv.vcf.gz.tbi")
                 # The following BAM is essentially redundant with the dna.germline.bam from the previous rule, delete to save space.
                 shell("rm -f "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.bam")
+                if "set_output_group" in config:
+                        shell("chgrp -R -f " + config["set_output_group"] + " " + config["output_dir"]+"/{wildcards.project}/{wildcards.subject}")
+                if "set_output_umask" in config:
+                        new_octal_perms = 0o666 ^ int(config["set_output_umask"], 8) # bitwise-xor of two octal representation numbers
+                        shell("find " + config["output_dir"]+"/{wildcards.project}/{wildcards.subject} -type f -exec chmod -f -user $USER " +new_octal_perms+" {} \\;")
+                        new_octal_perms = 0o777 ^ int(config["set_output_umask"], 8)
+                        shell("find " + config["output_dir"]+"/{wildcards.project}/{wildcards.subject} -type d -exec chmod -f -user $USER " +new_octal_perms+" {} \\;")
 
 rule dragen_germline_sv_fusions:
         priority: 98
