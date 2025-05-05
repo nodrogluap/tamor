@@ -12,7 +12,7 @@ temp_dir: "/staging/tmp"
 # For data sharing purposes, it can be useful to automatically set group ownership and permissions of Tamor output to match something useful on the shared Linux system.
 # If these settings are uncomment, Tamor will attempt to honour the settings, but will not propagate any failures in the attempt to do so.
 # set_output_group: tamor_users
-# set_output_umask: 0660
+# set_output_umask: 0007
 
 # For samples where SampleSheet contains UMI OverrideCycle setting:
 # What UMI scheme is being used (if random UMIs are used, comment out this setting). 
