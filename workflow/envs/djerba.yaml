@@ -15,6 +15,7 @@ dependencies:
   - wkhtmltopdf
   - mscorefonts
   - r-optparse
+  - r-devtools
   - r-dplyr
   - r-tidyr
   - r-ggplot2

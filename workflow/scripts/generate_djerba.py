@@ -24,6 +24,7 @@ parser = argparse.ArgumentParser(
                     prog='generate_djerba.py',
                     description='A wrapper to reformat SNV, CNV, and RNASeq results from Tamor suited for generation of Djerba variant interpretation reports')
 parser.add_argument("snv")
+parser.add_argument("cnv_gene")
 parser.add_argument("cnv")
 parser.add_argument("outdir")
 parser.add_argument("tcga_code_file")
@@ -243,7 +244,7 @@ maf_file = f"{maf_file}.gz"
 tamor["maf_file"] = maf_file
 
 os.environ["DJERBA_BASE_DIR"] = ".snakemake/conda/djerba/lib/python3.10/site-packages/djerba"
-os.environ["DJERBA_RUN_DIR"] = os.environ["DJERBA_BASE_DIR"] + "/data"
+os.environ["DJERBA_RUN_DIR"] = os.environ["DJERBA_BASE_DIR"] + "/util/data"
 # Somatic copy number variants reformatting, to resemble Purple's output.
 tmpdir = tempfile.TemporaryDirectory(prefix="djerba")
 os.environ["DJERBA_PRIVATE_DIR"] = tmpdir.name
@@ -300,11 +301,12 @@ with open(tf_segment, "w") as segment_tsv:
         segment_tsv.write(segment_header)
 system(f"gzip -cd {args.cnv} | perl -ane 'next if /^#/ or /DRAGEN:REF/ or not /\tPASS\t/; ($end) = /END=(\\d+)/; @d = split /:/, $F[$#F]; $d[2] = 1 if $d[2] == \".\"; print join(\"\\t\", $F[0], $F[1], $end, \"DIPLOID\", $d[1], 20, $d[2], $d[2]*0.2, $d[1]-$d[2], $d[2], 1, $d[1]-$d[2], ($d[1]-$d[2])*0.2, 0, $d[1]-$d[2], $d[1]-$d[2], 0.5, 1, 1, 1, $F[5], 1, 0.37, 0, $F[1], $F[1]),\"\\n\"' >> {tf_segment}")
 
-# Not sure it even uses this one?
+# CnaAnnotator.py uses this one.
 tf_gene = f"{CNAFILE}.purple.cnv.gene.tsv"
 gene_header = "chromosome\tstart\tend\tgene\tminCopyNumber\tmaxCopyNumber\tsomaticRegions\ttranscriptId\tisCanonical\tchromosomeBand\tminRegions\tminRegionStart\tminRegionEnd\tminRegionStartSupport\tminRegionEndSupport\tminRegionMethod\tminMinorAlleleCopyNumber\tdepthWindowCount\n"
 with open(tf_gene, "w") as gene_tsv:
         gene_tsv.write(gene_header)
+system(f"gzip -cd {args.cnv_gene} | perl -F\\\\t -ane 'next if $. == 1; ($chr, $start, $end) = $F[1] =~ /(\\S+?):(\\d+)-(\\d+)/; ($cyto) = $F[5] =~ /:(\\S+?)-/; ($trans) = $F[16] =~ /^(.+?)\\|/ ; print join(\"\\t\", $chr, $start, $end, $F[8], $F[2]+$F[3], $F[2]+$F[3], 1, $trans, \"true\", $cyto, 1, $start, $end, \"BND\", \"BND\", \"BAF_WEIGHTED\", $F[3], int(1000000*$F[4]/500)),\"\\n\"' >> {tf_gene}")        
 
 # Build the zip
 filenames = [tf_purity, tf_purity_range, tf_cnv, tf_segment, tf_gene]
@@ -385,6 +387,6 @@ with open(INIFILE, mode="w", encoding="utf-8") as message:
         message.write(content)
 
 # Generate Djerba report with all these data
-system(f"djerba.py --verbose report --ini {INIFILE} --out-dir {djerba_outdir} --no-archive --pdf")
+system(f"djerba.py --verbose report --ini {INIFILE} --out-dir {djerba_outdir} --work-dir resources/oncokb_cache --no-archive --pdf")
 system("read wait")
 exit(0)

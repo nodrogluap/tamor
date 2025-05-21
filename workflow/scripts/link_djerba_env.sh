@@ -9,3 +9,5 @@ elif [ -d .snakemake/conda/djerba ]; then
 fi
 # Generate the djerba.smk rule output expected path for djerba.py via softlink
 echo `which djerba.py` | perl -ne 'if(/^(.*)\/bin\/djerba.py/){$path=$1; ($dir,$rel_path) = $path =~ /^(.*\.snakemake\/conda)\/(.+)$/; system "cd $dir; ln -s $rel_path djerba"}'
+# Install the (patched) CMSclassifier dependency used by the CAPTIV-8 plugin (not available from conda).
+Rscript -e 'library(devtools);devtools::install_github("https://github.com/nodrogluap/CMSclassifier", dependencies = FALSE)'
