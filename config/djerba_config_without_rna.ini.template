@@ -11,12 +11,12 @@ requisition_id = {{subject}}
 sample_type = Fresh Frozen
 site_of_biopsy = NA
 study = {{project}}
-tcgacode = {{tcgacode}}
+tcga_code = {{tcgacode}}
 
 [report_title]
 
 [provenance_helper]
-provenance_input_path = results/files_report_latest.tsv.gz
+provenance_input_path = {{ provenance_file_path }}
 tumour_id = {{tumor_dna}}
 sample_name_aux = {{tumor_rna}}
 sample_name_tumour = {{tumor_dna}}
@@ -34,15 +34,15 @@ sample_name_normal = {{normal}}
 #clinical = True
 #supplementary = True 
 
-[wgts.snv_indel]
-attributes = research
-maf_path = {{maf_file}}
-oncokb cache = resources/oncokb_cache
-update cache = True
+#[wgts.snv_indel]
+#attributes = research
+#maf_path = {{maf_file}}
+#oncokb cache = resources/oncokb_cache
+#update cache = False
 
 [wgts.cnv_purple]
 attributes = research
-purple_zip = results/PR-CY-SAR-01010032-5715-T1.purple.zip
+purple_zip = {{ cnv_file_path }}
 oncokb cache = resources/oncokb_cache
 update cache = True 
 
