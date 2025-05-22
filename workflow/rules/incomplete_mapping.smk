@@ -4,8 +4,10 @@ configfile: "config/config.yaml"
 # These can be use downstream for things like finding oncogenic retrovirus integration events.
 rule generate_incompletely_mapped_reads_bams:
         resources:
-                runtime=180,
-                mem_mb=40000 
+		# These can be quite big files to search through, so generously give 24 hours for slow I/O systems
+                runtime=1440,
+		# As it's streaming, it doesn't need much memory though
+                mem_mb=4000 
         input:
                 source_bam=config["output_dir"]+'/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic_tumor.bam'
         output:
