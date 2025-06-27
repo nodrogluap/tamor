@@ -1,6 +1,4 @@
 [core]
-archive_name = djerba
-archive_url = http://admin:djerba123@10.30.133.78:5984
 attributes =
 configure_priority = 100
 depends_configure =
@@ -8,7 +6,7 @@ depends_extract =
 #document_config = document_config.json
 extract_priority = 100
 render_priority = 100
-report_id = __DJERBA_NULL__
+report_id =  {{ subject }}
 report_version = 1
 #input_params = input_params.json
 
@@ -20,7 +18,7 @@ attributes = research
 [input_params_helper]
 assay = WGTS
 donor = {{ subject }}
-oncotree_code = {{oncotree }}
+oncotree_code = {{ oncotree }}
 primary_cancer = {{ cancer_type }}
 project = {{ project }}
 requisition_approved = {{ date }}
@@ -28,7 +26,7 @@ requisition_id = {{ subject }}
 sample_type = {{ fresh_frozen }}
 site_of_biopsy = {{ site }}
 study = {{ project }}
-tcgacode = {{ tcgacode }}
+tcga_code = {{ tcgacode }}
 attributes = research
 configure_priority = 10
 depends_configure =
