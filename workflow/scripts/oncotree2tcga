@@ -42,7 +42,7 @@ with open("resources/oncotree2other_codes.tsv", 'r') as data_in:
     next(data_in) # skip header line
     tsv_file = csv.reader(decomment(data_in), delimiter="\t")
     for line in tsv_file:
-        oncotree2tcga[line[0]] = line[2]
+        oncotree2tcga[line[0]] = line[1]
 # Roll up the given oncotree code to a self or parent that has a TCGA mapping.
 if search_term in oncotree2tcga.keys():
     with open(args.output_filename, 'w') as output_file:
