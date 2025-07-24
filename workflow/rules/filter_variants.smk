@@ -20,7 +20,8 @@ rule filter_somatic_variants:
         shell:
                 # Add UMI prep polymerase slippage correction of SNVs if enabled.
                 # Add CNV well-characterized false positive filtering.
+                # TODO: add structural variant false positive filter using Dragen-provided blacklist.
                 """
-                workflow/scripts/filter_homopolymer_indels.py {config[umi_slippage_support_informative_fraction]} {input.snv_file} {config[ref_fasta]} {output.snv_metrics_file}
+                workflow/scripts/filter_homopolymer_indels.py {config[umi_slippage_support_informative_fraction]} {input.snv_file} {config[ref_fasta]} resources/systematic-noise-baseline-collection-1.1.0/snv_wgs_hg38_mean_v1.1_systematic_noise.bed.gz resources/bed-file-collection-1.0.0/v1.0.0_hg38_Alu_regions.bed.gz resources/dragen_snv_blacklist.txt {output.snv_metrics_file}
                 workflow/scripts/filter_false_positive_cnvs.py resources/dragen_cnv_blacklist.bed {input.cnv_file} {output.cnv_metrics_file}
                 """

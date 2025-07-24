@@ -4,3 +4,6 @@
 [submodule "workflow/submodules/oncokb-annotator"]
 	path = workflow/submodules/oncokb-annotator
 	url = https://github.com/oncokb/oncokb-annotator
+[submodule "workflow/submodules/pori_python"]
+	path = workflow/submodules/pori_python
+	url = https://github.com/bcgsc/pori_python

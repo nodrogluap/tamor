@@ -3,6 +3,8 @@
 import tempfile
 import argparse
 import gzip
+import yaml
+import pandas as pd
 from os import system
 from Bio import SeqIO
 
@@ -19,8 +21,22 @@ parser = argparse.ArgumentParser(
 parser.add_argument("informative_fraction", type=float, choices=[Range(0.0, 1.0)])
 parser.add_argument("vcf") #assume it's gzip'ed
 parser.add_argument("reference_fasta")
+parser.add_argument("systematic_noise_bed") # by Dragen
+parser.add_argument("alu_bed") # by Dragen, for FFPE samples only
+parser.add_argument("blacklist_tsv") # by Tamor
 parser.add_argument("output_metrics")
 args = parser.parse_args()
+
+with open("config/config.yaml", "r") as f:
+    config = yaml.safe_load(f)
+
+dna_sample_config_tsv = (
+    pd.read_csv(config["dna_paired_samples_tsv"], sep="\t",
+                dtype={"subjectID": str, "tumorSampleID": str, "germlineSampleID": str, "projectID": str, "oncoTreeCode": str},
+        comment='#').set_index(["tumorSampleID"], drop=False)
+)
+# Assume it was validated earlier in the invoking Snakemake for this script's call.
+#validate(dna_sample_config_tsv, schema="schemas/dna_sample_config.schema.yaml")
 
 # Some polymerases used during PCR-based library preparation can slip in homopolymer regions with a low frequency.
 # Over the 3 billion bases of the human genome, these rare events can manifest as somatic, low variant allele frequency (mostly) insertions in a somatic-calls VCF.

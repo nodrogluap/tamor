@@ -1,3 +1,4 @@
 subjectID	tumorSampleID	trueOrFalseTumorHasPCRDuplicates	germlineSampleID	trueOrFalseGermlineHasPCRDuplicates	trueOrFalseGermlineContainsSomeTumor	oncoTreeCode	projectID
-# OncoTree codes for cancer types can be found here: https://oncotree.mskcc.org/
-PR-CY-SAR-02073329	PR-CY-SAR-02073329-5116-T1	True	PR-CY-SAR-02073329-4789-N	False	True	SYNS	PR-CY-SAR
+# High coverage raw region chr16 46380679-55789510, throws segmentation error
+#PR-CY-SAR-19017426	PR-CY-SAR-19017426-6670-T	False	PR-CY-SAR-19017426-6704-N	False	True	ASPS	PR-CY-SAR
+PR-CY-SAR-05026458	PR-CY-SAR-05026458-5504-T1	False	PR-CY-SAR-05026458-5466-N	False	True	SARCNOS	PR-CY-SAR

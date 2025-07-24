@@ -10,7 +10,7 @@ rule dragen_rna_read_mapping_quant_and_fusion_calls:
                 mem_mb = 256000 
         input:
                 get_rna_sample_fastq_list_csvs,
-                config["ref_genome"]+'/anchored_rna',
+                #config["ref_genome"]+'/anchored_rna',
                 config["ref_exon_annotations"]
         output:
                 sf = "{output_dir}/{project}/{subject}/rna/{subject}_{sample}.rna.quant.genes.sf",
