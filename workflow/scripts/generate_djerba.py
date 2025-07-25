@@ -232,6 +232,7 @@ vepfiles = glob.glob(f"{args.outdir}/pcgr/{args.project}/{args.subject}_{args.tu
 if not vepfiles:
         print_error_exit("No PCGR-generated VEP file found")
 system(f"vcfanno config/gnomad.vcfanno.conf {vepfiles[0]} > {GNOMAD_VEPFILE.name}")
+#system(f"touch {GNOMAD_VEPFILE.name}")
 
 # Write the MAF header
 with open(maf_file, 'w') as maf_tsv:
@@ -243,11 +244,12 @@ system(f"gzip -c {maf_file} > {maf_file}.gz")
 maf_file = f"{maf_file}.gz"
 tamor["maf_file"] = maf_file
 
-os.environ["DJERBA_BASE_DIR"] = ".snakemake/conda/djerba/lib/python3.10/site-packages/djerba"
+os.environ["DJERBA_BASE_DIR"] = ".snakemake/conda/djerba/lib/python3.13/site-packages/djerba"
 os.environ["DJERBA_RUN_DIR"] = os.environ["DJERBA_BASE_DIR"] + "/util/data"
 # Somatic copy number variants reformatting, to resemble Purple's output.
 tmpdir = tempfile.TemporaryDirectory(prefix="djerba")
 os.environ["DJERBA_PRIVATE_DIR"] = tmpdir.name
+os.environ["DJERBA_TRACKING_DIR"] = tmpdir.name
 os.environ["PATH"] = os.environ["PATH"]+":"+os.getcwd()+"/workflow/submodules/oncokb-annotator:"+os.getcwd()+"/workflow/submodules/djerba/src/bin" # so that Djerba can find OncoKB Annotator
 # Djerba is looking for four files in the zip:
 # *purple.purity.range.tsv
