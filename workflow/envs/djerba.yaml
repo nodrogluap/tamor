@@ -3,8 +3,8 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
-  - python=3.10.6
-  - setuptools=65
+  - python=3.13
+  - setuptools
   - tabix
   - ca-certificates
   - certifi
