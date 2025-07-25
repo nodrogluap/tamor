@@ -153,4 +153,4 @@ This project is being developed at the [Centre for Health Genomics and Informati
 within the [University of Calgary's](https://www.ucalgary.ca/) [Cumming School of Medicine](https://cumming.ucalgary.ca/), 
 in support of the [Prairie Cancer Research Consortium](https://www.marathonofhopecancercentres.ca/our-network/consortium/prairies-cancer-research-consortium) (PR2C). 
 PR2C is the regional activity hub of the [Terry Fox Research Institute](https://www.tfri.ca/)'s 
-[Marathon of Hope Cancer Care Network](https://www.marathonofhopecancercentres.ca/).
+[Marathon of Hope Cancer Centre Network](https://www.marathonofhopecancercentres.ca/).
