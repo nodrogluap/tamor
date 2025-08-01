@@ -41,6 +41,8 @@ This is recommended by Illumina support, but not part of the Dragen documentatio
 
 # Installation
 
+If you prefer to not install mamba in your home directory, use [these alternative instructions](remote.md) to keep all software dependencies on a remote filesystem mountpoint. Otherwise:
+
 0. [Install the mamba package manager](https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html) if you don't already have it on your system.
 
 1. Create a mamba or conda environment for the latest Snakemake (8.something) and utilities:
@@ -55,20 +57,6 @@ pip install snakemake-executor-plugin-slurm
 ```bash
 git clone --recurse-submodules https://github.com/nodrogluap/tamor
 cd tamor
-```
-
-3. OPTIONAL. Tamor builds on a number of awesome existing bioinformatics software packages, which in turn depend on *lots* of other packages.
-We have tried to alleviate the pain involved in resolving these dependencies by using 'pinned' conda package lists for Linux. 
-*But* there is some chance that your default conda setup is incompatible with these pins. 
-If you run into conda errors while running Tamor for the first time, please try using the following ``~/.condarc`` file:
-
-```yaml
-channels:
-  - bioconda
-  - r
-  - defaults
-  - conda-forge
-channel_priority: flexible
 ```
 
 # Testing
@@ -105,7 +93,7 @@ On a single-user system:
 snakemake --use-conda -j 1 --keep-incomplete
 ```
 
-Otherwise, on a multi-user system, it is imperative to use a queuing system such as slurm to submit only one job at a time to Dragen v4.x. 
+Otherwise, on a multi-user system, it is imperative to use a queueing system such as slurm to submit only one job at a time to Dragen v4.x. 
 Once slurm is installed and configured on your Dragen system, Snakemake support for slurm is enabled by invoking like so:
   
 ```bash
