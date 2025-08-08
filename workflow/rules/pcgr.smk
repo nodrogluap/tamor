@@ -47,7 +47,6 @@ rule generate_pcgr_html:
                 # cnv_metrics_file=config["output_dir"]+"/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.cnv_filter_metrics.csv",
                 pcgrr_env = ".snakemake/conda/pcgrr/bin/Rscript"
         output:
-                tumor_cnv_file = config["output_dir"]+"/pcgr/{project}/{subject}_{tumor}_{normal}/{subject}.pcgr.grch38.cna_gene_ann.tsv.gz",
                 tumor_snv_file = config["output_dir"]+"/pcgr/{project}/{subject}_{tumor}_{normal}/{subject}.pcgr.grch38.snv_indel_ann.tsv.gz",
                 html=config["output_dir"]+'/pcgr/{project}/{subject}_{tumor}_{normal}/{subject}.pcgr.grch38.html',
                 rep=report(directory(config["output_dir"]+'/pcgr/{project}/{subject}_{tumor}_{normal}'),
