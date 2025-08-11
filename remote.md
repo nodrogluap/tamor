@@ -43,8 +43,8 @@ Anytime you would like to run Tamor, you must activate micromamba from the mount
 cd /path/to/your/mount/point
 export MAMBA_ROOT_PREFIX=`pwd`/mambaforge
 eval "$(micromamba shell hook --shell bash)"
-micromamba activate
-micromamba activate tamor
+alias conda=micromamba
+conda activate tamor
 cd tamor
-snakemake -j 1 --dry-run
+snakemake -j 1 --dry-run --use-conda
 ```
