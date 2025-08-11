@@ -39,7 +39,7 @@ git clone --recurse-submodules https://github.com/nodrogluap/tamor
 ## Running Tamor
 Anytime you would like to run Tamor, you must activate micromamba from the mount point:
 
-```
+```bash
 cd /path/to/your/mount/point
 export MAMBA_ROOT_PREFIX=`pwd`/mambaforge
 eval "$(micromamba shell hook --shell bash)"
