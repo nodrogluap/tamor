@@ -50,7 +50,7 @@ rule dragen_germline_snv_sv_and_cnv_calls:
                 # check for mixed compression formats and decompress where needed
                 harmonize_fastq_compression_formats(this_sample_only_fastq_list_csv)
                 
-                dragen_cmd = "dragen -r "+config["ref_genome"]+" --ora-reference "+config["ref_ora"]+" --enable-map-align true --enable-map-align-output true --enable-bam-indexing true --fastq-list {this_sample_only_fastq_list_csv} --fastq-list-all-samples true --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.normal}.dna.germline --enable-hla true --intermediate-results-dir "+ config["temp_dir"]+" -f"+" --enable-variant-caller true --enable-cnv true --cnv-enable-self-normalization true --enable-sv true --enable-down-sampler true --down-sampler-coverage 60 --enable-variant-annotation=true --variant-annotation-data=resources/nirvana --variant-annotation-assembly=GRCh38 --msi-command collect-evidence --msi-coverage-threshold " + str(config["msi_min_coverage"]) + " --msi-microsatellites-file {input.msi_sites}"
+                dragen_cmd = "dragen -r "+config["ref_genome"]+" --ora-reference "+config["ref_ora"]+" --enable-map-align true --enable-map-align-output true --enable-bam-indexing true --fastq-list {this_sample_only_fastq_list_csv} --fastq-list-all-samples true --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.normal}.dna.germline --enable-hla true --hla-enable-class-2 true --intermediate-results-dir "+ config["temp_dir"]+" -f"+" --enable-variant-caller true --enable-cnv true --cnv-enable-self-normalization true --enable-sv true --enable-down-sampler true --down-sampler-coverage 60 --enable-variant-annotation=true --variant-annotation-data=resources/nirvana --variant-annotation-assembly=GRCh38 --msi-command collect-evidence --msi-coverage-threshold " + str(config["msi_min_coverage"]) + " --msi-microsatellites-file {input.msi_sites} --vc-max-callable-region-memory-usage 26000 --bin_memory 40000" 
 
                 if has_pcr_duplicates and not has_UMIs:
                         dragen_cmd = dragen_cmd + " --enable-duplicate-marking true"
@@ -65,7 +65,7 @@ rule dragen_germline_snv_sv_and_cnv_calls:
                         print("Germline sample has UMI's, using bams instead of fastqs as variant calling input")
                         # only run alignment if germline bam does not exist?
                         if(not os.path.exists(normal_bam)):
-                                dragen_cmd_align = "dragen -r "+config["ref_genome"]+" --ora-reference "+config["ref_ora"]+" --enable-map-align true --enable-map-align-output true --enable-bam-indexing true --fastq-list {this_sample_only_fastq_list_csv} --fastq-list-all-samples true --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.normal}.dna.germline --enable-hla true --intermediate-results-dir "+ config["temp_dir"]+" -f --umi-enable true {umi_correction_flag} --umi-min-supporting-reads 1 --umi-min-map-quality 1 --enable-down-sampler true --down-sampler-coverage 60"
+                                dragen_cmd_align = "dragen -r "+config["ref_genome"]+" --ora-reference "+config["ref_ora"]+" --enable-map-align true --enable-map-align-output true --enable-bam-indexing true --fastq-list {this_sample_only_fastq_list_csv} --fastq-list-all-samples true --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.normal}.dna.germline --enable-hla true --hla-enable-class-2 true --intermediate-results-dir "+ config["temp_dir"]+" -f --umi-enable true {umi_correction_flag} --umi-min-supporting-reads 1 --umi-min-map-quality 1 --enable-down-sampler true --down-sampler-coverage 60"
                                 shell(dragen_cmd_align)
                         
                         # check that germline bam was written then pass dragen command with bams as input
@@ -83,6 +83,14 @@ rule dragen_germline_snv_sv_and_cnv_calls:
                             config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.sv.vcf.gz.tbi; "+
                       "cp "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.microsat_normal.dist "+
                             "resources/dragen_microsat/")
+
+                if "set_output_group" in config:
+                        shell("chgrp -R -f " + config["set_output_group"] + " " + config["output_dir"]+"/{wildcards.project}/{wildcards.subject}")
+                if "set_output_umask" in config:
+                        new_octal_perms = 0o666 ^ int(config["set_output_umask"], 8) # bitwise-xor of two octal representation numbers
+                        shell("find " + config["output_dir"]+"/{wildcards.project}/{wildcards.subject} -type f -exec chmod -f -user $USER " +new_octal_perms+" {} \\;")
+                        new_octal_perms = 0o777 ^ int(config["set_output_umask"], 8)
+                        shell("find " + config["output_dir"]+"/{wildcards.project}/{wildcards.subject} -type d -exec chmod -f -user $USER " +new_octal_perms+" {} \\;")
 
 
 
@@ -114,6 +122,15 @@ rule dragen_germline_cnv_and_sv_lowqual_check_and_mitigate:
                         interval_message = "PASS"
                 interval_df.loc[len(interval_df)] = ['COVERAGE UNIFORMITY CHECK','','Germline uniformity less than 0.5',interval_message,'']
                 interval_df.to_csv(output.interval_check, header=False, index=False)
+
+                if "set_output_group" in config:
+                        shell("chgrp -R -f " + config["set_output_group"] + " " + config["output_dir"]+"/{wildcards.project}/{wildcards.subject}")
+                if "set_output_umask" in config:
+                        new_octal_perms = 0o666 ^ int(config["set_output_umask"], 8) # bitwise-xor of two octal representation numbers
+                        shell("find " + config["output_dir"]+"/{wildcards.project}/{wildcards.subject} -type f -exec chmod -f -user $USER " +new_octal_perms+" {} \\;")
+                        new_octal_perms = 0o777 ^ int(config["set_output_umask"], 8)
+                        shell("find " + config["output_dir"]+"/{wildcards.project}/{wildcards.subject} -type d -exec chmod -f -user $USER " +new_octal_perms+" {} \\;")
+
 
 # should potentially have similar interval increase for somatic, based on average coverage or "Uniformity of coverage (PCT > 0.4*mean) over genome?"
 
@@ -172,7 +189,7 @@ rule dragen_somatic_snv_sv_and_cnv_calls:
                 # check for mixed compression formats and decompress where needed
                 harmonize_fastq_compression_formats(this_sample_germline_only_fastq_list_csv, this_sample_tumor_only_fastq_list_csv)
 
-                dragen_cmd = "dragen -r "+config["ref_genome"]+" --ora-reference "+config["ref_ora"]+" --enable-map-align true --enable-map-align-output true --enable-bam-indexing true --fastq-list {this_sample_germline_only_fastq_list_csv} --fastq-list-all-samples true --tumor-fastq-list {this_sample_tumor_only_fastq_list_csv} --tumor-fastq-list-all-samples true --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic --enable-hla true --intermediate-results-dir "+config["temp_dir"]+" -f"+" --enable-variant-caller true --enable-cnv true --cnv-use-somatic-vc-baf true --cnv-normal-cnv-vcf {input.germline_cnv} --enable-sv true --vc-enable-unequal-ntd-errors=true --vc-enable-trimer-context=true --msi-command tumor-normal --msi-coverage-threshold " + str(config["msi_min_coverage"]) + " --msi-microsatellites-file {input.msi_sites} --enable-hrd true --enable-variant-annotation=true --variant-annotation-data=resources/nirvana --variant-annotation-assembly=GRCh38 --enable-tmb true"
+                dragen_cmd = "dragen -r "+config["ref_genome"]+" --ora-reference "+config["ref_ora"]+" --enable-map-align true --enable-map-align-output true --enable-bam-indexing true --fastq-list {this_sample_germline_only_fastq_list_csv} --fastq-list-all-samples true --tumor-fastq-list {this_sample_tumor_only_fastq_list_csv} --tumor-fastq-list-all-samples true --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic --enable-hla true --hla-enable-class-2 true --intermediate-results-dir "+config["temp_dir"]+" -f"+" --enable-variant-caller true --enable-cnv true --cnv-use-somatic-vc-baf true --cnv-normal-cnv-vcf {input.germline_cnv} --enable-sv true --vc-enable-unequal-ntd-errors=true --vc-enable-trimer-context=true --msi-command tumor-normal --msi-coverage-threshold " + str(config["msi_min_coverage"]) + " --msi-microsatellites-file {input.msi_sites} --enable-hrd true --enable-variant-annotation=true --variant-annotation-data=resources/nirvana --variant-annotation-assembly=GRCh38 --enable-tmb true"
 
                 if has_pcr_duplicates and not tumor_has_UMIs:                                                                                                                                                                                                                       
                         dragen_cmd = dragen_cmd + " --enable-duplicate-marking true"
@@ -188,7 +205,7 @@ rule dragen_somatic_snv_sv_and_cnv_calls:
                         print("UMIs detected, using bams instead of fastqs as variant calling input")
                         # only run alignment if tumor bam does not exist?
                         #if(not os.path.exists(tumor_bam)):
-                        dragen_cmd_align = "dragen -r "+config["ref_genome"]+" --ora-reference "+config["ref_ora"]+" --enable-map-align true --enable-map-align-output true --enable-bam-indexing true --tumor-fastq-list {this_sample_tumor_only_fastq_list_csv} --tumor-fastq-list-all-samples true --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic --enable-hla true --intermediate-results-dir "+config["temp_dir"]+" -f --umi-enable true {umi_correction_flag} --umi-min-supporting-reads 1 --umi-min-map-quality 1"
+                        dragen_cmd_align = "dragen -r "+config["ref_genome"]+" --ora-reference "+config["ref_ora"]+" --enable-map-align true --enable-map-align-output true --enable-bam-indexing true --tumor-fastq-list {this_sample_tumor_only_fastq_list_csv} --tumor-fastq-list-all-samples true --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic --enable-hla true --hla-enable-class-2 true --intermediate-results-dir "+config["temp_dir"]+" -f --umi-enable true {umi_correction_flag} --umi-min-supporting-reads 1 --umi-min-map-quality 1"
                         print(dragen_cmd_align)
                         shell(dragen_cmd_align)
 
@@ -210,6 +227,13 @@ rule dragen_somatic_snv_sv_and_cnv_calls:
                             config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.sv.vcf.gz.tbi")
                 # The following BAM is essentially redundant with the dna.germline.bam from the previous rule, delete to save space.
                 shell("rm -f "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.bam")
+                if "set_output_group" in config:
+                        shell("chgrp -R -f " + config["set_output_group"] + " " + config["output_dir"]+"/{wildcards.project}/{wildcards.subject}")
+                if "set_output_umask" in config:
+                        new_octal_perms = 0o666 ^ int(config["set_output_umask"], 8) # bitwise-xor of two octal representation numbers
+                        shell("find " + config["output_dir"]+"/{wildcards.project}/{wildcards.subject} -type f -exec chmod -f -user $USER " +new_octal_perms+" {} \\;")
+                        new_octal_perms = 0o777 ^ int(config["set_output_umask"], 8)
+                        shell("find " + config["output_dir"]+"/{wildcards.project}/{wildcards.subject} -type d -exec chmod -f -user $USER " +new_octal_perms+" {} \\;")
 
 rule dragen_germline_sv_fusions:
         priority: 98
@@ -229,7 +253,6 @@ rule dragen_germline_sv_fusions:
 rule dragen_somatic_sv_fusions:
         priority: 95
         input:
-                config["output_dir"]+'/{project}/{subject}/{subject}_{normal}.dna.germline.sv.fusion_candidates.features.csv',
                 somatic_sv=config["output_dir"]+'/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.sv.vcf.gz'
         output:
                 dna_fusions=config["output_dir"]+'/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.sv.fusion_candidates.features.csv'

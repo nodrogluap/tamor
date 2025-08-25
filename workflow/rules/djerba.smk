@@ -11,7 +11,7 @@ rule setup_djerba_conda_env:
 		"../envs/djerba.yaml"
 	shell:
 		# First remove any existing soft link, in case it exists it could create a problem
-		"cd workflow/submodules/djerba && pip install . && cd ../oncokb-annotator && pip install -r requirements/common.txt -r requirements/pip3.txt && cd ../../../ && workflow/scripts/link_djerba_env.sh"
+		"python -m ensurepip --upgrade && python -m pip install --upgrade setuptools && cd workflow/submodules/djerba && python -m pip install . && cd ../oncokb-annotator && python -m pip install -r requirements/common.txt && cd ../../../ && python -m pip install graphkb && python -m pip install pysam && workflow/scripts/link_djerba_env.sh"
 
 rule lookup_tcga_code_from_oncotree:
 	input:
@@ -35,11 +35,13 @@ rule generate_djerba_html:
 	input:
 		somatic_snv_vcf = config["output_dir"]+'/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.hard-filtered.vcf.gz',
 		somatic_cnv_vcf = config["output_dir"]+'/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.cnv.vcf.gz',
+		# The next line makes it dependent on the CNV annotation PCGR output.
+		somatic_cnv_ann_txt = config["output_dir"]+"/pcgr/{project}/{subject}_{tumor}_{normal}/{subject}.pcgr.grch38.cna_gene_ann.tsv.gz",
 		tcga_code_file = config["output_dir"]+"/{project}/{subject}/{subject}_{tumor}_{normal}.tcga.tumor-site-code.txt",
 		djerba_env = ".snakemake/conda/djerba/bin/djerba.py"
 	output:
-		rna_outfile = config["output_dir"]+"/djerba/{project}/{subject}_{tumor}_{normal}/data_expression_zscores_tcga.txt",
-		html=config["output_dir"]+'/djerba/{project}/{subject}_{tumor}_{normal}/{subject}-v1_report.research.html',
+		#rna_outfile = config["output_dir"]+"/djerba/{project}/{subject}_{tumor}_{normal}/data_expression_zscores_tcga.txt",
+		html=config["output_dir"]+'/djerba/{project}/{subject}_{tumor}_{normal}/{subject}_report.research.html',
 		rep=report(directory(config["output_dir"]+'/djerba/{project}/{subject}_{tumor}_{normal}'),
 		       caption="../report/djerba_caption.rst",
 		       category="Reports",
@@ -50,7 +52,7 @@ rule generate_djerba_html:
 		"../envs/djerba.yaml"
 	shell:
 		# Wrapper script to reformat inputs and run PCGR, so we can use PCGR's conda env directly.
-		"workflow/scripts/generate_djerba.py {input.somatic_snv_vcf} {input.somatic_cnv_vcf} " +
+		"workflow/scripts/generate_djerba.py {input.somatic_snv_vcf} {input.somatic_cnv_ann_txt} {input.somatic_cnv_vcf} " +
 		# DNA sample spec
 		config["output_dir"]+ " {input.tcga_code_file} {wildcards.project} {wildcards.subject} {wildcards.tumor} {wildcards.normal}" +
 		"; ln -s {output.html} `dirname {output.html}`/index.html"

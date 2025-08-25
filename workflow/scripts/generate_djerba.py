@@ -12,6 +12,7 @@ import datetime
 import zipfile
 import glob
 import json
+import pandas as pd
 from pathlib import Path
 from os import system
 # Jinja2 for template-filling the config.ini for Djerba
@@ -22,10 +23,11 @@ from tamor_utils import decomment
 parser = argparse.ArgumentParser(
                     prog='generate_djerba.py',
                     description='A wrapper to reformat SNV, CNV, and RNASeq results from Tamor suited for generation of Djerba variant interpretation reports')
-parser.add_argument("tcga_code_file")
 parser.add_argument("snv")
+parser.add_argument("cnv_gene")
 parser.add_argument("cnv")
 parser.add_argument("outdir")
+parser.add_argument("tcga_code_file")
 parser.add_argument("project")
 parser.add_argument("subject")
 parser.add_argument("tumor")
@@ -177,34 +179,49 @@ rna_cohort = ""
 cohort_sample2tumor_dna = {} 
 tumor_dna2subject = {}
 tumor_dna2project = {}
-with open(config["rna_paired_samples_tsv"], 'r') as data_in:
-    tsv_file = csv.reader(decomment(data_in), delimiter="\t")
-    for line in tsv_file:
-        # We're using the first RNA sample in the file that corresponds to the tumor DNA given on the command line.
-        # This is noted in the config dir README.md, in case you havve tumor and normal RNA sample for a case, put the tumor sample first.
-        if line[0] == args.subject and line[2] == args.tumor:
-            rna_sample = line[1]
-            rna_cohort = line[4]
-            break
+
+# read the provided rna sample config file
+rna_sample_config_tsv = (
+    pd.read_csv(config["rna_paired_samples_tsv"], sep="\t",
+                dtype={"subjectID": str, "tumorRNASampleID": str, "matchedTumorDNASampleID": str, "projectID": str, "cohortNameForExpressionAnalysis": str},
+        comment='#').set_index(["tumorRNASampleID"], drop=False)
+)
+# Assume it was validated earlier in the invoking Snakemake for this script's call.
+#validate(rna_sample_config_tsv, schema="schemas/rna_sample_config.schema.yaml")
+
+for line in rna_sample_config_tsv.itertuples():
+    # We're using the first RNA sample in the file that corresponds to the tumor DNA given on the command line.
+    # This is noted in the config dir README.md, in case you have tumor and normal RNA sample for a case, put the tumor sample first.
+    if line.subjectID == args.subject and line.matchedTumorDNASampleID == args.tumor:
+        rna_sample = line.tumorRNASampleID
+        rna_cohort = line.cohortNameForExpressionAnalysis
+        break
+
+for line in rna_sample_config_tsv.itertuples():
+    if rna_sample and line.cohortNameForExpressionAnalysis == rna_cohort:
+        cohort_sample2tumor_dna[line.tumorRNASampleID] = line.matchedTumorDNASampleID
+        tumor_dna2subject[line.matchedTumorDNASampleID] = line.subjectID
+        tumor_dna2project[line.matchedTumorDNASampleID] = line.projectID
+        print ("RNA cohort includes RNA sample %s" % (line.tumorRNASampleID))
+
 print ("RNA cohort for %s is %s" % (rna_sample, rna_cohort))
-with open(config["rna_paired_samples_tsv"], 'r') as data_in:
-    tsv_file = csv.reader(decomment(data_in), delimiter="\t")
-    for line in tsv_file:
-        if rna_sample and line[4] == rna_cohort:
-            cohort_sample2tumor_dna[line[1]] = line[2]
-            tumor_dna2subject[line[2]] = line[0]
-            tumor_dna2project[line[2]] = line[3]
-            print ("RNA cohort includes RNA sample %s" % (line[1]))
 
 # There may not be an RNA sample associated with the DNA sample (yet), and that's okay.
-with open(config["dna_paired_samples_tsv"], 'r') as data_in:
-    tsv_file = csv.reader(decomment(data_in), delimiter="\t")
-    for line in tsv_file:
-        if line[0] == args.subject and line[1] == args.tumor and line[3] == args.normal and line[9] == args.project:
-            tamor["oncotree"] = line[7]
-        if line[1] in cohort_sample2tumor_dna.values():
-            tumor_dna2subject[line[1]] = line[0]
-            tumor_dna2project[line[1]] = line[9]
+# read and validate the provided dna sample config file
+dna_sample_config_tsv = (
+    pd.read_csv(config["dna_paired_samples_tsv"], sep="\t",
+                dtype={"subjectID": str, "tumorSampleID": str, "germlineSampleID": str, "projectID": str, "oncoTreeCode": str},
+        comment='#').set_index(["tumorSampleID"], drop=False)
+)
+# Assume it was validated earlier in the invoking Snakemake for this script's call.
+#validate(dna_sample_config_tsv, schema="schemas/dna_sample_config.schema.yaml")
+
+for line in dna_sample_config_tsv.itertuples():
+    if line.subjectID == args.subject and line.tumorSampleID == args.tumor and line.germlineSampleID == args.normal and line.projectID == args.project:
+        tamor["oncotree"] = line.oncoTreeCode
+    if line.tumorSampleID in cohort_sample2tumor_dna.values():
+        tumor_dna2subject[line.tumorSampleID] = line.subjectID
+        tumor_dna2project[line.tumorSampleID] = line.projectID
 
 # Somatic small nucleotide variants reformatting
 MAF=tempfile.NamedTemporaryFile(prefix="djerba", suffix=".maf.tsv")
@@ -215,22 +232,24 @@ vepfiles = glob.glob(f"{args.outdir}/pcgr/{args.project}/{args.subject}_{args.tu
 if not vepfiles:
         print_error_exit("No PCGR-generated VEP file found")
 system(f"vcfanno config/gnomad.vcfanno.conf {vepfiles[0]} > {GNOMAD_VEPFILE.name}")
+#system(f"touch {GNOMAD_VEPFILE.name}")
 
 # Write the MAF header
 with open(maf_file, 'w') as maf_tsv:
         maf_tsv.write("Variant_Classification\tTumor_Sample_Barcode\tMatched_Norm_Sample_Barcode\tFILTER\tt_depth\tt_alt_count\tn_depth\tn_alt_count\tgnomAD_AF\tBIOTYPE\tHugo_Symbol\tChromosome\tStart_Position\tEnd_Position\tReference_Allele\tAllele\tTUMOR_SEQ_ALLELE2\tgnomAD_AFR_AF\tgnomAD_AMR_AF\tgnomAD_ASJ_AF\tgnomAD_EAS_AF\tgnomAD_FIN_AF\tgnomAD_NFE_AF\tgnomAD_OTH_AF\tgnomAD_SAS_AF")
 
 # Djerba needs a MAF file on input
-system(f"cat {GNOMAD_VEPFILE.name} | perl -F\\t -ane 'BEGIN{{%vep2class=split /\s/s, `cat resources/vep2djerba_classes.txt`}}next if /^#/; $F[0] =~ s/^chr//; if(($alt_depth, $tot_depth, $class, $hugo, $type) = $F[$#F] =~ /TDP=(\d+).*DP=(\d+).*CSQ=.\|(.+?)\|.+?\|(.+?)\|.+?\|.+?\|.+?\|(.+?)\|/){{($afr_af,$amr_af,$asj_af,$eas_af,$fin_af,$nfe_af,$oth_af,$sas_af) = $F[$#F] =~ /;gnomAD_AFR_AF=([0-9.e\-]+);gnomAD_AMR_AF=([0-9.e\-]+);gnomAD_ASJ_AF=([0-9.e\-]+);gnomAD_EAS_AF=([0-9.e\-]+);gnomAD_FIN_AF=([0-9.e\-]+);gnomAD_NFE_AF=([0-9.e\-]+);gnomAD_OTH_AF=([0-9.e\-]+);gnomAD_SAS_AF=([0-9.e\-]+)/; print join(\"\t\", $vep2class{{$class}}, \"{args.tumor}\", \"{args.normal}\", \"PASS\", $tot_depth, $alt_depth, 30, 0, 0, $type, $hugo, $F[0], $F[1], $F[1]+length($F[3])-1, $F[3], $F[4], $F[4], $afr_af,$amr_af,$asj_af,$eas_af,$fin_af,$nfe_af,$oth_af,$sas_af),\"\n\"}}' >> {MAF.name}")
+system(f"cat {GNOMAD_VEPFILE.name} | perl -F\\t -ane 'BEGIN{{%vep2class=split /\\s/s, `cat resources/vep2djerba_classes.txt`}}next if /^#/; $F[0] =~ s/^chr//; if(($alt_depth, $tot_depth, $class, $hugo, $type) = $F[$#F] =~ /TDP=(\\d+).*DP=(\\d+).*CSQ=.\\|(.+?)\\|.+?\\|(.+?)\\|.+?\\|.+?\\|.+?\\|(.+?)\\|/){{($afr_af,$amr_af,$asj_af,$eas_af,$fin_af,$nfe_af,$oth_af,$sas_af) = $F[$#F] =~ /;gnomAD_AFR_AF=([0-9.e\\-]+);gnomAD_AMR_AF=([0-9.e\\-]+);gnomAD_ASJ_AF=([0-9.e\\-]+);gnomAD_EAS_AF=([0-9.e\\-]+);gnomAD_FIN_AF=([0-9.e\\-]+);gnomAD_NFE_AF=([0-9.e\\-]+);gnomAD_OTH_AF=([0-9.e\\-]+);gnomAD_SAS_AF=([0-9.e\\-]+)/; print join(\"\t\", $vep2class{{$class}}, \"{args.tumor}\", \"{args.normal}\", \"PASS\", $tot_depth, $alt_depth, 30, 0, 0, $type, $hugo, $F[0], $F[1], $F[1]+length($F[3])-1, $F[3], $F[4], $F[4], $afr_af,$amr_af,$asj_af,$eas_af,$fin_af,$nfe_af,$oth_af,$sas_af),\"\n\"}}' >> {MAF.name}")
 system(f"gzip -c {maf_file} > {maf_file}.gz")
 maf_file = f"{maf_file}.gz"
 tamor["maf_file"] = maf_file
 
-os.environ["DJERBA_BASE_DIR"] = ".snakemake/conda/djerba/lib/python3.10/site-packages/djerba"
-os.environ["DJERBA_RUN_DIR"] = os.environ["DJERBA_BASE_DIR"] + "/data"
+os.environ["DJERBA_BASE_DIR"] = ".snakemake/conda/djerba/lib/python3.13/site-packages/djerba"
+os.environ["DJERBA_RUN_DIR"] = os.environ["DJERBA_BASE_DIR"] + "/util/data"
 # Somatic copy number variants reformatting, to resemble Purple's output.
 tmpdir = tempfile.TemporaryDirectory(prefix="djerba")
 os.environ["DJERBA_PRIVATE_DIR"] = tmpdir.name
+os.environ["DJERBA_TRACKING_DIR"] = tmpdir.name
 os.environ["PATH"] = os.environ["PATH"]+":"+os.getcwd()+"/workflow/submodules/oncokb-annotator:"+os.getcwd()+"/workflow/submodules/djerba/src/bin" # so that Djerba can find OncoKB Annotator
 # Djerba is looking for four files in the zip:
 # *purple.purity.range.tsv
@@ -284,11 +303,12 @@ with open(tf_segment, "w") as segment_tsv:
         segment_tsv.write(segment_header)
 system(f"gzip -cd {args.cnv} | perl -ane 'next if /^#/ or /DRAGEN:REF/ or not /\tPASS\t/; ($end) = /END=(\\d+)/; @d = split /:/, $F[$#F]; $d[2] = 1 if $d[2] == \".\"; print join(\"\\t\", $F[0], $F[1], $end, \"DIPLOID\", $d[1], 20, $d[2], $d[2]*0.2, $d[1]-$d[2], $d[2], 1, $d[1]-$d[2], ($d[1]-$d[2])*0.2, 0, $d[1]-$d[2], $d[1]-$d[2], 0.5, 1, 1, 1, $F[5], 1, 0.37, 0, $F[1], $F[1]),\"\\n\"' >> {tf_segment}")
 
-# Not sure it even uses this one?
+# CnaAnnotator.py uses this one.
 tf_gene = f"{CNAFILE}.purple.cnv.gene.tsv"
 gene_header = "chromosome\tstart\tend\tgene\tminCopyNumber\tmaxCopyNumber\tsomaticRegions\ttranscriptId\tisCanonical\tchromosomeBand\tminRegions\tminRegionStart\tminRegionEnd\tminRegionStartSupport\tminRegionEndSupport\tminRegionMethod\tminMinorAlleleCopyNumber\tdepthWindowCount\n"
 with open(tf_gene, "w") as gene_tsv:
         gene_tsv.write(gene_header)
+system(f"gzip -cd {args.cnv_gene} | perl -F\\\\t -ane 'next if $. == 1; ($chr, $start, $end) = $F[1] =~ /(\\S+?):(\\d+)-(\\d+)/; ($cyto) = $F[5] =~ /:(\\S+?)-/; ($trans) = $F[16] =~ /^(.+?)\\|/ ; print join(\"\\t\", $chr, $start, $end, $F[8], $F[2]+$F[3], $F[2]+$F[3], 1, $trans, \"true\", $cyto, 1, $start, $end, \"BND\", \"BND\", \"BAF_WEIGHTED\", $F[3], int(1000000*$F[4]/500)),\"\\n\"' >> {tf_gene}")        
 
 # Build the zip
 filenames = [tf_purity, tf_purity_range, tf_cnv, tf_segment, tf_gene]
@@ -369,6 +389,6 @@ with open(INIFILE, mode="w", encoding="utf-8") as message:
         message.write(content)
 
 # Generate Djerba report with all these data
-system(f"djerba.py --verbose report --ini {INIFILE} --out-dir {djerba_outdir} --no-archive --pdf")
+system(f"djerba.py --verbose report --ini {INIFILE} --out-dir {djerba_outdir} --work-dir resources/oncokb_cache --no-archive --pdf")
 system("read wait")
 exit(0)

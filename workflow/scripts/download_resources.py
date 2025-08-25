@@ -19,6 +19,10 @@ resource_dict = {
         "ref_genome": ["https://s3.amazonaws.com/webdata.illumina.com/downloads/software/dragen/resource-files/hg38-alt_masked.cnv.graph.hla.rna-9-r3.0-1.tar", "kmer_cnv.bin", "tar", "xf"],
         "ref_ora": ["https://s3.amazonaws.com/webdata.illumina.com/downloads/software/dragen/resource-files/misc/oradata_homo_sapiens.tar", "oradata_homo_sapiens", "tar", "xf"],
         "ref_fasta": ["http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa", "GRCh38_full_analysis_set_plus_decoy_hla.fa"],
+        "cnv_germline_b_allele_sites": ["https://webdata.illumina.com/downloads/software/dragen/resource-files/misc/hg38_1000G_phase1.snps.high_confidence.vcf.gz", "hg38_1000G_phase1.snps.high_confidence.vcf.gz"],
+        "alu_vc_exclusions_bed": ["https://webdata.illumina.com/downloads/software/dragen/resource-files/bed-file-collection-1.0.0.tar", "bed-file-collection-1.0.0.tar", "tar", "xvf"],
+        "snv_systematic_noise": ["https://webdata.illumina.com/downloads/software/dragen/resource-files/systematic-noise-baseline-collection-1.1.0.tar", "systematic-noise-baseline-collection-1.1.0", "tar", "vxf"],
+        "sv_systematic_noise": ["https://webdata.illumina.com/downloads/software/dragen/resource-files/sv-systematic-noise-baseline-collection-2.0.1.tar", "sv-systematic-noise-baseline-collection-2.0.1", "tar", "xvf"],
         "oncotree_mappings": ["https://raw.githubusercontent.com/cBioPortal/oncotree/refs/heads/master/scripts/ontology_to_ontology_mapping_tool/ontology_mappings.txt", "oncotree_ontology_mappings.txt"],
         "oncotree_hierarchy": ["https://raw.githubusercontent.com/cBioPortal/oncotree/refs/heads/master/resources/rdf/oncotree-taxonomy-2021-11-02.rdf", "oncotree-taxonomy-2021-11-02.rdf"]
 }

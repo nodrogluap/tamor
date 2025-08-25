@@ -10,7 +10,7 @@ rule dragen_rna_read_mapping_quant_and_fusion_calls:
                 mem_mb = 256000 
         input:
                 get_rna_sample_fastq_list_csvs,
-                config["ref_genome"]+'/anchored_rna',
+                #config["ref_genome"]+'/anchored_rna',
                 config["ref_exon_annotations"]
         output:
                 sf = "{output_dir}/{project}/{subject}/rna/{subject}_{sample}.rna.quant.genes.sf",
@@ -36,6 +36,14 @@ rule dragen_rna_read_mapping_quant_and_fusion_calls:
                         shell("touch {output.csv}")
                 # Cleanup step to remove any temporary fastq.gz files if mixed ora/gz compression input
                 cleanup_decompressed_temporary_fastqs(this_sample_only_fastq_list_csv)
+                if "set_output_group" in config:
+                        shell("chgrp -R -f " + config["set_output_group"] + " " + config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/rna")
+                if "set_output_umask" in config:
+                        new_octal_perms = 0o666 ^ int(config["set_output_umask"], 8) # bitwise-xor of two octal representation numbers
+                        shell("find " + config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/rna -type f -exec chmod -f -user $USER " +new_octal_perms+" {} \\;")
+                        new_octal_perms = 0o777 ^ int(config["set_output_umask"], 8)
+                        shell("find " + config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/rna -type d -exec chmod -f -user $USER " +new_octal_perms+" {} \\;")
+
 
 rule annotate_rna_genes:
         priority: 101

@@ -7,6 +7,7 @@ import re
 import argparse
 import yaml
 import gzip
+import pandas as pd
 from pathlib import Path
 from os import system
 
@@ -51,15 +52,22 @@ with gzip.open(tumor_cnv_vcf, 'rt') as data_in:
         elif mploidy:
             tumor_ploidy = mploidy.group(1)
 
-# Read in the tamor RNA sample metadata file
-# Third column is associated tumor DNA sample for the RNA
 rna_sample = ""
-with open(config["rna_paired_samples_tsv"], 'r') as data_in:
-    tsv_file = csv.reader(decomment(data_in), delimiter="\t")
-    for line in tsv_file:
-        if line[0] == args.subject and line[2] == args.tumor:
-            rna_sample = line[1]
-            break
+# read the provided rna sample config file
+rna_sample_metadata = (
+    pd.read_csv(config["rna_paired_samples_tsv"], sep="\t",
+                dtype={"subjectID": str, "tumorRNASampleID": str, "matchedTumorDNASampleID": str, "projectID": str},
+        comment='#').set_index(["tumorRNASampleID"], drop=False)
+)
+# Assume it was validated earlier in the invoking Snakemake for this script's call.
+#validate(rna_sample_config_tsv, schema="schemas/rna_sample_config.schema.yaml")
+
+for line in rna_sample_metadata.itertuples():
+    # We're using the first RNA sample in the file that corresponds to the tumor DNA given on the command line.
+    # This is noted in the config dir README.md, in case you have tumor and normal RNA sample for a case, put the tumor sample first.
+    if line.subjectID == args.subject and line.matchedTumorDNASampleID == args.tumor:
+        rna_sample = line.tumorRNASampleID
+        break
 # There may not be an RNA sample associated with the DNA sample (yet), and that's okay.
 
 # Set a floor on tumor variant allele frequency to be included in the PCGR reports.
