@@ -16,7 +16,7 @@ Each tumor must have a DNA sample, and optionally an RNA sample.
 * [Test Case Defaults](#test-case-defaults)
 * [Site-specific customizations](#site-specific-customizations)
 * [DNA Sample Metadata](#dna-sample-metadata)
-* [RNA Sample Metadata](#rna-sample-metadata)
+* [RNA Sample Metadata and transcript blacklist](#rna-sample-metadata)
 * [Illumina Samplesheets](#illumina-samplesheets)
 * [Unique Molecular Indices](#unique-molecular-indices)
 * [Variant Blacklists](#variant-blacklists)
@@ -116,6 +116,12 @@ and typically you want to report out regarding the tumor RNA.
 
 The last column ``cohortNameForExpressionAnalysis`` is used for Djerba cohort reporting, e.g. to identify Z-score and percentile 
 rank outliers genes in this sample compared to others being processed at the same time and nominally of the same cancer/tissue type as defined by the user.
+
+### RNA Transcript Blacklist
+
+If the RNA samples provided to Tamor have been prepared using ribosomal depletion rather than polyA mRNA capture, [this file](transcript_id_comparison_blacklist.tsv) helps mitigate non-polyadenylated 
+mRNAs (primarily histones) from showing up in RNA expression outlier reports relative to polA-based cohorts like TCGA. This file can be customized to include
+addition systematic false positive outliers you observe in your cohorts relative to piublicalt available dara.
 
 ## Illumina Samplesheets
 These sample sheets are the only other metadata to which Tamor has access. Place all the 
