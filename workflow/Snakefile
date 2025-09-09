@@ -41,7 +41,7 @@ validate(dna_sample_config_tsv, schema="schemas/dna_sample_config.schema.yaml")
 
 # read and validate the provided rna sample config file
 rna_sample_config_tsv = (
-    pd.read_csv(config["rna_paired_samples_tsv"], sep="\t", 
+	pd.read_csv(config["rna_paired_samples_tsv"], sep="\t", 
 	dtype={"subjectID": str, "tumorRNASampleID": str, "projectID": str},
 	comment='#').set_index(["tumorRNASampleID"], drop=False)
 )
