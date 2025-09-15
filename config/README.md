@@ -48,7 +48,7 @@ These TSVs are the main config files that you will need to edit to run your own 
 
 ### Site-specific file permissions and group ownership
 
-On systems where multiple users will generate or use the Tamor analysis, it can useful to have the workflow automatically set shared permissions for the output files.
+On systems where multiple users will generate or use the Tamor analysis, it can be useful to have the workflow automatically set shared permissions for the output files.
 Uncommenting the ``set_output_group`` and ``set_output_umask`` lines in ``config/config.yaml`` will make Tamor try to honour those wishes. As per UNIX convention, a umask of 007 
 will allow read/write by the owner and designated group, but give no permissions to others.
 
