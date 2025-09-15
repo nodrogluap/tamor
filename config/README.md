@@ -158,7 +158,7 @@ default ``sequencer`` is ``HiSeq`` per the test data mentioned earlier).
 ## Unique Molecular Indices
 
 The samplesheet is also used to determine if Unique Molecular Indices (UMIs) were used to generate the sequencing libraries, which requires 
-different handling in Dragen during genotyping downstream. Use of UMIs is determined by the presence of an OverrideCycles setting in the smaplesheet
+different handling in Dragen during genotyping downstream. Use of UMIs is determined by the presence of an OverrideCycles setting in the samplesheet
 that includes a "U" value. By default, random UMIs are assumed. To specify a non-random UMI scheme, uncomment the ``umi_whitelist``, ``umi_correction_table``, and 
 ``umi_slippage_support_informative_fraction`` settings in ``config/config.yaml`` as appropriate. 
 
