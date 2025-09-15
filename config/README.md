@@ -120,8 +120,8 @@ rank outliers genes in this sample compared to others being processed at the sam
 ### RNA Transcript Blacklist
 
 If the RNA samples provided to Tamor have been prepared using ribosomal depletion rather than polyA mRNA capture, [this file](transcript_id_comparison_blacklist.tsv) helps mitigate non-polyadenylated 
-mRNAs (primarily histones) from showing up in RNA expression outlier reports relative to polA-based cohorts like TCGA. This file can be customized to include
-addition systematic false positive outliers you observe in your cohorts relative to piublicalt available dara.
+mRNAs (primarily histones) from showing up in RNA expression outlier reports relative to polyA-based cohorts like TCGA. This file can be customized to include
+addition systematic false positive outliers you observe in your cohorts relative to publicly available data.
 
 ## Illumina Samplesheets
 These sample sheets are the only other metadata to which Tamor has access. Place all the 
