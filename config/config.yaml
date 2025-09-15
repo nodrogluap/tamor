@@ -31,6 +31,13 @@ msi_min_coverage: 20
 # where you are focused on tracking subclonal expansion e.g. between a primary and recurrent or metastatic tumor.
 reporting_min_proportion: 0.1
 
+# Library preparations with short insert size (e.g. FFPE) tend to overestimate Alu repeat variation because of read-to-genome mappability issues,
+# and in the case of FFPE this is confounded by DNA damage artifacts such as stacked pyramidine cross-linking and 8-oxoG that appear like tumor mutations in the final sequencing.
+# A threshold of 300 means that all samples with mean library insert size less than the typical Alu length of 280-300 will not report mutations in Alu regions (see BED file 
+# blacklist in resources/bed-file-collection-1.0.0/v1.0.0_hg38_Alu_regions.bed.gz). This reduces otherwise-inflated Tumor Mutational Burden reporting for FFPE samples in practice.
+# This value can be commented out to disable Alu blacklist filtering, or adjusted based on your empirical analysis.
+library_mean_insert_size_alu_filtering_threshold: 300
+
 # For Dragen alignment, must have been built with --enable-cnv and --enable-rna and --enable-hla, so that subdirs anchored_rna and 
 # anchored_hla exist, as well as reference.bin, kmer_cnv.bin etc. in the top level dir.
 ref_genome: "resources"
