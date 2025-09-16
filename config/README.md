@@ -168,3 +168,9 @@ Some false positive variants may be recurrent across analyzes. To reduce the rep
 from PASS to filtered in output VCFs have been included in Tamor, based on commonalities found in hundreds of tumor-normal cases analyzed at the University of Calgary's CSM 
 Centre for Health Genomics and Informatics. These can be customized by editing the ``dragen_cnv_blacklist.bed`` and ``dragen_snv_blacklist.txt`` files for copy number and 
 small nucleotide variants respectively.
+
+The ``config.yaml`` file also contains a default setting that is primarily intended to mitigate false positive mutation calls in [Alu repeats](https://en.wikipedia.org/wiki/Alu_element#Alu_family) for sequencing libraries
+derived from formalin-fixed, paraffin-embdded (FFPE) samples.
+The Dragen-provided Alu regions blacklist, populated automatically by the Snakemake rule invoking the ``download_resources.py`` script, is applied to small nucleotide variant calls if the mean insert size for the 
+sequencing library is under the value (customizable, but defaulting to the Alu repeat size of ~300) specified in the setting ``library_mean_insert_size_alu_filtering_threshold``.
+This filter is applied post-hoc to the somatic SNV VCF file FILTER field, therefore this setting can be changed and reapplied simply by updating the modification date ("touching") a somatic SNV VCF file and rerunning Snakemake. 
