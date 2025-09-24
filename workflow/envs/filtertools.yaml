@@ -7,3 +7,6 @@ dependencies:
   - biopython
   - tabix
   - intervaltree
+  - scipy
+  - pyyaml
+  - pandas
