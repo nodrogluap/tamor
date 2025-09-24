@@ -38,6 +38,18 @@ reporting_min_proportion: 0.1
 # This value can be commented out to disable Alu blacklist filtering, or adjusted based on your empirical analysis.
 library_mean_insert_size_alu_filtering_threshold: 300
 
+# Dragen provides systematic noise estimates for many sites in the genome.  See details at https://support-docs.illumina.com/SW/dragen_v42/Content/SW/DRAGEN/SystematicNoiseBED.htm
+# Potential false positive somatic variants are marked as filtered by Tamor as a post-processing step on the 
+# somatic SNV VCF by using the Dragen-provided systematic noise estimates. Performing this filtering as a post-processing step allows filter criteria to be changed and applied
+# on a trial-and-error tuning basis by users without incurring more Dragen license usage (compard to if you'd included the systematic noise filter option in the mapping/variant call Dragen command line).
+#
+# The specificity vs sensitivity tradeoff for somatic variant detection is controlled by two settings here: 
+#   - systematic_noise_AQ_threshold if set higher than the Dragen default of 10 (calculated "AQ" phred-scaled noise probability under a binomial noise model, so 90% noise exclusion), more potential noisy 
+#      reads are excluded along with some chance of exclusing real variants at that site. Can effectively be set up to 60 (i.e. 99.9999% noise exclusion).
+#   - systematic_noise_extraction_method can be either "mean" or "max", with "max" yielding smaller AQ values, and hence increasing the number of variants labelled as noise.
+systematic_noise_AQ_threshold: 10
+systematic_noise_extraction_method: "mean"
+
 # For Dragen alignment, must have been built with --enable-cnv and --enable-rna and --enable-hla, so that subdirs anchored_rna and 
 # anchored_hla exist, as well as reference.bin, kmer_cnv.bin etc. in the top level dir.
 ref_genome: "resources"
