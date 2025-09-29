@@ -151,6 +151,7 @@ rule dragen_somatic_snv_sv_and_cnv_calls:
                 config["output_dir"]+"/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.cnv.vcf.gz",
                 config["output_dir"]+"/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.hard-filtered.vcf.gz",
                 config["output_dir"]+"/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.sv.vcf.gz",
+                config["output_dir"]+"/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.mapping_metrics.csv",
                 config["output_dir"]+"/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic_tumor.bam"
         run:
                 # Must remove any existing files that dragen chmod's to global write to avoid chmoderror if old file had different owner
