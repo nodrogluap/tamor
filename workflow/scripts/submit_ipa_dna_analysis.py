@@ -52,6 +52,8 @@ if not "access_token" in ipa.keys():
 with open("resources/ipa_api.pickle", "wb") as outfile:
     pickle.dump(ipa, outfile)
 
+composite_score = {}
+
 # Get the per-gene consequences of mutations from the small nucleotide variants file
 gene_acmg = {}
 LOF_consequences = ["frameshift_variant","stop_gained","start_loss"]
@@ -61,8 +63,10 @@ with gzip.open(args.snvfile, 'rt') as f:
     for row in read_tsv:
         if row[10] in LOF_consequences or row[50].endswith("_DISRUPTING") or row[59] == "Pathogenic":
             gene_acmg[row[4]] = 2  # pathogenic
+            composite_score[row[4]] = -2 # loss of function (capped per gene)
         elif row[59] == "Likely_Pathogenic" or row[12] == "TRUE" and (int(row[23]) < 4 or row[26] == "Oncogenic"):
             gene_acmg[row[4]] = 1  # likely pathogenic
+            composite_score[row[4]] = -2 # assume loss of function at molecular pathway level (though phenotype maybe be described as oncogenic gain-of-function)
 
 gene_gain_loss = {}
 with gzip.open(args.cnvfile, 'rt') as f:
@@ -73,12 +77,28 @@ with gzip.open(args.cnvfile, 'rt') as f:
         row3 = int(row[3]) 
         if row2 > 2:
             gene_gain_loss[row[8]] = 2
+            if row[8] in composite_score:
+                composite_score[row[8]] = composite_score[row[8]] + row2 
+            else:
+                composite_score[row[8]] = row2
         elif row2 > 1:
             gene_gain_loss[row[8]] = 1
+            if row[8] in composite_score:
+                composite_score[row[8]] = composite_score[row[8]] + row2
+            else:
+                composite_score[row[8]] = row2
         elif row2 + row3 == 1:
             gene_gain_loss[row[8]] = -1
+            if row[8] in composite_score:
+                composite_score[row[8]] = composite_score[row[8]] - 1
+            else:
+                composite_score[row[8]] = -1
         elif row2 + row3 == 0:
             gene_gain_loss[row[8]] = -2
+            if row[8] in composite_score:
+                composite_score[row[8]] = composite_score[row[8]] - 2
+            else:
+                composite_score[row[8]] = -2
 
 # Check if there is rna expression data available, report outliers
 gene_expression_zscore_outliers = {}
@@ -89,6 +109,8 @@ if args.rnazscorefile != "None":
             row1 = float(row[1])
             if row1 > 2 or row1 < -2:
                 gene_expression_zscore_outliers[row[0]] = row1
+                if row[0] in composite_score:
+                    composite_score[row[0]] = composite_score[row[0]] + row1
 
 # Convert the FPKM values to percentile rank within all non-zero expression genes
 gene_expression_percentile_rank = {}
@@ -115,8 +137,8 @@ if args.rnafpkmfile != "None":
 # - Measurement columns maintain the same order across all observations.
 
 with open(args.outfile, 'w') as output_file:
-    all_reportable_genes = reduce(set.union, (set(d.keys()) for d in [gene_gain_loss, gene_acmg, gene_expression_zscore_outliers]))
-    output_file.write('Gene IDs\tGain Loss\tACMG Classification\tZ-Score vs TCGA peers\tPercentile Rank in Sample FPKM\n')
+    all_reportable_genes = reduce(set.union, (set(d.keys()) for d in [gene_gain_loss, gene_acmg, gene_expression_zscore_outliers, composite_score]))
+    output_file.write('Gene IDs\tGain Loss\tACMG Classification\tZ-Score vs TCGA peers\tPercentile Rank in Sample FPKM\tcomposite_score\n')
     for gene in all_reportable_genes:
         if gene not in hgnc2ensembl:
             print("Skipping HGNC without Ensembl mapping: "+gene) 
@@ -141,6 +163,11 @@ with open(args.outfile, 'w') as output_file:
             output_file.write(str(gene_expression_percentile_rank[gene]))
         else:
             output_file.write("0")
+        output_file.write("\t")
+        if gene in composite_score.keys():
+            output_file.write(str(composite_score[gene]))
+        else:
+            output_file.write("0")
         output_file.write('\n')
 #sys.exit(0)
 
@@ -156,7 +183,7 @@ with open(args.outfile, 'w') as output_file:
 # - falsediscovery = False Discovery Rate, q-value [0,100]
 # - intensity = Intensity [0, +Inf]
 # - other = Other (normalized around zero) (-Inf, +Inf)
-# - gain_loss = Varian Gain/Loss [-2, -1, 0, 1, 2]
+# - gain_loss = Variant Gain/Loss [-2, -1, 0, 1, 2]
 # - classification = Variant ACMG Classification [-2, -1, 0, 1, 2]
 
 analysis_id = ipa_analyze(ipa=ipa,
@@ -165,8 +192,8 @@ analysis_id = ipa_analyze(ipa=ipa,
                           datasetname=None,
                           geneidtype='ensembl',
                           obs_names=[args.subject+'_'+args.tumor+'_'+args.normal],
-                          measurement_types=['gain_loss', 'classification', 'other', 'intensity'],
-                          cutoffs=[1, 1, 2, None],
+                          measurement_types=['gain_loss', 'classification', 'other', 'intensity', 'logratio'],
+                          cutoffs=[1, 1, 2, None, None],
                           referenceset='dataset')
 
 # The ability to check status and obtain analysis results programmatically is available only to commercial customers
