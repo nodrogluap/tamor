@@ -224,6 +224,8 @@ with open(tmpfile.name, 'wt') as new_vcf:
                     continue
                 if line.startswith("##FILTER=<ID=high_somatic_false_positive_position"):
                     continue
+                if line.startswith("##INFO=<ID=AQ,"):
+                    continue
                 if line.startswith("##TamorCommandLine="): # TODO: document the command line options used here in the VCF header.
                     continue
                 if AQ_info_line_printed == False and line.startswith("##INFO="):
