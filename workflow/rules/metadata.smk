@@ -57,31 +57,39 @@ def identify_libraries(is_rna, is_tumor, wildcards):
                         sample_name_index = -1
                         sample_id_index = -1
                         csv_file = csv.reader(data_in)
-                        for line in csv_file:
-                                if "Sample_Name" in line and "Sample_ID" in line and "Sample_Project" in line: #it's the header for the sample list
-                                        sample_name_index = line.index("Sample_Name")
-                                        sample_id_index = line.index("Sample_ID")
-                                        sample_project_index = line.index("Sample_Project")
-				# New NextSeq2000 format with sample ID and sample name squished into one field by convention (hyphen separated)
-                                elif "Sample ID*" in line and "Project" in line:
-                                        sample_id_index = line.index("Sample ID*")
-                                        sample_project_index = line.index("Project")
-                                elif sample_name_index != -1 and line[sample_name_index] == target_sample or sample_id_index != -1 and line[sample_id_index].endswith("-"+target_sample):
-                                        if is_rna:
-                                                if "RNA" in line[sample_project_index]:
-                                                        sample_libraries.append(line[sample_id_index])
-                                                        sample_has_UMIs = run_has_UMIs
-                                        else:
-                                                if not "RNA" in line[sample_project_index]:
-                                                        sample_libraries.append(line[sample_id_index])
-                                                        sample_has_UMIs = run_has_UMIs
-                                elif len(line) > 1 and line[0] == "OverrideCycles" and "U" in line[1]:
-                                        run_has_UMIs = True
+                        try:
+                                for line in csv_file:
+                                        if "Sample_Name" in line and "Sample_ID" in line and "Sample_Project" in line: #it's the header for the sample list
+                                                sample_name_index = line.index("Sample_Name")
+                                                sample_id_index = line.index("Sample_ID")
+                                                sample_project_index = line.index("Sample_Project")
+                                        # New NextSeq2000 format with sample ID and sample name squished into one field by convention (hyphen separated)
+                                        elif "Sample ID*" in line and "Project" in line:
+                                                sample_id_index = line.index("Sample ID*")
+                                                sample_project_index = line.index("Project")
+                                        elif sample_name_index != -1 and line[sample_name_index] == target_sample or sample_id_index != -1 and line[sample_id_index].endswith("-"+target_sample):
+                                                if is_rna:
+                                                        if "RNA" in line[sample_project_index]:
+                                                                sample_libraries.append(line[sample_id_index])
+                                                                sample_has_UMIs = run_has_UMIs
+                                                else:
+                                                        if not "RNA" in line[sample_project_index]:
+                                                                sample_libraries.append(line[sample_id_index])
+                                                                sample_has_UMIs = run_has_UMIs
+                                        elif len(line) > 1 and line[0] == "OverrideCycles" and "U" in line[1]:
+                                                run_has_UMIs = True
+
                         # Uncomment below if you want to be pedantic.
                         #if sample_name_index == -1:
                         #       raise NameError("Missing Sample_Name column in Illumina samplesheet "+samplesheet)
                         #if sample_id_index == -1:
                         #       raise NameError("Missing Sample_ID column in Illumina samplesheet "+samplesheet)
+
+                        # Usefully handle garbage text in the samplesheets rather than having a generic error/traceback.
+                        except UnicodeDecodeError as ude:
+                                lineGuess = ude.object[:ude.start].count(b'\n') + 1
+                                sys.exit("Found a bad char (non-UTF-8) in file " + str(samplesheet) + " at byte " + str(ude.start) + " around line " + str(lineGuess))
+
         return sample_has_UMIs, list(set(sample_libraries)) # dedup
 
 
@@ -94,9 +102,9 @@ def get_tumor_has_pcr_duplicates(wildcards):
 # In theory since we record the PCR status of the normal on multiple lines of the config file, we will use the first instance encountered as correct.
 # TODO: enforce PCR status to be the same across all DNA config lines a normal appears on?
 def get_normal_has_pcr_duplicates(wildcards):
-	for key, tuplevalues in dna_paired_samples.items():
-		if key.startswith(wildcards.subject+"_") and key.endswith("_"+wildcards.normal):
-        		return tuplevalues[4] == 'True'
-	return False
+        for key, tuplevalues in dna_paired_samples.items():
+                if key.startswith(wildcards.subject+"_") and key.endswith("_"+wildcards.normal):
+                        return tuplevalues[4] == 'True'
+        return False
 
 
