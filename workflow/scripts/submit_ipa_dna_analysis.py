@@ -57,6 +57,7 @@ composite_score = {}
 # Get the per-gene consequences of mutations from the small nucleotide variants file
 gene_acmg = {}
 LOF_consequences = ["frameshift_variant","stop_gained","start_loss"]
+coding_region_LOF_consequences = ["splice_donor_variant","splice_acceptor_variant"]
 with gzip.open(args.snvfile, 'rt') as f:
     next(f) # skip header
     read_tsv = csv.reader(f, delimiter="\t")
@@ -64,7 +65,7 @@ with gzip.open(args.snvfile, 'rt') as f:
         if row[10] in LOF_consequences or row[50].endswith("_DISRUPTING") or row[59] == "Pathogenic":
             gene_acmg[row[4]] = 2  # pathogenic
             composite_score[row[4]] = -2 # loss of function (capped per gene)
-        elif row[59] == "Likely_Pathogenic" or row[12] == "TRUE" and (int(row[23]) < 4 or row[26] == "Oncogenic"):
+        elif row[59] == "Likely_Pathogenic" or row[12] == "TRUE" and (int(row[23]) < 4 or row[26] == "Oncogenic") or row[10] in coding_region_LOF_consequences:
             gene_acmg[row[4]] = 1  # likely pathogenic
             composite_score[row[4]] = -2 # assume loss of function at molecular pathway level (though phenotype maybe be described as oncogenic gain-of-function)
 
