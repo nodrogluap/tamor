@@ -1,0 +1,20 @@
+>IDT-Ilmn
+CTGTCTCTTATACACATCTCGCAGGGGATAGTCAGATGACGCTGCCGACGA
+>Illumina Stranded mRNA and Illumina Stranded Total RNA Adapter Trimming (added T)
+ACTGTCTCTTATACACATCT
+>Illumina DNA PCR-Free Prep, Tagmentation Adapter Trimming #1
+CTGTCTCTTATACACATCT
+>Illumina DNA PCR-Free Prep, Tagmentation Adapter Trimming #1 old
+CTGTCTCTTATACACATCTCGCAGGGGATAGTCAGATGACGCTGCCGACGA
+>Illumina DNA PCR-Free Prep, Tagmentation Adapter Trimming #2
+ATGTGTATAAGAGACA
+>Agilent SureSelect
+AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT
+>Illumina Prep and Nextera Kits
+CTGTCTCTTATACACATCT
+>Nextera Mate Pair Adapter Trimming
+AGATGTGTATAAGAGACAG
+>Nextera Transpoase Adapter
+GTCTCGTGGGCTCGGAGATGTGTATAAGAGACAG
+>PCR Primers (unique prefix before i5)
+AATGATACGGCGACCACCGAGATCTACAC
