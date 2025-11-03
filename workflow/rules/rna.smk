@@ -30,7 +30,7 @@ rule dragen_rna_read_mapping_quant_and_fusion_calls:
 			" --output-dir "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/rna" +
 			" --output-file-prefix {wildcards.subject}_{wildcards.sample}.rna --enable-sort true --enable-rna true --enable-map-align true" +
 			" --enable-map-align-output true --enable-bam-indexing true --enable-rna-gene-fusion true --enable-rna-quantification true" +
-			" --annotation-file "+config["ref_exon_annotations"]+" --force")
+			" --annotation-file "+config["ref_exon_annotations"]+" --force --read-trimmers polyg,adapter --trim-adapter-read1 resources/adapter_sequences/read1_3prime.fasta --trim-adapter-read2 resources/adapter_sequences/read2_3prime.fasta")
                 # If there are no fusion gene candidates, no output files are created. In this case, created a blank one so we don't rerun this analysis or fail out due to lack of output file.
                 if not Path(output.csv).is_file():
                         shell("touch {output.csv}")
