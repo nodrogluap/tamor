@@ -7,3 +7,6 @@
 [submodule "workflow/submodules/pori_python"]
 	path = workflow/submodules/pori_python
 	url = https://github.com/bcgsc/pori_python
+[submodule "workflow/submodules/djerba_graphkb_plugin"]
+	path = workflow/submodules/djerba_graphkb_plugin
+	url = https://github.com/nodrogluap/djerba_graphkb_plugin

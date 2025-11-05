@@ -119,11 +119,11 @@ render_priority = 400
 #update cache = True 
 #purple_zip = {{ cnv_file_path }}
 
-[wgts.snv_indel]
-attributes = research
-oncokb cache = resources/oncokb_cache
-update cache = True
-maf_path = {{ maf_file }}
+#[wgts.snv_indel]
+#attributes = research
+#oncokb cache = resources/oncokb_cache
+#update cache = True
+#maf_path = {{ maf_file }}
 
 #[fusion]
 #mavis_path = results/PR-CY-SAR-01010032-5715-T1.mavis_summary.tab
@@ -137,3 +137,7 @@ tcga_data = resources/tcga
 enscon = resources/ensemble_conversion_hg38.txt
 gep_reference = {{ cohort_rna_file_path }}
 rsem_genes_results = {{ rna_file_path }}
+
+[graphkb]
+canonical_transcripts_tsv = resources/mart_export.protein_coding.canonical.txt
+input_snpeff_vcf = resources/example_snvs.variants.passed.4.3.eff.hgvs.vcf

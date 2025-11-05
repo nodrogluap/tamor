@@ -231,8 +231,8 @@ GNOMAD_VEPFILE=tempfile.NamedTemporaryFile(prefix="djerba", suffix=".maf.tsv")
 vepfiles = glob.glob(f"{args.outdir}/pcgr/{args.project}/{args.subject}_{args.tumor}_{args.normal}/{args.subject}.pcgr.grch38.*.vep.vcf.gz")
 if not vepfiles:
         print_error_exit("No PCGR-generated VEP file found")
-system(f"vcfanno config/gnomad.vcfanno.conf {vepfiles[0]} > {GNOMAD_VEPFILE.name}")
-#system(f"touch {GNOMAD_VEPFILE.name}")
+#system(f"vcfanno config/gnomad.vcfanno.conf {vepfiles[0]} > {GNOMAD_VEPFILE.name}")
+system(f"touch {GNOMAD_VEPFILE.name}")
 
 # Write the MAF header
 with open(maf_file, 'w') as maf_tsv:

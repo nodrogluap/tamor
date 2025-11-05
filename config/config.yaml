@@ -48,7 +48,7 @@ library_mean_insert_size_alu_filtering_threshold: 300
 #      reads are excluded along with some chance of exclusing real variants at that site. Can effectively be set up to 60 (i.e. 99.9999% noise exclusion).
 #   - systematic_noise_extraction_method can be either "mean" or "max", with "max" yielding smaller AQ values, and hence increasing the number of variants labelled as noise.
 systematic_noise_AQ_threshold: 10
-systematic_noise_extraction_method: "mean"
+systematic_noise_extraction_method: "max"
 
 # For Dragen alignment, must have been built with --enable-cnv and --enable-rna and --enable-hla, so that subdirs anchored_rna and 
 # anchored_hla exist, as well as reference.bin, kmer_cnv.bin etc. in the top level dir.

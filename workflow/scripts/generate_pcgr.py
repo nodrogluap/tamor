@@ -102,7 +102,7 @@ TPMFILE=tf3.name
 tpm_header = "TargetID\tTPM\n"
 with open(TPMFILE, "w") as text_file:
         text_file.write(tpm_header)
-system(f"tail -n +2 {tumor_expr_tpm_tsv} | perl -ane 'BEGIN{{%blacklist = split /\\s/s, `resources/transcript_id_comparison_blacklist.tsv`}}$F[0] =~ s/\\.\\d$//; print \"$F[0]\\t$F[3]\\n\" unless exists $blacklist{{$F[0]}}' >> {TPMFILE}")
+system(f"tail -n +2 {tumor_expr_tpm_tsv} | perl -ane 'BEGIN{{%blacklist = split /\\s/s, `resources/transcript_id_comparison_blacklist.tsv`}}$F[0] =~ s/\\.\\d+$//; print \"$F[0]\\t$F[3]\\n\" unless exists $blacklist{{$F[0]}}' >> {TPMFILE}")
 
 # RNA fusion reformatting - not active in PCGR quite yet, but ready to go when it is supported
 tumor_rna_fusion_tsv = f"{args.outdir}/{args.project}/{args.subject}/rna/{args.subject}_{rna_sample}.rna.fusion_candidates.features.csv"
