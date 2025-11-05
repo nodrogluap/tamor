@@ -70,7 +70,7 @@ ref_exon_annotations: "resources/gencode.v46.chr_patch_hapl_scaff.annotation.gtf
 # BarcodeMismatchesIndex2,2
 # OverrideCycles,U8Y143;I10;I10;U8Y143
 
-samplesheet_dir: "/bulk/chgi_analysis/samplesheets/uploaded_via_galaxy"
+samplesheet_dir: "resources/samplesheets"
 
 # Where the catalog of samples to be processed lives.
 
@@ -85,16 +85,16 @@ tumor_in_normal_tolerance_proportion: 0.05
 
 bcl_dir: "/bulk/instrument_data/chgi_novaseq6000"
 
-# Where to write the intermediate outputs (BAMs, stats, etc.).
+# Where to write the intermediate outputs (FASTQs, fastq_list.csv, etc.).
 
-analysis_dir: "/bulk/chgi_analysis"
+analysis_dir: "results/analysis"
 
 # The name of the sequencer used to generate the data (may be useful for batch effect or other corrections downstream, and avoids possible run name collision 
 # if aggregating data from multiple machines).
 
-sequencer: "novaseq6000"
+sequencer: "HiSeq"
 
-output_dir: "/bulk/chgi_analysis/tiered_chgi_analysis/chgi_mohccn/output"
+output_dir: "results"
 
 # If Tamor is being used with a slurm queue, these arguments will be passed on to sbatch
 slurm_extra: "--gres=fpga:1 --mem-per-cpu=255000"
