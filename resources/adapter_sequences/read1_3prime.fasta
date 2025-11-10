@@ -2,24 +2,14 @@
 CTGTCTCTTATACACATCT
 >Illumina part 2
 ATGTGTATAAGAGACA
->Agilent SureSelect
-CTGTCTCTTATACACATCTCCGAGCCCACGAGAC
 >Illumina stranded mRNA (added A)
 ACTGTCTCTTATACACATCT
 >Illumina miRNA adapter/TruSeq
 AGATCGGAAGAGCACACGTCTGAACTCCAGTCA
->Nextera Mate Pair part 2
-AGATGTGTATAAGAGACAG
->Nextera Transposase (old)
-TCGTCGGCAGCGTCAGATGTGTATAAGAGACAG
->PCR Primers (unique prefix before i7)
-CAAGCAGAAGACGGCATACGAGAT
 >Illumina Small RNA 3' Adapter
 TGGAATTCTCGG
 >Illumina Small RNA 5' Adapter
 GATCGTCGGACT
->Nextera Transposase Sequence
-CTGTCTCTTATA
 >TruSeq Small RNA
 TGGAATTCTCGGGTGCCAAGG
 >ScriptSeq and TruSeq DNA Methylation
