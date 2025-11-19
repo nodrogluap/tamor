@@ -27,6 +27,46 @@ resource_dict = {
         "oncotree_hierarchy": ["https://raw.githubusercontent.com/cBioPortal/oncotree/refs/heads/master/resources/rdf/oncotree-taxonomy-2021-11-02.rdf", "oncotree-taxonomy-2021-11-02.rdf"],
         "graphkb_canonical_transcripts": ["https://raw.githubusercontent.com/bcgsc/pori/feature/colab-notebooks/demo/mart_export.protein_coding.canonical.txt", "mart_export.protein_coding.canonical.txt"]
 }
+
+# Illumina Annotation Engine (used for Tumor Mutational Burden reporting) has its own downloading system, in a standard place on Dragen 4.2 servers, variable on v4.4+
+is_dragen_v42 = True
+nirvana_downloader_path = "/opt/edico/share/nirvana/Downloader"
+install_path = ""
+if(not os.path.exists(nirvana_downloader_path)):
+    # In Dragen v4.4 it's changed to be from the PATH so that multiple Dragen versions can be supported on one server.
+    result = subprocess.run(["/usr/bin/which", "dragen_info"], capture_output=True, text=True, check=True)
+    if result.stderr:
+        raise SystemExit("FATAL: Aborting reference data download, did not find Dragen install in path (assuming Dragen v4.4+)")   
+    install_path = result.stdout.removesuffix("/bin/dragen_info\n")
+    nirvana_downloader_path = install_path+"/share/nirvana/DataManager"
+    if(not os.path.exists(nirvana_downloader_path)):
+        raise SystemExit("FATAL: Aborting reference data download, did not find Nirvana downloader script in expected location for a Dragen server: " + nirvana_downloader_path)
+    is_dragen_v42 = False
+if(not os.path.exists("nirvana")):
+    result = subprocess.run(["mkdir", "nirvana"])
+    if result.returncode != 0:
+        raise SystemExit("FATAL: Cannot create missing output path: " + os.getcwd() + "/nirvana")
+print("INFO: Fetching Nirvana annotation databases with " + nirvana_downloader_path)
+if is_dragen_v42:
+    result = subprocess.run([nirvana_downloader_path, "--ga", "GRCh38", "--out", "nirvana"])
+    if result.returncode != 0:
+        raise SystemExit("FATAL: Received non-zero return code (" + str(result.returncode) + ") from command: " + nirvana_downloader_path + " --ga GRCh38 --out nirvana")
+else:
+    credentials_file = "credentials.json" # remember, we're already in the resources dir
+    if(not os.path.exists(credentials_file)):
+        raise SystemExit("FATAL: For Dragen v4.4+ an Illumina API key is required to download annotation resources, please generate (per https://help.dragen.illumina.com/product-guide/dragen-v4.4/nirvana#premium-sources) and place an Illumina API key JSON in resources/"+credentials_file)
+    config_file = install_path+"/resources/annotation/all_annotations_GRCh38.json"
+    if(not os.path.exists(config_file)):
+        raise SystemExit("FATAL: For Dragen v4.4+ the expected default annotation config JSON is not where we expect it ("+config_file+")")
+    subprocess.run([install_path+"/share/nirvana/DataManager", "download", "-r", "GRCh38", "--credentials-file",
+                   credentials_file, "--dir", "nirvana", "--versions-config", config_file])
+
+# Update the reference genome index as required for v4.4+
+if(not is_dragen_v42):
+        resource_dict["ref_genome"] = ["https://s3.us-east-1.amazonaws.com/webdata.illumina.com/downloads/software/dragen/references/genome-files/hg38-alt_masked.cnv.graph.hla.methyl_cg.rna-11-r5.0-1.tar.gz", "kmer_cnv.bin", "tar", "zxf"]
+        resource_dict["snv_systematic_noise"] = ["https://webdata.illumina.com/downloads/software/dragen/resource-files/misc/systematic-noise-baseline-collection-2.0.0.tar", "systematic-noise-baseline-collection-2.0.0", "tar", "vxf"]
+        resource_dict["sv_systematic_noise"]: ["https://webdata.illumina.com/downloads/software/dragen/resource-files/4.4/sv-systematic-noise-baseline-collection-v3.1.0-1.tar.gz", "WGS_hg38_v3.1.0_systematic_noise.sv.bedpe.gz", "tar", "zxvf"]
+
 for resource_name, spec in resource_dict.items():
     if(not os.path.exists(spec[1])):
         a = urlparse(spec[0])
@@ -58,15 +98,3 @@ for resource_name, spec in resource_dict.items():
             if result.returncode != 0:
                 print("WARNING: Received non-zero return code ("+str(result.returncode)+") from source cleanup command: rm " + local_path)
 
-# Illumina Annotation Engine (used for Tumor Mutational Burden reporting) has its own downloading system, in a standard place on Dragen servers
-nirvana_downloader_path = "/opt/edico/share/nirvana/Downloader"
-if(not os.path.exists(nirvana_downloader_path)):
-    raise SystemExit("FATAL: Aborting reference data download, did not find Nirvana downloader script in expected location for a Dragen server: " + nirvana_downloader_path)
-if(not os.path.exists("nirvana")):
-    result = subprocess.run(["mkdir", "nirvana"])
-    if result.returncode != 0:
-        raise SystemExit("FATAL: Cannot create missing output path: " + os.getcwd() + "/nirvana")
-print("INFO: Fetching Nirvana annotation databases with " + nirvana_downloader_path)
-result = subprocess.run([nirvana_downloader_path, "--ga", "GRCh38", "--out", "nirvana"])
-if result.returncode != 0:
-    raise SystemExit("FATAL: Received non-zero return code (" + str(result.returncode) + ") from command: " + nirvana_downloader_path + " --ga GRCh38 --out nirvana")
