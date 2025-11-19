@@ -37,7 +37,7 @@ for resource_name, spec in resource_dict.items():
         result = subprocess.run(["wget", "--progress=bar:force:noscroll", "-c", spec[0], "--output-document", local_path+".part"])
         if result.returncode != 0:
             raise SystemExit("FATAL: Aborting reference data download, received non-zero return code ("+str(result.returncode)+") from command: " +
-            "wget --progress=bar:force:noscroll -c " + spec[0] + "--output-document "+ local_path+".part ")
+            "wget --progress=bar:force:noscroll -c " + spec[0] + " --output-document "+ local_path+".part ")
 
         result = subprocess.run(["mv", local_path+".part", local_path])
         if result.returncode != 0:
