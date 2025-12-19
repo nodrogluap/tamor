@@ -93,7 +93,7 @@ cna_header = "Chromosome\tStart\tEnd\tnMajor\tnMinor\n"
 with open(CNAFILE, "w") as text_file:
         text_file.write(cna_header)
 # Added special case for degenerate diploid CNV calling where fields are different for depth
-system(f"gzip -cd {args.cnv} | perl -ane 'next if /^#/ or not /\tPASS\t/; ($end) = /END=(\\d+)/; @d = split /:/, $F[$#F]; $d[2] = 1 if $d[2] == \".\"; if(/GT:SM:SD:/){{$major=int($d[2]/$d[1]);$minor=int($d[1])}}else{{$major=$d[1]-$d[2];$minor=$d[2]}} print join(\"\\t\", $F[0], $F[1], $end, $major, $minor),\"\\n\"' >> {CNAFILE}")
+system(f"gzip -cd {args.cnv} | perl -ane 'next if /^#/ or not /\tPASS\t/; ($end) = /END=(\\d+)/; @d = split /:/, $F[$#F]; $d[2] = 1 if $d[2] == \".\"; if(/GT:SM:SD:MAF:/){{$major=1;$minor=$d[1]<1?0:2}}else{{$major=$d[1]-$d[2];$minor=$d[2]}} print join(\"\\t\", $F[0], $F[1], $end, $major, $minor),\"\\n\"' >> {CNAFILE}")
 
 # RNA expression data reformatting
 tumor_expr_tpm_tsv = f"{args.outdir}/{args.project}/{args.subject}/rna/{args.subject}_{rna_sample}.rna.quant.sf"
