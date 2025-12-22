@@ -41,7 +41,7 @@ library_mean_insert_size_alu_filtering_threshold: 300
 # Dragen provides systematic noise estimates for many sites in the genome.  See details at https://support-docs.illumina.com/SW/dragen_v42/Content/SW/DRAGEN/SystematicNoiseBED.htm
 # Potential false positive somatic variants are marked as filtered by Tamor as a post-processing step on the 
 # somatic SNV VCF by using the Dragen-provided systematic noise estimates. Performing this filtering as a post-processing step allows filter criteria to be changed and applied
-# on a trial-and-error tuning basis by users without incurring more Dragen license usage (compard to if you'd included the systematic noise filter option in the mapping/variant call Dragen command line).
+# on a trial-and-error tuning basis by users without incurring more Dragen license usage (compared to if you'd included the systematic noise filter option in the mapping/variant call Dragen command line).
 #
 # The specificity vs sensitivity tradeoff for somatic variant detection is controlled by two settings here: 
 #   - systematic_noise_AQ_threshold if set higher than the Dragen default of 10 (calculated "AQ" phred-scaled noise probability under a binomial noise model, so 90% noise exclusion), more potential noisy 
@@ -49,6 +49,15 @@ library_mean_insert_size_alu_filtering_threshold: 300
 #   - systematic_noise_extraction_method can be either "mean" or "max", with "max" yielding smaller AQ values, and hence increasing the number of variants labelled as noise.
 systematic_noise_AQ_threshold: 10
 systematic_noise_extraction_method: "max"
+
+# Especially for germline variant calls, where the default site Dragen quality threshold is just over 3 (compared to over 17 for somatic), false positive variants can
+# creep into germline susceptibility reports with little supporting sequencing evidence, e.g. this occurs in susceptibility genes with paralogs or xenologs such as Mucin and DNA polymerase respectively.
+# If enabled, the following threshold can reduce false positives with minimal effect on true positives. 
+# Additionally, due to the empirically observed nature of the interaction between mapping quality and site quality, a site along with all its variants will be filtered 
+# if the site quality (sixth column of the VCF) + MQ (mapping quality from the info field) is less than 50 + min_site_variant_phred_threshold. 
+# Variants at sites meeting either of these criteria are much less likely to occur in dbSNP, and if they are in dbSNP they tend to have very low allele frequency, suggesting sequencing artifacts rather than true SNPs.
+# This setting can be disabled to enhance very low frequency somatic mutation detection.
+min_site_variant_phred_threshold: 10
 
 # For Dragen alignment, must have been built with --enable-cnv and --enable-rna and --enable-hla, so that subdirs anchored_rna and 
 # anchored_hla exist, as well as reference.bin, kmer_cnv.bin etc. in the top level dir.
