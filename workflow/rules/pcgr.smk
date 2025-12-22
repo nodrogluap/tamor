@@ -44,7 +44,9 @@ rule generate_pcgr_html:
                 somatic_cnv_vcf = config["output_dir"]+'/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.cnv.vcf.gz',
                 tumor_site_code_file = config["output_dir"]+'/{project}/{subject}/{subject}_{tumor}_{normal}.pcgr.tumor-site-code.txt',
                 # This metrics file is a marker that the somatic_cnv_vcf file has been post-filtered for known false positives, its contents aren't used-directly in this rule.
-                snv_metrics_file=config["output_dir"]+"/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.snv_filter_metrics.csv",
+                somatic_snv_metrics_file=config["output_dir"]+"/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.snv_filter_metrics.csv",
+		# Sme thing, for germline susceptibility filtering.
+                germline_snv_metrics_file=config["output_dir"]+"/{project}/{subject}/{subject}_{normal}.dna.germline.snv_filter_metrics.csv",
                 pcgrr_env = ".snakemake/conda/pcgrr/bin/Rscript"
         output:
                 tumor_snv_file = config["output_dir"]+"/pcgr/{project}/{subject}_{tumor}_{normal}/{subject}.pcgr.grch38.snv_indel_ann.tsv.gz",
