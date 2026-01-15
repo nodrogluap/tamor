@@ -174,7 +174,7 @@ the X axis is site quality, and the Y axis is mapping quality, both from filter 
 
 ![Dotplot of site (X) and mapping (Y) qualities, colored by presence or absence in dbSNP, and fresh vs FFPE](../docs/mapq_siteq_dotplot.png)
 
-Blue (fresh frozen PCR-free prep) and green (FFPE PCR'ed prep) dots represent the first 100K SNVs in dbSNP, overlaid on top of the first 100K SNVs not in dbSNP in red (fresh forzen) and yellow (FFPE). The Black vertical line represents the default (10) minimum site quality score in Tamor's config.yaml (setting "min_site_variant_phred_threshold"). The dotted line represents the combined site+mapping score threshold in Tamor (50 + min_site_variant_phred_threshold). Variants below either threshold are changed from PASS to "posthoc_low_qual_site_filtering" by the script ``workflow/scripts/filter_false_positive_snvs.py``, which runs on both germline and somatic variant SNV VCFs.
+Blue (fresh frozen PCR-free prep) and green (FFPE PCR'ed prep) dots represent the first 100K SNVs in dbSNP, overlaid on top of the first 100K SNVs not in dbSNP in red (fresh frozen) and yellow (FFPE). The Black vertical line represents the default (10) minimum site quality score in Tamor's config.yaml (setting "min_site_variant_phred_threshold"). The dotted line represents the combined site+mapping score threshold in Tamor (50 + min_site_variant_phred_threshold). Variants below either threshold are changed from PASS to "posthoc_low_qual_site_filtering" by the script ``workflow/scripts/filter_false_positive_snvs.py``, which runs on both germline and somatic variant SNV VCFs.
 
 ### Systematic Noise Filtering
 
