@@ -19,7 +19,7 @@ Each tumor must have a DNA sample, and optionally an RNA sample.
 * [RNA Sample Metadata and transcript blacklist](#rna-sample-metadata)
 * [Illumina Samplesheets](#illumina-samplesheets)
 * [Unique Molecular Indices](#unique-molecular-indices)
-* [Variant Blacklists](#variant-blacklists)
+* [False Positive Variant Filtering](#false-positive-variant-filtering)
 
 ## Test case defaults
 
@@ -162,12 +162,36 @@ different handling in Dragen during genotyping downstream. Use of UMIs is determ
 that includes a "U" value. By default, random UMIs are assumed. To specify a non-random UMI scheme, uncomment the ``umi_whitelist``, ``umi_correction_table``, and 
 ``umi_slippage_support_informative_fraction`` settings in ``config/config.yaml`` as appropriate. 
 
-## Variant Blacklists
+## False Positive Variant Filtering
+
+False Positive Filtering in Tamor into three main categories: low quality thresholding, systematic noise filtering, and specific customizable blacklisted genome locations.
+Each is configurable and described below.
+
+### Low Quality Metrics and Thresholding 
+
+While the default site quality threshold for somatic small nucleotide variant calls in Dragen is moderately stringent (Phred score of ~17, which translates to 95% FP exclusion), the default for germline variants is only 3 (only ~5% FP exclusion). Especially for germline sequencing derived from FFPE samples, this can lead to the reporting of many false positive coding variant changes that might imply germline cancer susceptibility (e.g, in mismatch repair proteins) in CSPR/PCGR reports, or erroneous pharmacogenomic indications.  In the following dotplot,
+the X axis is site quality, and the Y axis is mapping quality, both from filter PASS lines in Dragen germline DNA SNV VCFs. 
+
+![Dotplot of site (X) and mapping (Y) qualities, colored by presence or absence in dbSNP, and fresh vs FFPE](../docs/mapq_siteq_dotplot.png)
+
+Blue (fresh frozen PCR-free prep) and green (FFPE PCR'ed prep) dots represent the first 100K SNVs in dbSNP, overlaid on top of the first 100K SNVs not in dbSNP in red (fresh forzen) and yellow (FFPE). The Black vertical line represents the default (10) minimum site quality score in Tamor's config.yaml (setting "min_site_variant_phred_threshold"). The dotted line represents the combined site+mapping score threshold in Tamor (50 + min_site_variant_phred_threshold). Variants below either threshold are changed from PASS to "posthoc_low_qual_site_filtering" by the script ``workflow/scripts/filter_false_positive_snvs.py``, which runs on both germline and somatic variant SNV VCFs.
+
+### Systematic Noise Filtering
+
+Dragen provides systematic noise estimates for many sites in the genome.  See details [here](https://support-docs.illumina.com/SW/dragen_v42/Content/SW/DRAGEN/SystematicNoiseBED.htm).
+Potential false positive somatic variants are marked as filtered by Tamor as a post-processing step on the 
+somatic SNV VCF by using the Dragen-provided systematic noise estimates. Performing this filtering as a post-processing step allows filter criteria to be changed and applied
+on a trial-and-error tuning basis by users without incurring more Dragen license usage (compared to if you'd included the systematic noise filter option in the mapping/variant call Dragen command line).
+
+The specificity vs sensitivity tradeoff for somatic variant detection is controlled by two settings in the Tamor ``config/config.yaml`` file: 
+   * ``systematic_noise_AQ_threshold`` if set higher than the Dragen default of 10 (calculated "AQ" phred-scaled noise probability under a binomial noise model, so 90% noise exclusion), then more potential noisy reads are excluded along with some chance of exclusing real variants at that site. Can effectively be set up to 60 (i.e. 99.9999% noise exclusion).
+   * ``systematic_noise_extraction_method`` can be either "mean" or "max", with "max" yielding smaller AQ values, and hence increasing the number of variants labelled as noise.
+
+### Variant Blacklists
 
 Some false positive variants may be recurrent across analyzes. To reduce the reporting of likely false-positive results, default list of variants to change 
 from PASS to filtered in output VCFs have been included in Tamor, based on commonalities found in hundreds of tumor-normal cases analyzed at the University of Calgary's CSM 
-Centre for Health Genomics and Informatics. These can be customized by editing the ``dragen_cnv_blacklist.bed`` and ``dragen_snv_blacklist.txt`` files for copy number and 
-small nucleotide variants respectively.
+Centre for Health Genomics and Informatics (for fresh frozen), plus another site (for FFPE). These can be customized by editing the ``dragen_cnv_blacklist.bed`` and ``dragen_snv_blacklist.txt`` files for copy number and small nucleotide variants respectively. Further details on their provenance can be found in [the blacklist README](../resources/dragen_snv_blacklist.README.md).
 
 The ``config.yaml`` file also contains a default setting that is primarily intended to mitigate false positive mutation calls in [Alu repeats](https://en.wikipedia.org/wiki/Alu_element#Alu_family) for sequencing libraries
 derived from formalin-fixed, paraffin-embdded (FFPE) samples.
