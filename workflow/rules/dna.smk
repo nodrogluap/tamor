@@ -74,7 +74,7 @@ rule dragen_germline_snv_sv_and_cnv_calls:
                         if(not os.path.exists(normal_bam)):
                                 raise Exception("Missing germline bam for UMI sample "+wildcards.germline+" cannot proceed with rule dragen_germline_snv_sv_and_cnv_calls")
                         
-                        dragen_cmd = "dragen -r "+config["ref_genome"]+" --enable-map-align false --bam-input "+normal_bam+" --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.normal}.dna.germline --intermediate-results-dir "+config["temp_dir"]+" -f"+" --enable-variant-caller true --enable-cnv true --cnv-enable-self-normalization true --enable-sv true"+" --vc-enable-umi-germline true --enable-variant-annotation=true --variant-annotation-data=resources/nirvana --variant-annotation-assembly=GRCh38"
+                        dragen_cmd = "dragen -r "+config["ref_genome"]+" --enable-map-align false "+get_aligned_input_param(normal_bam)+" --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.normal}.dna.germline --intermediate-results-dir "+config["temp_dir"]+" -f"+" --enable-variant-caller true --enable-cnv true --cnv-enable-self-normalization true --enable-sv true"+" --vc-enable-umi-germline true --enable-variant-annotation=true --variant-annotation-data=resources/nirvana --variant-annotation-assembly=GRCh38"
                         
                 print("Dragen Command: " + dragen_cmd)
                 shell(dragen_cmd)
@@ -103,7 +103,7 @@ rule dragen_germline_cnv_and_sv_lowqual_check_and_mitigate:
                 runtime=720,
                 mem_mb=256000
         input:
-                germline_bam=config["output_dir"]+'/{project}/{subject}/{subject}_{normal}.dna.germline.bam',
+                germline_bam=get_normal_bam,
                 cnv_metrics=config["output_dir"]+'/{project}/{subject}/{subject}_{normal}.dna.germline.cnv_metrics.csv'
         output:
                 interval_check=config["output_dir"]+"/{project}/{subject}/{subject}_{normal}.dna.germline.coverage_uniformity_check.csv"
@@ -115,7 +115,7 @@ rule dragen_germline_cnv_and_sv_lowqual_check_and_mitigate:
                 if coverage_uniformity > 0.5:
                         interval_message = "FAIL: triggered dragen_germline_cnv_and_sv_lowqual_check_and_mitigate with --cnv-interval-width 5000"
 
-                        dragen_cmd = "dragen -r {config[ref_genome]} --enable-map-align false --bam-input {input.germline_bam} --output-directory {config[output_dir]}/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.normal}.dna.germline --intermediate-results-dir {config[temp_dir]} -f --enable-cnv true --cnv-enable-self-normalization true --enable-sv true --cnv-interval-width 5000"
+                        dragen_cmd = "dragen -r {config[ref_genome]} --enable-map-align false "+get_aligned_input_param(input.germline_bam) +" --output-directory {config[output_dir]}/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.normal}.dna.germline --intermediate-results-dir {config[temp_dir]} -f --enable-cnv true --cnv-enable-self-normalization true --enable-sv true --cnv-interval-width 5000"
                         shell(dragen_cmd)
                         shell("mv "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/sv/results/variants/diploidSV.vcf.gz "+
                                     config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.sv.vcf.gz; "+
@@ -135,8 +135,9 @@ rule dragen_germline_cnv_and_sv_lowqual_check_and_mitigate:
                         shell("find " + config["output_dir"]+"/{wildcards.project}/{wildcards.subject} -type d -exec chmod -f -user $USER " +new_octal_perms+" {} \\;")
 
 
-# should potentially have similar interval increase for somatic, based on average coverage or "Uniformity of coverage (PCT > 0.4*mean) over genome?"
+# todo: should potentially have similar interval increase for somatic, based on average coverage or "Uniformity of coverage (PCT > 0.4*mean) over genome?"
 
+# Use a function to find the alignment file, since the BAM has been converted to CRAM at some point to save disk space, outside Snakemake
 
 rule dragen_somatic_snv_sv_and_cnv_calls:
         priority: 98
@@ -148,7 +149,7 @@ rule dragen_somatic_snv_sv_and_cnv_calls:
                 get_tumor_dna_sample_fastq_list_csvs,
                 germline_cnv=config["output_dir"]+"/{project}/{subject}/{subject}_{normal}.dna.germline.cnv.vcf.gz",
                 msi_sites="resources/msisensor-pro-scan.tsv",
-                germline_bam=config["output_dir"]+"/{project}/{subject}/{subject}_{normal}.dna.germline.bam",
+                germline_bam=get_normal_bam,
                 germline_check=config["output_dir"]+"/{project}/{subject}/{subject}_{normal}.dna.germline.coverage_uniformity_check.csv"
         output:
                 config["output_dir"]+"/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.cnv.vcf.gz",
@@ -217,7 +218,7 @@ rule dragen_somatic_snv_sv_and_cnv_calls:
                         if(not os.path.exists(tumor_bam)):
                                 raise Exception("Missing tumor bam for UMI sample "+wildcards.tumor+" cannot proceed with rule dragen_somatic_snv_sv_and_cnv_calls")
 
-                        dragen_cmd = "dragen -r "+config["ref_genome"]+" --enable-map-align false --bam-input {input.germline_bam} --tumor-bam-input {tumor_bam} --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic --intermediate-results-dir "+config["temp_dir"]+" -f"+" --enable-variant-caller true --enable-cnv true --cnv-use-somatic-vc-baf true --cnv-normal-cnv-vcf {input.germline_cnv} --enable-sv true --vc-enable-unequal-ntd-errors=true --vc-enable-trimer-context=true --vc-enable-umi-solid true --msi-command tumor-normal --msi-coverage-threshold " + str(config["msi_min_coverage"]) + " --msi-microsatellites-file {input.msi_sites} --enable-hrd true --enable-variant-annotation=true --variant-annotation-data=resources/nirvana --variant-annotation-assembly=GRCh38 --enable-tmb true"
+                        dragen_cmd = "dragen -r "+config["ref_genome"]+" --enable-map-align false "+get_aligned_input_param(input.germline_bam)+" --tumor-bam-input {tumor_bam} --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic --intermediate-results-dir "+config["temp_dir"]+" -f"+" --enable-variant-caller true --enable-cnv true --cnv-use-somatic-vc-baf true --cnv-normal-cnv-vcf {input.germline_cnv} --enable-sv true --vc-enable-unequal-ntd-errors=true --vc-enable-trimer-context=true --vc-enable-umi-solid true --msi-command tumor-normal --msi-coverage-threshold " + str(config["msi_min_coverage"]) + " --msi-microsatellites-file {input.msi_sites} --enable-hrd true --enable-variant-annotation=true --variant-annotation-data=resources/nirvana --variant-annotation-assembly=GRCh38 --enable-tmb true"
 
                 if has_tumor_in_normal:
                         dragen_cmd = dragen_cmd +  " --sv-enable-liquid-tumor-mode true --sv-tin-contam-tolerance "+str(config["tumor_in_normal_tolerance_proportion"])

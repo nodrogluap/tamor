@@ -9,7 +9,7 @@ rule generate_incompletely_mapped_reads_bams:
 		# As it's streaming, it doesn't need much memory though
                 mem_mb=4000 
         input:
-                source_bam=config["output_dir"]+'/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic_tumor.bam'
+                source_bam=get_tumor_bam
         output:
                 clipped_bam=config["output_dir"]+'/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic_tumor.clipped_reads.bam',
                 unmapped_bam=config["output_dir"]+'/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic_tumor.no_proper_read_pair.bam' 
