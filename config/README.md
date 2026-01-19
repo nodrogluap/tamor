@@ -189,7 +189,7 @@ The specificity vs sensitivity tradeoff for somatic variant detection is control
 
 ### Variant Blacklists
 
-Some false positive variants may be recurrent across analyzes. To reduce the reporting of likely false-positive results, default list of variants to change 
+Some false positive variants may be recurrent across analyzes. To reduce the reporting of likely false-positive results, default lists of variants to change 
 from PASS to filtered in output VCFs have been included in Tamor, based on commonalities found in hundreds of tumor-normal cases analyzed at the University of Calgary's CSM 
 Centre for Health Genomics and Informatics (for fresh frozen), plus another site (for FFPE). These can be customized by editing the ``dragen_cnv_blacklist.bed`` and ``dragen_snv_blacklist.txt`` files for copy number and small nucleotide variants respectively. Further details on their provenance can be found in [the blacklist README](../resources/dragen_snv_blacklist.README.md).
 
