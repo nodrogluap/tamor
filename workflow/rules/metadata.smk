@@ -34,14 +34,16 @@ with open(config["rna_paired_samples_tsv"], 'r') as data_in:
                 rna_paired_samples[rna_paired_samples_key] = [line[0],line[1],line[3]]
 
 
-# Return a tuple of two:
+# Return a tuple of three:
 # Boolean as to whether this library should get the Unique Molecular Indices treatment, using info from the SampleSheet.csv
 # The list of library names (that will be in the FASTQ list CSV) that correspond to the sample name identified by the wildcards 
+# The list of sequencing runs where the data was found.
 def identify_libraries(is_rna, is_tumor, wildcards):
         # Figure out the library ID (which is in the FASTQ file names) from the sample name in the samplesheet
         # If XP loading was used, you can have multiple "libraries" called Li###-lane1, etc. for the same sample on a run as IEV requires unique sample IDs and normally we'd use the library ID
         sample_has_UMIs = False
         sample_libraries = []
+        sample_runs = []
         if is_tumor and hasattr(wildcards, "tumor"):
                 target_sample = wildcards.tumor
         elif hasattr(wildcards, "normal"):
@@ -52,6 +54,7 @@ def identify_libraries(is_rna, is_tumor, wildcards):
                 raise NameError("Missing any useable wildcard attribute (tumor, normal, or sample) in call to identify_libraries")
         for samplesheet in glob.iglob(config["samplesheet_dir"]+'/*.csv'):
                 run_has_UMIs = False
+                runid = Path(samplesheet).stem
                 with open(samplesheet, 'r') as data_in:
                         sample_project_index = -1
                         sample_name_index = -1
@@ -71,10 +74,12 @@ def identify_libraries(is_rna, is_tumor, wildcards):
                                                 if is_rna:
                                                         if "RNA" in line[sample_project_index]:
                                                                 sample_libraries.append(line[sample_id_index])
+                                                                sample_runs.append(runid)
                                                                 sample_has_UMIs = run_has_UMIs
                                                 else:
                                                         if not "RNA" in line[sample_project_index]:
                                                                 sample_libraries.append(line[sample_id_index])
+                                                                sample_runs.append(runid)
                                                                 sample_has_UMIs = run_has_UMIs
                                         elif len(line) > 1 and line[0] == "OverrideCycles" and "U" in line[1]:
                                                 run_has_UMIs = True
@@ -90,7 +95,7 @@ def identify_libraries(is_rna, is_tumor, wildcards):
                                 lineGuess = ude.object[:ude.start].count(b'\n') + 1
                                 sys.exit("Found a bad char (non-UTF-8) in file " + str(samplesheet) + " at byte " + str(ude.start) + " around line " + str(lineGuess))
 
-        return sample_has_UMIs, list(set(sample_libraries)) # dedup
+        return sample_has_UMIs, list(set(sample_libraries)), list(set(sample_runs)) # dedup
 
 
 def get_normal_contains_some_tumor(wildcards):
