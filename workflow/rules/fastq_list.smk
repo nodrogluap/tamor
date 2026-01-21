@@ -136,14 +136,8 @@ def cleanup_decompressed_temporary_fastqs(sample_fastq_list_csv, paired_sample_f
 def get_sample_fastq_list_csvs(wildcards, is_rna, is_tumor):
         library_info = identify_libraries(is_rna, is_tumor, wildcards)
         all_csvs_with_sample = [];
-        # Gather file specs from all run that have been converted.
-        for fastq_list_csv in glob.iglob(config["analysis_dir"]+'/primary/'+config["sequencer"]+'/*/Reports/fastq_list.csv'):
-                with open(fastq_list_csv, 'r') as data_in:
-                        csv_file = csv.reader(data_in)
-                        for line in csv_file:
-                                if line[1] in library_info[1]:
-                                        all_csvs_with_sample.append(fastq_list_csv)
-                                        break;
+        for run in library_info[2]:
+                all_csvs_with_sample.append(config["analysis_dir"]+'/primary/'+config["sequencer"]+'/'+run+'/Reports/fastq_list.csv')
         return all_csvs_with_sample
 
 def get_normal_dna_sample_fastq_list_csvs(wildcards):
