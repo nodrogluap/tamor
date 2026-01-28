@@ -1,3 +1,7 @@
+# If set to true, after Dragen BAM file generation the FASTQ.gz files used as input will be removed and replaced with ORA-compressed 
+# sequence files (using index pointe to in ref_ora setting below). This will require and use Compression license as seen in the output of the dragen_lic command.
+ora_compress_fastqs: False
+
 # This needs to be provided by the user, after registering for access to OncoKB (https://www.oncokb.org/account/register) the token is 
 # available from the user's profile page (https://www.oncokb.org/account/settings). 
 # If a token is not provided, Djerba reports will not be generated.
