@@ -36,6 +36,10 @@ linked to designated Subjects and Samples via the [Illumina Samplesheets](#sampl
 
 ## Site-specific customizations
 
+### Spacing-saving features
+
+See details about enabling specialized file compression methods, and safe input file removal, [in this document](../docs/data_management.md).
+
 ### Site-specific file paths
 
 ``config/config.yaml`` is the file that you can customize for your site-specific settings. 
