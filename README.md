@@ -41,7 +41,7 @@ This is recommended by Illumina support, but not part of the Dragen documentatio
 
 # Installation
 
-If you prefer to not install mamba in your home directory, use [these alternative instructions](remote.md) to keep all software dependencies on a remote filesystem mountpoint. Otherwise:
+If you prefer to not install mamba in your home directory, use [these alternative instructions](docs/remote.md) to keep all software dependencies on a remote filesystem mountpoint. Otherwise:
 
 0. [Install the mamba package manager](https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html) if you don't already have it on your system.
 
