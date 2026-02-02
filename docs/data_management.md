@@ -8,7 +8,7 @@ reduce the data storage burden.
 
 ### Deleting aligned reads
 
-Once variant call (VCF) files are generated, BAM file existence or modification date does *not* triggering Tamor workflow rule reruns. 
+Once variant call (VCF) files are generated, BAM file existence or modification date does *not* trigger Tamor workflow rule reruns. 
 Therefore, if you do not want or need the BAMs for subsequent investigations, they can manually removed.
 
 ### Compressing aligned reads
