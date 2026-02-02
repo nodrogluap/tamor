@@ -167,7 +167,7 @@ fi
 
 # If we got this far, we can be quote certain that we have a valid lossless compressed copy of the original file, delete the original.
 echo "DEBUG: After successful conversion to losssless CRAM, removing original BAM file $1"
-if rm $1; then
+if rm -f $1; then
     echo "INFO: Successfully removed original BAM file."
 else
     echo "WARNING: Could not remove the BAM after successful CRAM conversion ('rm $1' had non-zero exit code $?)"
