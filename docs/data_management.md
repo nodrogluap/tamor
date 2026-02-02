@@ -60,7 +60,7 @@ Sequences generated on the NextSeq2000 or NovaSeqX typically have the option of 
 
 Enabling the ``ora_compress_fastqs`` option in ``config.yaml`` will cause Tamor to replace any FASTQ input files with their ORA-compressed versions after they've been used for alignment/genotyping.
 
-Tamor defaults (``ref_ora`` setting in ``config.yaml``) to downloading and using the human v2 index reference for compression.
+Tamor defaults (``ref_ora`` setting in ``config.yaml``) to downloading and using the [human v2 index reference](https://webdata.illumina.com/downloads/software/dragen/resource-files/misc/lenadata.tar) for compression.
 FASTQs can also be converted to ORA files using the standalone script ``workflow/scripts/fastq2ora.sh``, such as for the test case's two FASTQ paired-end read files: 
 
 ```bash
