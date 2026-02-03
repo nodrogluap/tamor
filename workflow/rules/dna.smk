@@ -6,6 +6,11 @@ import pandas as pd
 
 configfile: "config/config.yaml"
 
+is_dragen_v42 = True
+nirvana_downloader_path = "/opt/edico/share/nirvana/Downloader"
+if(not os.path.exists(nirvana_downloader_path)):
+        is_dragen_v42 = False
+
 # Used by PCGR for reporting known germline cancer susceptibility or related variants.
 # The CNV calls will also be used later to filter somatic CNV calls.
 rule dragen_germline_snv_sv_and_cnv_calls:
@@ -27,6 +32,7 @@ rule dragen_germline_snv_sv_and_cnv_calls:
         run:
                 # Must remove any existing files that dragen chmod's to global write to avoid chmoderror if old file had different owner
                 shell ("rm -f "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.bam "
+                        +config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.cram "
                         +config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.cnv.excluded_intervals.bed.gz "
                         +config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.cnv.vcf.gz "
                         +config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.cnv_sv.vcf.gz "
@@ -47,6 +53,7 @@ rule dragen_germline_snv_sv_and_cnv_calls:
                 this_sample_only_fastq_list_csv = make_sample_fastq_list_csv(wildcards, False, False, sample_libraries)
                 print("Germline libraries: " + ", ".join(sample_libraries))
                 print("Germline using UMIs: " + str(has_UMIs))
+                print("Outputing CRAM: " + str(config["generate_crams"]))
 
                 # check for mixed compression formats and decompress where needed
                 harmonize_fastq_compression_formats(this_sample_only_fastq_list_csv)
@@ -54,6 +61,8 @@ rule dragen_germline_snv_sv_and_cnv_calls:
                 # todo max call mem only if huge input file needs downsampling               
                 dragen_cmd = "dragen -r "+config["ref_genome"]+" --ora-reference "+config["ref_ora"]+" --enable-map-align true --enable-map-align-output true --enable-bam-indexing true --fastq-list {this_sample_only_fastq_list_csv} --fastq-list-all-samples true --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.normal}.dna.germline --enable-hla true --hla-enable-class-2 true --intermediate-results-dir "+ config["temp_dir"]+" -f"+" --enable-variant-caller true --enable-cnv true --cnv-enable-self-normalization true --enable-sv true --enable-down-sampler true --down-sampler-coverage 60 --enable-variant-annotation=true --variant-annotation-data=resources/nirvana --variant-annotation-assembly=GRCh38 --msi-command collect-evidence --msi-coverage-threshold " + str(config["msi_min_coverage"]) + " --msi-microsatellites-file {input.msi_sites} --soft-read-trimmers polyg --read-trimmers adapter --trim-adapter-read1 resources/adapter_sequences/read1_3prime.fasta --trim-adapter-read2 resources/adapter_sequences/read2_3prime.fasta" 
 
+                if config["generate_crams"]:
+                        dragen_cmd = dragen_cmd + " --output-format CRAM"
                 if has_pcr_duplicates and not has_UMIs:
                         dragen_cmd = dragen_cmd + " --enable-duplicate-marking true"
                 if has_UMIs:
@@ -68,23 +77,36 @@ rule dragen_germline_snv_sv_and_cnv_calls:
                         # only run alignment if germline bam does not exist?
                         if(not os.path.exists(normal_bam)):
                                 dragen_cmd_align = "dragen -r "+config["ref_genome"]+" --ora-reference "+config["ref_ora"]+" --enable-map-align true --enable-map-align-output true --enable-bam-indexing true --fastq-list {this_sample_only_fastq_list_csv} --fastq-list-all-samples true --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.normal}.dna.germline --enable-hla true --hla-enable-class-2 true --intermediate-results-dir "+ config["temp_dir"]+" -f --umi-enable true {umi_correction_flag} --umi-min-supporting-reads 1 --umi-min-map-quality 1 --enable-down-sampler true --down-sampler-coverage 60 --soft-read-trimmers polyg --read-trimmers adapter --trim-adapter-read1 resources/adapter_sequences/read1_3prime.fasta --trim-adapter-read2 resources/adapter_sequences/read2_3prime.fasta"
+                                
+                                if config["generate_crams"]:
+                                        dragen_cmd_align = dragen_cmd_align + " --output-format CRAM"
+                                if config["ora_compress_fastqs"]:
+                                        dragen_cmd_align = dragen_cmd_align + " --enable-ora true --ora-delete-input-files true"
                                 shell(dragen_cmd_align)
-                        
+                                # ORA files are written to the analysis output directory. Move them back to the original FASTQ input location(s).
+                                if config["ora_compress_fastqs"]:
+                                        move_ora_files(config["output_dir"]+"/{wildcards.project}/{wildcards.subject}", this_sample_only_fastq_list_csv)
                         # check that germline bam was written then pass dragen command with bams as input
                         if(not os.path.exists(normal_bam)):
                                 raise Exception("Missing germline bam for UMI sample "+wildcards.germline+" cannot proceed with rule dragen_germline_snv_sv_and_cnv_calls")
                         
                         dragen_cmd = "dragen -r "+config["ref_genome"]+" --enable-map-align false "+get_aligned_input_param(normal_bam)+" --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.normal}.dna.germline --intermediate-results-dir "+config["temp_dir"]+" -f"+" --enable-variant-caller true --enable-cnv true --cnv-enable-self-normalization true --enable-sv true"+" --vc-enable-umi-germline true --enable-variant-annotation=true --variant-annotation-data=resources/nirvana --variant-annotation-assembly=GRCh38"
+
+                if config["ora_compress_fastqs"] and not "--enable-map-align false" in dragen_cmd:
+                        dragen_cmd = dragen_cmd + " --enable-ora true --ora-delete-input-files true"
                         
                 print("Dragen Command: " + dragen_cmd)
                 shell(dragen_cmd)
                 # Cleanup step to remove any temporary fastq.gz files if mixed ora/gz compression input
                 cleanup_decompressed_temporary_fastqs(this_sample_only_fastq_list_csv)
-                shell("mv "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/sv/results/variants/diploidSV.vcf.gz "+
+                if config["ora_compress_fastqs"] and not "--enable-map-align false" in dragen_cmd:
+                        move_ora_files(config["output_dir"]+"/{wildcards.project}/{wildcards.subject}", this_sample_only_fastq_list_csv)
+                if is_dragen_v42:
+                        shell("mv "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/sv/results/variants/diploidSV.vcf.gz "+
                             config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.sv.vcf.gz; "+
-                      "mv "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/sv/results/variants/diploidSV.vcf.gz.tbi "+
+                            "mv "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/sv/results/variants/diploidSV.vcf.gz.tbi "+
                             config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.sv.vcf.gz.tbi; "+
-                      "cp "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.microsat_normal.dist "+
+                            "cp "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.microsat_normal.dist "+
                             "resources/dragen_microsat/")
 
                 if "set_output_group" in config:
@@ -169,6 +191,7 @@ rule dragen_somatic_snv_sv_and_cnv_calls:
                         +config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.tumor.target.counts.gc-corrected.gz "
                         +config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.tumor.target.counts.gz "
                         +config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.vcf.gz "
+                        +config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic_tumor.cram "
                         +config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic_tumor.bam")
 
                 has_pcr_duplicates = get_tumor_has_pcr_duplicates(wildcards)
@@ -190,13 +213,17 @@ rule dragen_somatic_snv_sv_and_cnv_calls:
                 this_sample_tumor_only_fastq_list_csv = make_sample_fastq_list_csv(wildcards, False, True, tumor_sample_libraries)
                 print("Tumor libraries: " + ", ".join(tumor_sample_libraries))
                 print("Tumor using UMIs: " + str(tumor_has_UMIs))
+                print("Outputing CRAM: " + str(config["generate_crams"]))
                 
                 # check for mixed compression formats and decompress where needed
                 harmonize_fastq_compression_formats(this_sample_germline_only_fastq_list_csv, this_sample_tumor_only_fastq_list_csv)
 
                 dragen_cmd = "dragen -r "+config["ref_genome"]+" --ora-reference "+config["ref_ora"]+" --enable-map-align true --enable-map-align-output true --enable-bam-indexing true --fastq-list {this_sample_germline_only_fastq_list_csv} --fastq-list-all-samples true --tumor-fastq-list {this_sample_tumor_only_fastq_list_csv} --tumor-fastq-list-all-samples true --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic --enable-hla true --hla-enable-class-2 true --intermediate-results-dir "+config["temp_dir"]+" -f"+" --enable-variant-caller true --enable-cnv true --cnv-use-somatic-vc-baf true --cnv-normal-cnv-vcf {input.germline_cnv} --enable-sv true --vc-enable-unequal-ntd-errors=true --vc-enable-trimer-context=true --msi-command tumor-normal --msi-coverage-threshold " + str(config["msi_min_coverage"]) + " --msi-microsatellites-file {input.msi_sites} --enable-hrd true --enable-variant-annotation=true --variant-annotation-data=resources/nirvana --variant-annotation-assembly=GRCh38 --enable-tmb true --soft-read-trimmers polyg --read-trimmers adapter --trim-adapter-read1 resources/adapter_sequences/read1_3prime.fasta --trim-adapter-read2 resources/adapter_sequences/read2_3prime.fasta"
 
-                if has_pcr_duplicates and not tumor_has_UMIs:                                                                                                                                                                                                                       
+                if config["generate_crams"]:
+                        dragen_cmd = dragen_cmd + " --output-format CRAM"
+
+                if has_pcr_duplicates and not tumor_has_UMIs:
                         dragen_cmd = dragen_cmd + " --enable-duplicate-marking true"
 
                 if germline_has_UMIs or tumor_has_UMIs:
@@ -211,8 +238,14 @@ rule dragen_somatic_snv_sv_and_cnv_calls:
                         # only run alignment if tumor bam does not exist?
                         #if(not os.path.exists(tumor_bam)):
                         dragen_cmd_align = "dragen -r "+config["ref_genome"]+" --ora-reference "+config["ref_ora"]+" --enable-map-align true --enable-map-align-output true --enable-bam-indexing true --tumor-fastq-list {this_sample_tumor_only_fastq_list_csv} --tumor-fastq-list-all-samples true --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic --enable-hla true --hla-enable-class-2 true --intermediate-results-dir "+config["temp_dir"]+" -f --umi-enable true {umi_correction_flag} --umi-min-supporting-reads 1 --umi-min-map-quality 1 --soft-read-trimmers polyg --read-trimmers adapter --trim-adapter-read1 resources/adapter_sequences/read1_3prime.fasta --trim-adapter-read2 resources/adapter_sequences/read2_3prime.fasta"
+                        if config["generate_crams"]:
+                                dragen_cmd_align = dragen_cmd_align + " --output-format CRAM"
+                        if config["ora_compress_fastqs"]:
+                                dragen_cmd_align = dragen_cmd_align + " --enable-ora true --ora-delete-input-files true"
                         print(dragen_cmd_align)
                         shell(dragen_cmd_align)
+                        if config["ora_compress_fastqs"]:
+                                move_ora_files(config["output_dir"]+"/{wildcards.project}/{wildcards.subject}", this_sample_tumor_only_fastq_list_csv)
 
                         # check that tumor bam was written then pass dragen command with bams as input
                         if(not os.path.exists(tumor_bam)):
@@ -223,15 +256,26 @@ rule dragen_somatic_snv_sv_and_cnv_calls:
                 if has_tumor_in_normal:
                         dragen_cmd = dragen_cmd +  " --sv-enable-liquid-tumor-mode true --sv-tin-contam-tolerance "+str(config["tumor_in_normal_tolerance_proportion"])
 
+                if config["ora_compress_fastqs"] and not "--enable-map-align false" in dragen_cmd:
+                        dragen_cmd = dragen_cmd + " --enable-ora true --ora-delete-input-files true"
+
                 shell(dragen_cmd)
+
                 # Cleanup step to remove any temporary fastq.gz files if mixed ora/gz compression input
                 cleanup_decompressed_temporary_fastqs(this_sample_germline_only_fastq_list_csv, this_sample_tumor_only_fastq_list_csv)
-                shell("mv "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/sv/results/variants/somaticSV.vcf.gz "+
+                if config["ora_compress_fastqs"] and not "--enable-map-align false" in dragen_cmd:
+                        move_ora_files(config["output_dir"]+"/{wildcards.project}/{wildcards.subject}", this_sample_tumor_only_fastq_list_csv)
+                if is_dragen_v42:
+                        shell("mv "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/sv/results/variants/somaticSV.vcf.gz "+
                             config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.sv.vcf.gz; "+
-                      "mv "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/sv/results/variants/somaticSV.vcf.gz.tbi "+
+                            "mv "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/sv/results/variants/somaticSV.vcf.gz.tbi "+
                             config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.sv.vcf.gz.tbi")
-                # The following BAM is essentially redundant with the dna.germline.bam from the previous rule, delete to save space.
-                shell("rm -f "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.bam")
+                # The following BAM/CRAM is essentially redundant with the dna.germline.bam/cram from the previous rule, delete to save space.
+                if config["generate_crams"]:
+                        shell("rm -f "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.cram")
+                else:
+                        shell("rm -f "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.bam")
+
                 if "set_output_group" in config:
                         shell("chgrp -R -f " + config["set_output_group"] + " " + config["output_dir"]+"/{wildcards.project}/{wildcards.subject}")
                 if "set_output_umask" in config:

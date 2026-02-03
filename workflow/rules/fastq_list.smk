@@ -133,6 +133,31 @@ def cleanup_decompressed_temporary_fastqs(sample_fastq_list_csv, paired_sample_f
                                 # remove the decompressed file list
                                 shell(f"rm {fastq_list_csv}.decompressed")
 
+# If Dragen generated ORA files from the input FASTiQs during alignment/genotyping they will be in the same output directory as the VCFs, etc.
+# Tamor is setup (see make_sample_fastq_list_csv method above) to look for them in the same dir where the FASTQs originally were located, 
+# so move them there in case we need to reprocess them in the future. 
+def move_ora_files(dragen_output_dir, sample_fastq_list_csv):
+        # Read through the sample_fastq_list_csv and match .ora's from dragen_output_dir with the same basename.
+        with open(sample_fastq_list_csv, 'r') as fastq_list:
+               for line in fastq_list: 
+                       fields = line.split(',')
+                       if len(fields) != 6:
+                                print("Skipping malformatted line (expected six comma separated values) in sample_fastq_list_csv: "+line)
+                                continue
+                       for orig_input_file in fields[4:]: # Should capture paths for reads 1 and 2.
+                                # If it's a gzip'ed FASTQ input file that Dragen automatically deleted after compressing to ORA, 
+                                # move the .ora to the same folder.
+                                if orig_input_file.endswith(".fastq.gz") and not os.path.exists(orig_input_file):
+                                        orig_input_dir = os.path.dirname(orig_input_file)
+                                        input_file_ora_equivalent = dragen_output_dir+"/"+os.path.basename(orig_input_file).replace(".fastq.gz",".fastq.ora")
+                                        
+                                        if not os.path.exists(input_file_ora_equivalent):
+                                               raise Exception("MISSING DATA: Original input file "+orig_input_file+
+                                                               " does not exist, nor does the ORA equivalent "+ input_file_ora_equivalent)
+					# May throw an error or exception:
+                                        shutil.move(input_file_ora_equivalent, orig_input_dir+"/"+input_file_ora_equivalent)
+                                        print(f"Moved new ORA file "+input_file_ora_equivalent+" to "+orig_input_dir)
+
 def get_sample_fastq_list_csvs(wildcards, is_rna, is_tumor):
         library_info = identify_libraries(is_rna, is_tumor, wildcards)
         all_csvs_with_sample = [];
