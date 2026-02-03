@@ -9,6 +9,9 @@ rule dragen_bcl_conversion:
                 csv=get_samplesheet
         output:
                 config["analysis_dir"]+'/primary/'+config["sequencer"]+'/{run}/Reports/fastq_list.csv'
-        shell:
-                "dragen --bcl-conversion-only true --force --sample-sheet {input.csv} --bcl-input-directory "+config["bcl_dir"]+'/{wildcards.run} --output-directory '+config["analysis_dir"]+'/primary/'+config["sequencer"]+'/{wildcards.run}'
-
+        run:
+                dragen_cmd = "dragen --bcl-conversion-only true --force --sample-sheet {input.csv} --bcl-input-directory " + config["bcl_dir"]+'/{wildcards.run} --output-directory '+config["analysis_dir"]+ '/primary/'+config["sequencer"]+'/{wildcards.run}'
+                if config["ora_compress_fastqs"]:
+                        dragen_cmd = dragen_cmd + " --fastq-compression-format dragen --ora-reference " + config["ref_ora"]
+                print("Dragen Command: " + dragen_cmd)
+                shell(dragen_cmd)
