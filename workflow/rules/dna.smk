@@ -25,7 +25,7 @@ rule dragen_germline_snv_sv_and_cnv_calls:
                 config["output_dir"]+'/{project}/{subject}/{subject}_{normal}.dna.germline.hard-filtered.vcf.gz',
                 config["output_dir"]+'/{project}/{subject}/{subject}_{normal}.dna.germline.cnv.vcf.gz',
                 config["output_dir"]+'/{project}/{subject}/{subject}_{normal}.dna.germline.sv.vcf.gz',
-                (config["output_dir"]+'/{project}/{subject}/{subject}_{normal}.dna.germline.bam' if config["generate_crams"] else config["output_dir"]+'/{project}/{subject}/{subject}_{normal}.dna.germline.bam'),
+                (config["output_dir"]+'/{project}/{subject}/{subject}_{normal}.dna.germline.cram' if config["generate_crams"] else config["output_dir"]+'/{project}/{subject}/{subject}_{normal}.dna.germline.bam'),
                 config["output_dir"]+'/{project}/{subject}/{subject}_{normal}.dna.germline.microsat_normal.dist',
                 config["output_dir"]+'/{project}/{subject}/{subject}_{normal}.dna.germline.mapping_metrics.csv',
                 config["output_dir"]+'/{project}/{subject}/{subject}_{normal}.dna.germline.cnv_metrics.csv'

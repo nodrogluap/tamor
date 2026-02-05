@@ -11,19 +11,31 @@ def get_file(project, subject, sample_name, is_rna, suffix):
 # Use a function to find the alignment file, note that maybe the BAM has been converted to CRAM at some point to save disk space, outside Snakemake
 def get_normal_bam(wildcards):
         cram = get_file(wildcards.project, wildcards.subject, wildcards.normal, False, ".dna.germline.cram")
+        bam = get_file(wildcards.project, wildcards.subject, wildcards.normal, False, ".dna.germline.bam")
         if exists(cram):
                 return cram
-        return get_file(wildcards.project, wildcards.subject, wildcards.normal, False, ".dna.germline.bam")
+        elif exists(bam):
+                return bam
+        elif config["generate_crams"]:
+                return cram
+        else:
+                return bam
 
 def get_tumor_bam(wildcards):
         cram = get_file(wildcards.project, wildcards.subject, wildcards.tumor+"_"+wildcards.normal, False, ".dna.somatic_tumor.cram")
+        bam = get_file(wildcards.project, wildcards.subject, wildcards.tumor+"_"+wildcards.normal, False, ".dna.somatic_tumor.bam")
         if exists(cram):
                 return cram
-        return get_file(wildcards.project, wildcards.subject, wildcards.tumor+"_"+wildcards.normal, False, ".dna.somatic_tumor.bam")
+        elif exists(bam):
+                return bam
+        elif config["generate_crams"]:
+                return cram
+        else:
+                return bam
 
 def get_tumor_rna_bam(wildcards):
         cram = get_file(wildcards.project, wildcards.subject, wildcards.tumor, True, ".rna.cram")
-        if exists(cram):
+        if exists(cram): # not automated yet so don't use the config setting
                 return cram
         return get_file(wildcards.project, wildcards.subject, wildcards.tumor, True, ".rna.bam")
 
