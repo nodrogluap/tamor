@@ -29,11 +29,11 @@ This compression typically shrinks the input file to ~35% of its original size.
 The standalone script can be run *outside* of Tamor's Snakemake workflow, if samtools>=1.6 is in the shell PATH. 
 It takes two arguments:
  - The file path to the existing BAM to be replaced.
- - Optionally, a FastA-formatted genome to use as a reference (defaults to ``resources/resources/GRCh38_full_analysis_set_plus_decoy_hla.fa``) 
+ - Optionally, a FastA-formatted genome to use as a reference (defaults to ``resources/GRCh38_full_analysis_set_plus_decoy_hla.fa``) 
 
 For example, to compress the completed test case's tumor BAM file:
 ```bash
-workflow/scripts/bam2cram.sh results/PR-TEST-CLL/PR-TEST-CLL-SAMN08512283/PR-TEST-CLL-SAMN08512283_PR-TEST-CLL-SAMN08512283-SRR6702602-T_PR-TEST-CLL-SAMN08512283-SRR6702602-N.dna.somatic_tumor.bam resources/GRCh38_full_analysis_set_plus_decoy_hla.fa
+workflow/scripts/bam2cram.sh results/PR-TEST-CLL/PR-TEST-CLL-SAMN08512283/PR-TEST-CLL-SAMN08512283_PR-TEST-CLL-SAMN08512283-SRR6702602-T_PR-TEST-CLL-SAMN08512283-SRR6702602-N.dna.somatic_tumor.bam
 ```
 
 Tamor will automatically use the CRAM input if found, e.g. for the rule conditionally rerunning germline CNV calling in the case of uneven WGS coverage. 
