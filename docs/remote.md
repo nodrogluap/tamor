@@ -11,7 +11,7 @@ To create a standalone Tamor on a mounted filesystem at /path/to/your/mount/poin
 
 ```bash
 cd /path/to/your/mount/point
-export MAMBA_ROOT_PREFIX=`pwd`/mambaforge
+export MAMBA_ROOT_PREFIX=`pwd`/micromamba
 "${SHELL}" <(curl -L micro.mamba.pm/install.sh)
 ```
 
@@ -41,7 +41,7 @@ Anytime you would like to run Tamor, you must activate micromamba from the mount
 
 ```bash
 cd /path/to/your/mount/point
-export MAMBA_ROOT_PREFIX=`pwd`/mambaforge
+export MAMBA_ROOT_PREFIX=`pwd`/micromamba
 eval "$(micromamba shell hook --shell bash)"
 micromamba activate tamor
 cd tamor
