@@ -1,8 +1,15 @@
 # Data Management
 
-Deep whole genome shotgun sequencing and analysis of tumors with matched normals generates a lot of data, 
+tl;dr Deep whole genome shotgun sequencing and analysis of tumors with matched normals generates a lot of data, 
 especially the raw (FASTQ) and genome-aligned reads (BAM) files. Tamor supports several measures to 
 reduce the data storage burden.
+
+# Table of Contents
+* [Deleting aligned reads](#deletingalignedreads)
+* [Compressing aligned reads](#compressingalignedreads)
+* [Deleting raw reads](#deletingrawreads)
+* [Restoring deleted raw reads](#restoringdeletedrawreads)
+* [Compressing raw reads](#compressingrawreads)
 
 ## Aligned Reads
 
@@ -22,19 +29,20 @@ This compression typically shrinks the input file to ~35% of its original size.
 The standalone script can be run *outside* of Tamor's Snakemake workflow, if samtools>=1.6 is in the shell PATH. 
 It takes two arguments:
  - The file path to the existing BAM to be replaced.
- - The FastA-formatted genome to use as a reference (for optimal compatibility with possible Tamor reanalysis, use the same file as specified in Tamor's ``ref_fasta`` setting in ``config.yaml``) 
+ - Optionally, a FastA-formatted genome to use as a reference (defaults to ``resources/resources/GRCh38_full_analysis_set_plus_decoy_hla.fa``) 
 
 For example, to compress the completed test case's tumor BAM file:
 ```bash
-workflow/scripts/bam2cram.sh results/PR-TEST-CLL/PR-TEST-CLL-SAMN08512283_PR-TEST-CLL-SAMN08512283-SRR6702602-T_PR-TEST-CLL-SAMN08512283-SRR6702602-N.dna.somatic_tumor.bam resources/GRCh38_full_analysis_set_plus_decoy_hla.fa
+workflow/scripts/bam2cram.sh results/PR-TEST-CLL/PR-TEST-CLL-SAMN08512283/PR-TEST-CLL-SAMN08512283_PR-TEST-CLL-SAMN08512283-SRR6702602-T_PR-TEST-CLL-SAMN08512283-SRR6702602-N.dna.somatic_tumor.bam resources/GRCh38_full_analysis_set_plus_decoy_hla.fa
 ```
+
 Tamor will automatically use the CRAM input if found, e.g. for the rule conditionally rerunning germline CNV calling in the case of uneven WGS coverage. 
 Otherwise it will fallback to using the BAM if it exists.
 
 Any subsequent processing outside of Tamor will require a copy of the FastA reference used, e.g. with samtools:
 
 ```bash
-samtools view -T resources/GRCh38_full_analysis_set_plus_decoy_hla.fa results/PR-TEST-CLL/PR-TEST-CLL-SAMN08512283_PR-TEST-CLL-SAMN08512283-SRR6702602-T_PR-TEST-CLL-SAMN08512283-SRR6702602-N.dna.somatic_tumor.cram
+samtools view -T resources/GRCh38_full_analysis_set_plus_decoy_hla.fa results/PR-TEST-CLL/PR-TEST-CLL-SAMN08512283/PR-TEST-CLL-SAMN08512283_PR-TEST-CLL-SAMN08512283-SRR6702602-T_PR-TEST-CLL-SAMN08512283-SRR6702602-N.dna.somatic_tumor.cram
 ```
 
 ## Raw reads
@@ -44,6 +52,7 @@ samtools view -T resources/GRCh38_full_analysis_set_plus_decoy_hla.fa results/PR
 Removal of raw FASTQ or ORA input files will not trigger Tamor workflow rule reruns. 
 It is therefore safe to remove these files after VCF file generation. Workflow rerun, including BCL to FASTQ conversion, *will* however be triggered
 if the ``results/analysis/primary/sequencer/RunID/Reports/fastq_list.csv`` file is missing or older than the corresponding ``resources/samplesheets/RunID.csv``.
+That is to say, it's safe to delete the ``*.fastq.gz`` files, but NOT the ``Reports/fastq_list.csv``.
 
 Dragen-generated BAM or CRAM alignment files contain both the mapped and unmapped reads, therefore keeping the FASTQ or ORA input files constitutes a safety net of sorts
 since most sequence read information is preserved in the aligned file and could be restored to FASTQ without too much effort. 
@@ -51,6 +60,36 @@ since most sequence read information is preserved in the aligned file and could 
 It is worth noting that the BCL format of a WGS run is typically ~60% of the size of the equivalent FASTQ.gz files. 
 Therefore the BCLs rather than FASTQ.gz files should be kept if there is potential for warranted changes in upstream processing such as  
 barcode mismatch allowance, UMI processing, or adapter trimming.
+
+### Restoring deleted raw reads
+
+The most space-efficient option is to remove the source FASTQ.gz files after variant calling is complete. 
+But what if you need to recreate those FASTQ.gz files for some other analysis outside Tamor later? If you have a BAM file:
+
+```bash
+samtools fastq -0 /dev/null -1 mycase_R1.fastq.gz -2 mycase_R2.fastq.gz mycase.bam
+```
+
+or for CRAMs (requires samtools v1.8 or higher):
+
+```bash
+samtools fastq --reference resources/GRCh38_full_analysis_set_plus_decoy_hla.fa -0 /dev/null -1 mycase_R1.fastq.gz -2 mycase_R2.fastq.gz mycase.bam
+```
+
+The restored FASTQ sequences may differ slightly from your original FASTQs, because Tamor enforces adapter sequence hard trimming during the dragen mapping step.
+
+If you need the FASTQ files to rerun mapping and variant calling in Tamor (e.g. due to algorithmic changes), 
+the ``cram2fastq.sh`` script will rebuild FASTQ input files from either CRAMs or BAMs to the expected locations 
+from the Tamor-generated FASTQ list CSV.  To Tamor it'll be like you never deleted them at all!  
+
+The command takes two arguments: 1) the CRAM or BAM source, and 2) the FASTQ list CSV specifying the FASTQ destination paths 
+(Tamor builds this for each sample that's been mapped/genotyped, in the location given below). 
+
+```bash
+workflow/scripts/cram2fastq.sh results/PR-TEST-CLL/PR-TEST-CLL-SAMN08512283/PR-TEST-CLL-SAMN08512283_PR-TEST-CLL-SAMN08512283-SRR6702602-T_PR-TEST-CLL-SAMN08512283-SRR6702602-N.dna.somatic_tumor.cram results/PR-TEST-CLL/PR-TEST-CLL-SAMN08512283/PR-TEST-CLL-SAMN08512283-SRR6702602-T_fastq_list.csv
+```
+
+If you generated the CRAM with a reference FastA genome other than ``resources/GRCh38_full_analysis_set_plus_decoy_hla.fa``, provide that as a third argument.
 
 ### Compressing raw reads
 
@@ -71,7 +110,7 @@ workflow/scripts/fastq2ora.sh results/analysis/primary/HiSeq/SRX3676780/SRR67026
 This will require and use Dragen server license for ORA compression.
 
 To use the ORA files in subsequent analyses outside of Tamor and your Dragen server, the 
-[free ORA decompresion software](https://support.illumina.com/sequencing/sequencing_software/DRAGENORA.html) 
+[free ORA decompression software](https://support.illumina.com/sequencing/sequencing_software/DRAGENORA.html) 
 must be installed and used.
 To decompress the ORA data for the test case on any machine (Linux, Mac and Windows are supported):
 
