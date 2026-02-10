@@ -1,3 +1,7 @@
+# If the results need to be written and read by multiple users on the same system, enable these two settimngs to control group access and writeability.
+# set_output_group: foo
+# set_output_umask: 0o770
+
 # If set to true, after Dragen BAM file generation the FASTQ.gz files used as input will be removed and replaced with ORA-compressed 
 # sequence files (using index pointed to in 'ref_ora' setting below). 
 # This will require and use Compression license as seen in the output of the dragen_lic command.
