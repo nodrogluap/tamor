@@ -11,7 +11,7 @@ rule dragen_bcl_conversion:
                 config["analysis_dir"]+'/primary/'+config["sequencer"]+'/{run}/Reports/fastq_list.csv'
         run:
                 dragen_cmd = "dragen --bcl-conversion-only true --force --sample-sheet {input.csv} --bcl-input-directory " + config["bcl_dir"]+'/{wildcards.run} --output-directory '+config["analysis_dir"]+ '/primary/'+config["sequencer"]+'/{wildcards.run}'
-                if csv == "resources/samplesheets/SRX3676780.csv":
+                if input.csv == "resources/samplesheets/SRX3676780.csv":
                         print("Skipping BCL conversion for test case")
                         shell("touch "+output[0])
                 else:
