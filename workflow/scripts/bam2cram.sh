@@ -2,19 +2,20 @@
 
 # Function to display the usage message.
 usage() {
-    echo "Usage: $(basename "$0") <input.bam> <ref_genome.fasta>" >&2
+    echo "Usage: $(basename "$0") <input.bam> [ref_genome.fasta]" >&2
     echo " " >&2
     echo "Converts a BAM file to a lossless CRAM file, then removes the BAM file." >&2
     echo "See https://htslib.org/ for BAM and CRAM format details." >&2
     echo " " >&2
-    echo "This script requires two arguments, an existing BAM aligned DNA sequencing read file, and " >&2
+    echo "This script requires one or two arguments, an existing BAM aligned DNA sequencing read file, and optionally " >&2
     echo "a reference genome (e.g. downloaded from http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa)." >&2
+    echo "If no genome is given, the Tamor-specific path resources/GRCh38_full_analysis_set_plus_decoy_hla.fa is used and expected to already exist."
     echo "The output CRAM file is written to the same directory as the input (with a different suffix)." >&2
     exit 1
 }
 
 # Print the usage message and exit if the number of arguments ($#) is not equal to 2
-if [ "$#" -ne 2 ]; then
+if [ "$#" -ne 2 ] && [ "$#" -ne 1 ]; then
     usage
 fi
 
@@ -57,8 +58,12 @@ else
 fi
 
 # Check that we have the reference data needed for the conversion.
-REF_FASTA=$2
-# REF_FASTA=/bulk/chgi_analysis/mohccn/dragen/tamor/resources/GRCh38_full_analysis_set_plus_decoy_hla.fa
+if [ "$#" -eq 2 ]; then
+    REF_FASTA=$2
+else
+    REF_FASTA=resources/GRCh38_full_analysis_set_plus_decoy_hla.fa
+fi
+
 if [ -f "$REF_FASTA" ]; then
     echo "INFO: reference genome FastA file $REF_FASTA exists and is a regular file, as required."
 else
