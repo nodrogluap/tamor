@@ -83,7 +83,7 @@ the ``cram2fastq.sh`` script will rebuild FASTQ input files from either CRAMs or
 from the Tamor-generated FASTQ list CSV.  To Tamor it'll be like you never deleted them at all!  
 
 The command takes two arguments: 1) the CRAM or BAM source, and 2) the FASTQ list CSV specifying the FASTQ destination paths 
-(Tamor builds this for each sample that's been mapped/genotyped, in the location given below). 
+(Tamor builds this for each sample that's been mapped/genotyped, in the location given below). This can take several hours.
 
 ```bash
 workflow/scripts/cram2fastq.sh results/PR-TEST-CLL/PR-TEST-CLL-SAMN08512283/PR-TEST-CLL-SAMN08512283_PR-TEST-CLL-SAMN08512283-SRR6702602-T_PR-TEST-CLL-SAMN08512283-SRR6702602-N.dna.somatic_tumor.cram results/PR-TEST-CLL/PR-TEST-CLL-SAMN08512283/PR-TEST-CLL-SAMN08512283-SRR6702602-T_fastq_list.csv
@@ -93,22 +93,30 @@ If you generated the CRAM with a reference FastA genome other than ``resources/G
 
 ### Compressing raw reads
 
-Unaligned reads used as input to the Tamor workflow can be in standard FASTQ format, or in the proprietary reference-based Illumina ORA-compressed format. 
+There are two main options for compressing raw reads.  
+
+1) The first one is free, but a bit compute-intensive. FASTQ.gz files regenerated using the ``cram2fastq.sh`` are about 50% of the original FASTQ.gz file sizes,
+because the reads are in genome-coordinate order rather that the quasi-random physical flowcell order from the sequencer. The gzip program is able to better
+compress the co-located reads (that shared a lot of subsequences once genome coverage is above 20x).
+One can therefore remove original FASTQs and restore them from CRAM once the Tamor pipeline is complete.
+
+2) Unaligned reads used as input to the Tamor workflow can be in standard FASTQ format, or in the proprietary reference-based Illumina ORA-compressed format. 
 ORA files are typically ~15% to 20% of the gzip'ed FASTQ file size.
 Sequences generated on the NextSeq2000 or NovaSeqX typically have the option of including ORA compression during onboard BCL to FASTQ conversion.
 
-Enabling the ``ora_compress_fastqs`` option in ``config.yaml`` will cause Tamor to replace any FASTQ input files with their ORA-compressed versions after they've been used for alignment/genotyping.
+    Enabling the ``ora_compress_fastqs`` option in ``config.yaml`` will cause Tamor to replace any FASTQ input files with their ORA-compressed versions after they've been used for alignment/genotyping.
 
-Tamor defaults (``ref_ora`` setting in ``config.yaml``) to downloading and using the [human v2 index reference](https://webdata.illumina.com/downloads/software/dragen/resource-files/misc/lenadata.tar) for compression.
+    Tamor defaults (``ref_ora`` setting in ``config.yaml``) to downloading and using the [human v2 index reference](https://webdata.illumina.com/downloads/software/dragen/resource-files/misc/lenadata.tar) for compression.
 FASTQs can also be converted to ORA files using the standalone script ``workflow/scripts/fastq2ora.sh``, such as for the test case's two FASTQ paired-end read files: 
 
+    *Whether done manually or using the config settings, such compression will require and use Dragen server license for ORA compression.*
+   
 ```bash
 workflow/scripts/fastq2ora.sh results/analysis/primary/HiSeq/SRX3676780/SRR6702602_1.fastq.gz  resources/oradata_homo_sapiens
 workflow/scripts/fastq2ora.sh results/analysis/primary/HiSeq/SRX3676780/SRR6702602_2.fastq.gz  resources/oradata_homo_sapiens
 ```
 
-This will require and use Dragen server license for ORA compression.
-
+ 
 To use the ORA files in subsequent analyses outside of Tamor and your Dragen server, the 
 [free ORA decompression software](https://support.illumina.com/sequencing/sequencing_software/DRAGENORA.html) 
 must be installed and used.
