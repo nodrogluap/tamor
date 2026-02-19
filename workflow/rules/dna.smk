@@ -60,6 +60,10 @@ rule dragen_germline_snv_sv_and_cnv_calls:
  
                 # todo max call mem only if huge input file needs downsampling               
                 dragen_cmd = "dragen -r "+config["ref_genome"]+" --ora-reference "+config["ref_ora"]+" --enable-map-align true --enable-map-align-output true --enable-bam-indexing true --fastq-list {this_sample_only_fastq_list_csv} --fastq-list-all-samples true --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.normal}.dna.germline --enable-hla true --hla-enable-class-2 true --intermediate-results-dir "+ config["temp_dir"]+" -f"+" --enable-variant-caller true --enable-cnv true --cnv-enable-self-normalization true --enable-sv true --enable-down-sampler true --down-sampler-coverage 60 --enable-variant-annotation=true --variant-annotation-data=resources/nirvana --variant-annotation-assembly=GRCh38 --msi-command collect-evidence --msi-coverage-threshold " + str(config["msi_min_coverage"]) + " --msi-microsatellites-file {input.msi_sites} --soft-read-trimmers polyg --read-trimmers adapter --trim-adapter-read1 resources/adapter_sequences/read1_3prime.fasta --trim-adapter-read2 resources/adapter_sequences/read2_3prime.fasta" 
+                if is_dragen_v42:
+                        dragen_cmd = dragen_cmd + " --sv-systematic-noise resources/sv-systematic-noise-baseline-collection-2.0.1/WGS_hg38_v2.0.1_systematic_noise.sv.bedpe.gz"
+                else:
+                        dragen_cmd = dragen_cmd + " --sv-systematic-noise resources/WGS_hg38_v3.1.0_systematic_noise.sv.bedpe.gz"
 
                 if config["generate_crams"]:
                         dragen_cmd = dragen_cmd + " --output-format CRAM"
@@ -137,12 +141,8 @@ rule dragen_germline_cnv_and_sv_lowqual_check_and_mitigate:
                 if coverage_uniformity > 0.5:
                         interval_message = "FAIL: triggered dragen_germline_cnv_and_sv_lowqual_check_and_mitigate with --cnv-interval-width 5000"
 
-                        dragen_cmd = "dragen -r {config[ref_genome]} --enable-map-align false "+get_aligned_input_param(input.germline_bam) +" --output-directory {config[output_dir]}/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.normal}.dna.germline --intermediate-results-dir {config[temp_dir]} -f --enable-cnv true --cnv-enable-self-normalization true --enable-sv true --cnv-interval-width 5000"
+                        dragen_cmd = "dragen -r {config[ref_genome]} --enable-map-align false "+get_aligned_input_param(input.germline_bam) +" --output-directory {config[output_dir]}/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.normal}.dna.germline --intermediate-results-dir {config[temp_dir]} -f --enable-cnv true --cnv-enable-self-normalization true --cnv-interval-width 5000"
                         shell(dragen_cmd)
-                        shell("mv "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/sv/results/variants/diploidSV.vcf.gz "+
-                                    config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.sv.vcf.gz; "+
-                              "mv "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/sv/results/variants/diploidSV.vcf.gz.tbi "+
-                                    config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.sv.vcf.gz.tbi")
                 else:
                         interval_message = "PASS"
                 interval_df.loc[len(interval_df)] = ['COVERAGE UNIFORMITY CHECK','','Germline uniformity less than 0.5',interval_message,'']
@@ -158,8 +158,7 @@ rule dragen_germline_cnv_and_sv_lowqual_check_and_mitigate:
 
 
 # todo: should potentially have similar interval increase for somatic, based on average coverage or "Uniformity of coverage (PCT > 0.4*mean) over genome?"
-
-# Use a function to find the alignment file, since the BAM has been converted to CRAM at some point to save disk space, outside Snakemake
+# counterpoint: According to the Dragen docs, it's only effective for germline.
 
 rule dragen_somatic_snv_sv_and_cnv_calls:
         priority: 98
@@ -220,6 +219,11 @@ rule dragen_somatic_snv_sv_and_cnv_calls:
 
                 dragen_cmd = "dragen -r "+config["ref_genome"]+" --ora-reference "+config["ref_ora"]+" --enable-map-align true --enable-map-align-output true --enable-bam-indexing true --fastq-list {this_sample_germline_only_fastq_list_csv} --fastq-list-all-samples true --tumor-fastq-list {this_sample_tumor_only_fastq_list_csv} --tumor-fastq-list-all-samples true --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic --enable-hla true --hla-enable-class-2 true --intermediate-results-dir "+config["temp_dir"]+" -f"+" --enable-variant-caller true --enable-cnv true --cnv-use-somatic-vc-baf true --cnv-normal-cnv-vcf {input.germline_cnv} --enable-sv true --vc-enable-unequal-ntd-errors=true --vc-enable-trimer-context=true --msi-command tumor-normal --msi-coverage-threshold " + str(config["msi_min_coverage"]) + " --msi-microsatellites-file {input.msi_sites} --enable-hrd true --enable-variant-annotation=true --variant-annotation-data=resources/nirvana --variant-annotation-assembly=GRCh38 --enable-tmb true --soft-read-trimmers polyg --read-trimmers adapter --trim-adapter-read1 resources/adapter_sequences/read1_3prime.fasta --trim-adapter-read2 resources/adapter_sequences/read2_3prime.fasta"
 
+                if is_dragen_v42:
+                        dragen_cmd = dragen_cmd + " --sv-systematic-noise resources/sv-systematic-noise-baseline-collection-2.0.1/WGS_hg38_v2.0.1_systematic_noise.sv.bedpe.gz"
+                else:
+                        dragen_cmd = dragen_cmd + " --sv-systematic-noise resources/WGS_hg38_v3.1.0_systematic_noise.sv.bedpe.gz"
+
                 if config["generate_crams"]:
                         dragen_cmd = dragen_cmd + " --output-format CRAM"
 
@@ -252,6 +256,10 @@ rule dragen_somatic_snv_sv_and_cnv_calls:
                                 raise Exception("Missing tumor bam for UMI sample "+wildcards.tumor+" cannot proceed with rule dragen_somatic_snv_sv_and_cnv_calls")
 
                         dragen_cmd = "dragen -r "+config["ref_genome"]+" --enable-map-align false "+get_aligned_input_param(input.germline_bam)+" --tumor-bam-input {tumor_bam} --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic --intermediate-results-dir "+config["temp_dir"]+" -f"+" --enable-variant-caller true --enable-cnv true --cnv-use-somatic-vc-baf true --cnv-normal-cnv-vcf {input.germline_cnv} --enable-sv true --vc-enable-unequal-ntd-errors=true --vc-enable-trimer-context=true --vc-enable-umi-solid true --msi-command tumor-normal --msi-coverage-threshold " + str(config["msi_min_coverage"]) + " --msi-microsatellites-file {input.msi_sites} --enable-hrd true --enable-variant-annotation=true --variant-annotation-data=resources/nirvana --variant-annotation-assembly=GRCh38 --enable-tmb true"
+                        if is_dragen_v42:
+                                dragen_cmd = dragen_cmd + " --sv-systematic-noise resources/sv-systematic-noise-baseline-collection-2.0.1/WGS_hg38_v2.0.1_systematic_noise.sv.bedpe.gz"
+                        else:
+                                dragen_cmd = dragen_cmd + " --sv-systematic-noise resources/WGS_hg38_v3.1.0_systematic_noise.sv.bedpe.gz"
 
                 if has_tumor_in_normal:
                         dragen_cmd = dragen_cmd +  " --sv-enable-liquid-tumor-mode true --sv-tin-contam-tolerance "+str(config["tumor_in_normal_tolerance_proportion"])
