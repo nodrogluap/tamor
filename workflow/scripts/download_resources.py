@@ -60,6 +60,11 @@ else:
         raise SystemExit("FATAL: For Dragen v4.4+ the expected default annotation config JSON is not where we expect it ("+config_file+")")
     subprocess.run([install_path+"/share/nirvana/DataManager", "download", "-r", "GRCh38", "--credentials-file",
                    credentials_file, "--dir", "nirvana", "--versions-config", config_file])
+    tmb_config_file = install_path+"/resources/annotation/tmb_annotations_GRCh38.json"
+    if(not os.path.exists(tmb_config_file)):
+        raise SystemExit("FATAL: For Dragen v4.4+ the expected default annotation config JSON is not where we expect it ("+tmb_config_file+")")
+    subprocess.run([install_path+"/share/nirvana/DataManager", "download", "-r", "GRCh38", "--credentials-file",
+                   credentials_file, "--dir", "nirvana", "--versions-config", tmb_config_file])
 
 # Update the reference genome index as required for v4.4+
 if(not is_dragen_v42):
