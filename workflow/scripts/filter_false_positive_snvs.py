@@ -310,7 +310,8 @@ with open(tmpfile.name, 'wt') as new_vcf:
                 alt_supporting_reads_for_position = 0
                 if "AD" in format_key_index: # true 99.9% of the time, unless the SNV comes from a Dragen-detected gene conversion
                     for alt_allele_depth in format_data[format_key_index["AD"]].split(",")[1:]: # add up every allele depth reported except the 0th, reference allele depth
-                        alt_supporting_reads_for_position = alt_supporting_reads_for_position + int(alt_allele_depth)
+                        if alt_allele_depth != ".":
+                            alt_supporting_reads_for_position = alt_supporting_reads_for_position + int(alt_allele_depth)
                     total_reads_for_position = int(format_data[format_key_index["DP"]]) # approximation, excludes poor qual reads
                     if alt_supporting_reads_for_position > total_reads_for_position:
                         total_reads_for_position = alt_supporting_reads_for_position # hopefully doesn't happen often!
