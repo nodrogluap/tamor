@@ -4,7 +4,8 @@ import tempfile
 import argparse
 import gzip
 import sys
-from os import system
+import os
+from os import system, path
 from intervaltree import Interval, IntervalTree
 
 parser = argparse.ArgumentParser(
@@ -104,6 +105,13 @@ with open(tmpfile.name, 'wt') as new_vcf:
 
 with open(args.output_metrics, "wt") as metrics:
     print("CNV FALSE POSITIVE FILTERING,,Filter changed PASS to catalogued_false_positive,"+str(len(chr_pos_to_filter))+","+str(len(chr_pos_to_filter)/original_total_pass_cnvs), file=metrics)
-    
+
+# Remember the modification date of the original VCF file, so we can apply it to the new file.
+# Otherwise the somatic Snakemake rule will get retriggered if Snakemake is called after a completed run.
+orig_mod_time = path.getmtime(args.cnv_vcf)
+
 # Replace the old VCF with the new one, including the bgzip compression and tabix indexing, and md5sum (using md5sum-lite from the default base conda install)
-system(f"bgzip -c {tmpfile.name} > {args.cnv_vcf}; tabix {args.cnv_vcf}; md5sum-lite {args.cnv_vcf} > {args.cnv_vcf}.md5sum")
+system(f"bgzip -c {tmpfile.name} > {args.cnv_vcf}; tabix {args.cnv_vcf}; md5sum {args.cnv_vcf} > {args.cnv_vcf}.md5sum")
+
+# Restore (access and) mod time.
+os.utime(args.cnv_vcf, (orig_mod_time, orig_mod_time))
