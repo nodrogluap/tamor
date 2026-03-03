@@ -111,7 +111,7 @@ with open(args.output_metrics, "wt") as metrics:
 orig_mod_time = path.getmtime(args.cnv_vcf)
 
 # Replace the old VCF with the new one, including the bgzip compression and tabix indexing, and md5sum (using md5sum-lite from the default base conda install)
-system(f"bgzip -c {tmpfile.name} > {args.cnv_vcf}; tabix {args.cnv_vcf}; md5sum {args.cnv_vcf} > {args.cnv_vcf}.md5sum")
+system(f"rm -f {args.vcf}; bgzip -c {tmpfile.name} > {args.cnv_vcf}; tabix {args.cnv_vcf}; md5sum {args.cnv_vcf} > {args.cnv_vcf}.md5sum")
 
 # Restore (access and) mod time.
 os.utime(args.cnv_vcf, (orig_mod_time, orig_mod_time))
