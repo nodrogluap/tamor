@@ -85,7 +85,7 @@ rule dragen_germline_snv_sv_and_cnv_calls:
                                 shell(dragen_cmd_align)
                                 # ORA files are written to the analysis output directory. Move them back to the original FASTQ input location(s).
                                 if config["ora_compress_fastqs"]:
-                                        move_ora_files(config["output_dir"]+"/{wildcards.project}/{wildcards.subject}", this_sample_only_fastq_list_csv)
+                                        move_ora_files(config["output_dir"]+f"/{wildcards.project}/{wildcards.subject}", this_sample_only_fastq_list_csv)
                         # check that germline bam was written then pass dragen command with bams as input
                         if(not os.path.exists(normal_bam)):
                                 raise Exception("Missing germline bam for UMI sample "+wildcards.germline+" cannot proceed with rule dragen_germline_snv_sv_and_cnv_calls")
@@ -100,7 +100,7 @@ rule dragen_germline_snv_sv_and_cnv_calls:
                 # Cleanup step to remove any temporary fastq.gz files if mixed ora/gz compression input
                 cleanup_decompressed_temporary_fastqs(this_sample_only_fastq_list_csv)
                 if config["ora_compress_fastqs"] and not "--enable-map-align false" in dragen_cmd:
-                        move_ora_files(config["output_dir"]+"/{wildcards.project}/{wildcards.subject}", this_sample_only_fastq_list_csv)
+                        move_ora_files(config["output_dir"]+f"/{wildcards.project}/{wildcards.subject}", this_sample_only_fastq_list_csv)
                 if is_dragen_v42:
                         shell("mv "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/sv/results/variants/diploidSV.vcf.gz "+
                             config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.sv.vcf.gz; "+
@@ -245,7 +245,7 @@ rule dragen_somatic_snv_sv_and_cnv_calls:
                         print(dragen_cmd_align)
                         shell(dragen_cmd_align)
                         if config["ora_compress_fastqs"]:
-                                move_ora_files(config["output_dir"]+"/{wildcards.project}/{wildcards.subject}", this_sample_tumor_only_fastq_list_csv)
+                                move_ora_files(config["output_dir"]+f"/{wildcards.project}/{wildcards.subject}", this_sample_tumor_only_fastq_list_csv)
 
                         # check that tumor bam was written then pass dragen command with bams as input
                         if(not os.path.exists(tumor_bam)):
@@ -268,7 +268,7 @@ rule dragen_somatic_snv_sv_and_cnv_calls:
                 # Cleanup step to remove any temporary fastq.gz files if mixed ora/gz compression input
                 cleanup_decompressed_temporary_fastqs(this_sample_germline_only_fastq_list_csv, this_sample_tumor_only_fastq_list_csv)
                 if config["ora_compress_fastqs"] and not "--enable-map-align false" in dragen_cmd:
-                        move_ora_files(config["output_dir"]+"/{wildcards.project}/{wildcards.subject}", this_sample_tumor_only_fastq_list_csv)
+                        move_ora_files(config["output_dir"]+f"/{wildcards.project}/{wildcards.subject}", this_sample_tumor_only_fastq_list_csv)
                 if is_dragen_v42:
                         shell("mv "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/sv/results/variants/somaticSV.vcf.gz "+
                             config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.sv.vcf.gz; "+
