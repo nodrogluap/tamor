@@ -75,7 +75,7 @@ Details on how to set each column are below.
 The ``subjectID``, ``tumorSampleID`` and ``germlineSampleID`` must:
 
 - *CONTAIN NO UNDERSCORES*
-- The ``subjectID`` must be between 6 and 35 characters (due to a PCGR naming limitation)
+- The ``tumorSampleID`` must be between 6 and 35 characters (due to a PCGR naming limitation)
 - ``tumorSampleID`` and ``germlineSampleID`` must be the exact ``Sample_Name`` values you used in your Illumina sequencing sample spreadsheets (see samplesheet section below for details).
 
 ### Handling PCR duplicates

@@ -43,14 +43,14 @@ rule generate_pcgr_html:
                 somatic_snv_vcf = config["output_dir"]+'/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.hard-filtered.vcf.gz',
                 somatic_cnv_vcf = config["output_dir"]+'/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.cnv.vcf.gz',
                 tumor_site_code_file = config["output_dir"]+'/{project}/{subject}/{subject}_{tumor}_{normal}.pcgr.tumor-site-code.txt',
-                # This metrics file is a marker that the somatic_cnv_vcf file has been post-filtered for known false positives, its contents aren't used-directly in this rule.
+                # This metrics file is a marker that the somatic_snv_vcf file has been post-filtered for known false positives, its contents aren't used-directly in this rule.
                 somatic_snv_metrics_file=config["output_dir"]+"/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.snv_filter_metrics.csv",
 		# Sme thing, for germline susceptibility filtering.
                 germline_snv_metrics_file=config["output_dir"]+"/{project}/{subject}/{subject}_{normal}.dna.germline.snv_filter_metrics.csv",
                 pcgrr_env = ".snakemake/conda/pcgrr/bin/Rscript"
         output:
-                tumor_snv_file = config["output_dir"]+"/pcgr/{project}/{subject}_{tumor}_{normal}/{subject}.pcgr.grch38.snv_indel_ann.tsv.gz",
-                html=config["output_dir"]+'/pcgr/{project}/{subject}_{tumor}_{normal}/{subject}.pcgr.grch38.html',
+                tumor_snv_file = config["output_dir"]+"/pcgr/{project}/{subject}_{tumor}_{normal}/{tumor}.pcgr.grch38.snv_indel_ann.tsv.gz",
+                html=config["output_dir"]+'/pcgr/{project}/{subject}_{tumor}_{normal}/{tumor}.pcgr.grch38.html',
                 rep=report(directory(config["output_dir"]+'/pcgr/{project}/{subject}_{tumor}_{normal}'),
                        caption="../report/pcgr_caption.rst",
                        category="Reports",
@@ -73,7 +73,9 @@ rule generate_pcgr_html:
 # Germline cancer susceptibility reporting
 rule generate_cpsr:
         input:
-                germline_snv_vcf = config["output_dir"]+'/{project}/{subject}/{subject}_{normal}.dna.germline.hard-filtered.vcf.gz'
+                germline_snv_vcf = config["output_dir"]+'/{project}/{subject}/{subject}_{normal}.dna.germline.hard-filtered.vcf.gz',
+                # This metrics file is a marker that the germline_snv_vcf file has been post-filtered for known false positives, its contents aren't used-directly in this rule.
+                germline_snv_metrics_file = config["output_dir"]+"/{project}/{subject}/{subject}_{normal}.dna.germline.snv_filter_metrics.csv"
         output:
                 config["output_dir"]+'/{project}/{subject}/{normal}.cpsr.grch38.classification.tsv.gz',
                 config["output_dir"]+'/{project}/{subject}/{normal}.cpsr.grch38.conf.yaml'
