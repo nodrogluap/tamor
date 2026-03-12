@@ -23,7 +23,7 @@ resource_dict = {
         "alu_vc_exclusions_bed": ["https://webdata.illumina.com/downloads/software/dragen/resource-files/bed-file-collection-1.0.0.tar", "bed-file-collection-1.0.0", "tar", "xvf"],
         "snv_systematic_noise": ["https://webdata.illumina.com/downloads/software/dragen/resource-files/systematic-noise-baseline-collection-1.1.0.tar", "systematic-noise-baseline-collection-1.1.0", "tar", "vxf"],
         "sv_systematic_noise": ["https://webdata.illumina.com/downloads/software/dragen/resource-files/sv-systematic-noise-baseline-collection-2.0.1.tar", "sv-systematic-noise-baseline-collection-2.0.1", "tar", "xvf"],
-        "oncotree_mappings": ["https://raw.githubusercontent.com/cBioPortal/oncotree/refs/heads/master/scripts/ontology_to_ontology_mapping_tool/ontology_mappings.txt", "ontology_mappings.txt"],
+        "oncotree_mappings": ["https://raw.githubusercontent.com/cBioPortal/oncotree/refs/heads/feat/oncotree-2025-10-03/scripts/ontology_to_ontology_mapping_tool/ontology_mappings.txt", "ontology_mappings.txt"],
         "oncotree_hierarchy": ["https://raw.githubusercontent.com/cBioPortal/oncotree/refs/heads/master/resources/rdf/oncotree-taxonomy-2021-11-02.rdf", "oncotree-taxonomy-2021-11-02.rdf"],
         "graphkb_canonical_transcripts": ["https://raw.githubusercontent.com/bcgsc/pori/feature/colab-notebooks/demo/mart_export.protein_coding.canonical.txt", "mart_export.protein_coding.canonical.txt"]
 }
