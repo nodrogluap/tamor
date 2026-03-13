@@ -97,6 +97,7 @@ rule dragen_germline_snv_sv_and_cnv_calls:
                         
                 print("Dragen Command: " + dragen_cmd)
                 shell(dragen_cmd)
+
                 # Cleanup step to remove any temporary fastq.gz files if mixed ora/gz compression input
                 cleanup_decompressed_temporary_fastqs(this_sample_only_fastq_list_csv)
                 if config["ora_compress_fastqs"] and not "--enable-map-align false" in dragen_cmd:
@@ -176,6 +177,15 @@ rule dragen_somatic_snv_sv_and_cnv_calls:
                 config["output_dir"]+"/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.mapping_metrics.csv",
                 (config["output_dir"]+"/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic_tumor.cram" if config["generate_crams"] else config["output_dir"]+"/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic_tumor.bam")
         run:
+                # Putting the files on SSD hopefully
+                temp_dir_obj = tempfile.TemporaryDirectory(dir=config["temp_dir"])
+                output_temp_dir = temp_dir_obj.name 
+                # Make sure we have permissions to remove this, otherwise we won't be able to 
+                # move the  results from the temporary dir to the final destination later.
+                sv_dir = config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/sv";
+                if(os.path.exists(sv_dir)):
+                        shell("rm -r " +sv_dir)
+
                 # Must remove any existing files that dragen chmod's to global write to avoid chmoderror if old file had different owner
                 shell("rm -f "+config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.cnv.excluded_intervals.bed.gz "
                         +config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.cnv.vcf.gz "
@@ -210,11 +220,12 @@ rule dragen_somatic_snv_sv_and_cnv_calls:
                 print("Tumor libraries: " + ", ".join(tumor_sample_libraries))
                 print("Tumor using UMIs: " + str(tumor_has_UMIs))
                 print("Outputing CRAM: " + str(config["generate_crams"]))
+                print("Temporary output dir: " + output_temp_dir)
                 
                 # check for mixed compression formats and decompress where needed
                 harmonize_fastq_compression_formats(this_sample_germline_only_fastq_list_csv, this_sample_tumor_only_fastq_list_csv)
 
-                dragen_cmd = "dragen -r "+config["ref_genome"]+" --ora-reference "+config["ref_ora"]+" --enable-map-align true --enable-map-align-output true --enable-bam-indexing true --fastq-list {this_sample_germline_only_fastq_list_csv} --fastq-list-all-samples true --tumor-fastq-list {this_sample_tumor_only_fastq_list_csv} --tumor-fastq-list-all-samples true --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic --enable-hla true --hla-enable-class-2 true --intermediate-results-dir "+config["temp_dir"]+" -f"+" --enable-variant-caller true --enable-cnv true --cnv-use-somatic-vc-baf true --cnv-normal-cnv-vcf {params.germline_cnv} --enable-sv true --vc-enable-unequal-ntd-errors=true --vc-enable-trimer-context=true --msi-command tumor-normal --msi-coverage-threshold " + str(config["msi_min_coverage"]) + " --msi-microsatellites-file {input.msi_sites} --enable-hrd true --enable-variant-annotation=true --variant-annotation-data=resources/nirvana --variant-annotation-assembly=GRCh38 --enable-tmb true --soft-read-trimmers polyg --read-trimmers adapter --trim-adapter-read1 resources/adapter_sequences/read1_3prime.fasta --trim-adapter-read2 resources/adapter_sequences/read2_3prime.fasta"
+                dragen_cmd = "dragen -r "+config["ref_genome"]+" --ora-reference "+config["ref_ora"]+" --enable-map-align true --enable-map-align-output true --enable-bam-indexing true --fastq-list {this_sample_germline_only_fastq_list_csv} --fastq-list-all-samples true --tumor-fastq-list {this_sample_tumor_only_fastq_list_csv} --tumor-fastq-list-all-samples true --output-directory {output_temp_dir} --output-file-prefix {wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic --enable-hla true --hla-enable-class-2 true --intermediate-results-dir "+config["temp_dir"]+" -f"+" --enable-variant-caller true --enable-cnv true --cnv-use-somatic-vc-baf true --cnv-normal-cnv-vcf {params.germline_cnv} --enable-sv true --vc-enable-unequal-ntd-errors=true --vc-enable-trimer-context=true --msi-command tumor-normal --msi-coverage-threshold " + str(config["msi_min_coverage"]) + " --msi-microsatellites-file {input.msi_sites} --enable-hrd true --enable-variant-annotation=true --variant-annotation-data=resources/nirvana --variant-annotation-assembly=GRCh38 --enable-tmb true --soft-read-trimmers polyg --read-trimmers adapter --trim-adapter-read1 resources/adapter_sequences/read1_3prime.fasta --trim-adapter-read2 resources/adapter_sequences/read2_3prime.fasta"
 
                 if is_dragen_v42:
                         dragen_cmd = dragen_cmd + " --sv-systematic-noise resources/sv-systematic-noise-baseline-collection-2.0.1/WGS_hg38_v2.0.1_systematic_noise.sv.bedpe.gz"
@@ -252,7 +263,7 @@ rule dragen_somatic_snv_sv_and_cnv_calls:
                         if(not os.path.exists(tumor_bam)):
                                 raise Exception("Missing tumor bam for UMI sample "+wildcards.tumor+" cannot proceed with rule dragen_somatic_snv_sv_and_cnv_calls")
 
-                        dragen_cmd = "dragen -r "+config["ref_genome"]+" --enable-map-align false "+get_aligned_input_param(input.germline_bam)+" --tumor-bam-input {tumor_bam} --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic --intermediate-results-dir "+config["temp_dir"]+" -f"+" --enable-variant-caller true --enable-cnv true --cnv-use-somatic-vc-baf true --cnv-normal-cnv-vcf {params.germline_cnv} --enable-sv true --vc-enable-unequal-ntd-errors=true --vc-enable-trimer-context=true --vc-enable-umi-solid true --msi-command tumor-normal --msi-coverage-threshold " + str(config["msi_min_coverage"]) + " --msi-microsatellites-file {input.msi_sites} --enable-hrd true --enable-variant-annotation=true --variant-annotation-data=resources/nirvana --variant-annotation-assembly=GRCh38 --enable-tmb true"
+                        dragen_cmd = "dragen -r "+config["ref_genome"]+" --enable-map-align false "+get_aligned_input_param(input.germline_bam)+" --tumor-bam-input {tumor_bam} --output-directory {output_temp_dir} --output-file-prefix {wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic --intermediate-results-dir "+config["temp_dir"]+" -f"+" --enable-variant-caller true --enable-cnv true --cnv-use-somatic-vc-baf true --cnv-normal-cnv-vcf {params.germline_cnv} --enable-sv true --vc-enable-unequal-ntd-errors=true --vc-enable-trimer-context=true --vc-enable-umi-solid true --msi-command tumor-normal --msi-coverage-threshold " + str(config["msi_min_coverage"]) + " --msi-microsatellites-file {input.msi_sites} --enable-hrd true --enable-variant-annotation=true --variant-annotation-data=resources/nirvana --variant-annotation-assembly=GRCh38 --enable-tmb true"
                         if is_dragen_v42:
                                 dragen_cmd = dragen_cmd + " --sv-systematic-noise resources/sv-systematic-noise-baseline-collection-2.0.1/WGS_hg38_v2.0.1_systematic_noise.sv.bedpe.gz"
                         else:
@@ -265,6 +276,14 @@ rule dragen_somatic_snv_sv_and_cnv_calls:
                         dragen_cmd = dragen_cmd + " --enable-ora true --ora-delete-input-files true"
 
                 shell(dragen_cmd)
+
+                # Move the data from SSD to the final storage.
+                shell("mv -f " + output_temp_dir + "/* " + config["output_dir"]+"/{wildcards.project}/{wildcards.subject}") 
+                try:
+                        temp_dir_obj.cleanup()
+                        print("Temporary directory removed.")
+                except OSError as e:
+                        print(f"Error during cleanup: {e}")
 
                 # Cleanup step to remove any temporary fastq.gz files if mixed ora/gz compression input
                 cleanup_decompressed_temporary_fastqs(this_sample_germline_only_fastq_list_csv, this_sample_tumor_only_fastq_list_csv)
