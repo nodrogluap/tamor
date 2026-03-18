@@ -41,7 +41,7 @@ with gzip.open(args.cnv_vcf, 'rt') as f:
             
         fields = line.split("\t")
         if len(fields) != 10:
-            raise Exception('Expected 10 tab-delimited columns but found ' + str(len(fields)) + " at "+args.vcf+":"+str(line_num))
+            raise Exception('Expected 10 tab-delimited columns but found ' + str(len(fields)) + " at "+args.cnv_vcf+":"+str(line_num))
         if fields[6] != "PASS" and fields[6] != "catalogued_false_positive":
             continue # not being filtered by us
         original_total_pass_cnvs = original_total_pass_cnvs + 1
@@ -49,12 +49,12 @@ with gzip.open(args.cnv_vcf, 'rt') as f:
         # Looks something like DRAGEN:GAIN:chr1:7699646-12859821
         cnv_spec = fields[2].split(":")
         if len(cnv_spec) != 4:
-            raise Exception('Expected four colon-delimited fields in third tab-delimited column, but found ' + str(len(cnv_spec)) + " at "+args.vcf+":"+str(line_num))
+            raise Exception('Expected four colon-delimited fields in third tab-delimited column, but found ' + str(len(cnv_spec)) + " at "+args.cnv_vcf+":"+str(line_num))
         cnv_span = cnv_spec[3].split("-")
         cnv_span[0] = int(cnv_span[0])
         cnv_span[1] = int(cnv_span[1])
         if len(cnv_span) != 2:
-            raise Exception('Expected "start-end" at end of third tab-delimited column, but found ' + str(len(cnv_spec)) + " at "+args.vcf+":"+str(line_num))
+            raise Exception('Expected "start-end" at end of third tab-delimited column, but found ' + str(len(cnv_spec)) + " at "+args.cnv_vcf+":"+str(line_num))
         # Intersect with the blacklist position ranges
         overlaps = blacklist_tree[cnv_span[0]:cnv_span[1]]
         for blacklist_interval in overlaps:
@@ -91,7 +91,7 @@ with open(tmpfile.name, 'wt') as new_vcf:
             fields = line.split("\t")
             # Commented out since checked on first pass of the file in the code above.
             #if len(fields) != 10:
-            #    raise Exception('Expected 10 tab-delimited columns but found ' + str(len(fields)) + " at "+args.vcf+":"+str(line_num))
+            #    raise Exception('Expected 10 tab-delimited columns but found ' + str(len(fields)) + " at "+args.cnv_vcf+":"+str(line_num))
 
             # Requires filter status change?
             if fields[0]+":"+fields[1] in chr_pos_to_filter:
