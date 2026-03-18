@@ -12,3 +12,6 @@ The score column in the BEDPE lists the number of PASS observations for the site
 This list was supplemented with ~20K SV sites (plus/minus two bases) that are likely false positives enhanced in FFPE germline analyses,
 showing up in the 250 FFPE samples' germline calls across (required) both sequencing sites at a higher absolute count than across all of the 
 ~1000 fresh frozen + FFPE samples from the PR2C site (with a minimum count of 3 occurences).
+
+The list also includes over one thousand germline intrachromosomal translocation DRAGEN:BND examples that have PASS status in at least one FFPE germline sample and three samples overall,
+which we should safely assume are artifactual.
