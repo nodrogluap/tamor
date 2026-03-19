@@ -72,6 +72,12 @@ systematic_noise_extraction_method: "max"
 # This setting can be disabled to enhance very low frequency somatic mutation detection.
 min_site_variant_phred_threshold: 10
 
+# Breakend structural variants in Dragen can be either precise, because the reads spanning the breakpoint assemble into a consensus, or
+# imprecise because there are multiple read pairs than are on either end of the SV arc but they don't assemble into a consensus.
+# The false positive rate for imprecise SV calls is significantly higher, therefore setting the following to True can reduce the number
+# of spurious translocations identified (in case they are not already on the SV blacklist).
+filter_imprecise_structural_variants: True
+
 # For Dragen alignment, must have been built with --enable-cnv and --enable-rna and --enable-hla, so that subdirs anchored_rna and 
 # anchored_hla exist, as well as reference.bin, kmer_cnv.bin etc. in the top level dir.
 ref_genome: "resources"
