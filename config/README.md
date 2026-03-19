@@ -20,6 +20,7 @@ Each tumor must have a DNA sample, and optionally an RNA sample.
 * [Illumina Samplesheets](#illumina-samplesheets)
 * [Unique Molecular Indices](#unique-molecular-indices)
 * [False Positive Variant Filtering](#false-positive-variant-filtering)
+* [False Positive Variant Config Settings](#false-positive-variant-config-settings)
 
 ## Test case defaults
 
@@ -195,10 +196,15 @@ The specificity vs sensitivity tradeoff for somatic variant detection is control
 
 Some false positive variants may be recurrent across analyzes. To reduce the reporting of likely false-positive results, default lists of variants to change 
 from PASS to filtered in output VCFs have been included in Tamor, based on commonalities found in hundreds of tumor-normal cases analyzed at the University of Calgary's CSM 
-Centre for Health Genomics and Informatics (for fresh frozen), plus another site (for FFPE). These can be customized by editing the ``dragen_cnv_blacklist.bed`` and ``dragen_snv_blacklist.txt`` files for copy number and small nucleotide variants respectively. Further details on their provenance can be found in [the blacklist README](../resources/dragen_snv_blacklist.README.md).
+Centre for Health Genomics and Informatics (for fresh frozen), plus another site (for FFPE). These can be customized by editing the ``dragen_sv_blacklist.bedpe``, ``dragen_cnv_blacklist.bed`` and ``dragen_snv_blacklist.txt`` files for copy number and small nucleotide variants respectively. Further details on their provenance can be found in [the SNV blacklist README](../resources/dragen_snv_blacklist.README.md) and [the SV blacklist README](../resources/dragen_sv_blacklist.README.md).
+
+### False Positive Variant Config Settings
 
 The ``config.yaml`` file also contains a default setting that is primarily intended to mitigate false positive mutation calls in [Alu repeats](https://en.wikipedia.org/wiki/Alu_element#Alu_family) for sequencing libraries
 derived from formalin-fixed, paraffin-embdded (FFPE) samples.
 The Dragen-provided Alu regions blacklist, populated automatically by the Snakemake rule invoking the ``download_resources.py`` script, is applied to small nucleotide variant calls if the mean insert size for the 
 sequencing library is under the value (customizable, but defaulting to the Alu repeat size of ~300) specified in the setting ``library_mean_insert_size_alu_filtering_threshold``.
 This filter is applied post-hoc to the somatic SNV VCF file FILTER field, therefore this setting can be changed and reapplied simply by updating the modification date ("touching") a somatic SNV VCF file and rerunning Snakemake. 
+
+An additional ``config.yaml`` setting, ``filter_imprecise_structural_variants`` can be set to True or False to improve precision or recall respectively for breakend structural variants, with the biggest effect seen in germline SV calls and FFPE somatic calls.
+
