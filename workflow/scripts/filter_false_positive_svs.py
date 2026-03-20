@@ -240,11 +240,26 @@ with open(tmpfile.name, 'wt') as new_vcf:
 
 with open(args.output_metrics, "wt") as metrics:
     print("SV FALSE POSITIVE FILTERING,,Number of PASS imprecise BNDs,"+str(original_total_pass_imprecise_bnds)+",1", file=metrics)
-    print("SV FALSE POSITIVE FILTERING,,Filter changed PASS to catalogued_false_positive,"+str(len(pair_to_filter)-len(imprecise_bnd_filtered))+","+str(len(pair_to_filter)/original_total_pass_svs), file=metrics)
-    print("SV FALSE POSITIVE FILTERING,,Filter changed PASS to catalogued_false_positive for INS,"+str(ins_filtered)+","+str(ins_filtered/original_total_pass_inss), file=metrics)
-    print("SV FALSE POSITIVE FILTERING,,Filter changed PASS to catalogued_false_positive for DEL,"+str(del_filtered)+","+str(del_filtered/original_total_pass_dels), file=metrics)
-    print("SV FALSE POSITIVE FILTERING,,Filter changed PASS to catalogued_false_positive for TANDEM:DUP,"+str(dup_filtered)+","+str(dup_filtered/original_total_pass_dups), file=metrics)
-    print("SV FALSE POSITIVE FILTERING,,Filter changed PASS to catalogued_false_positive for BND,"+str(bnd_filtered)+","+str(bnd_filtered/original_total_pass_bnds), file=metrics)
+    if original_total_pass_svs > 0:
+        print("SV FALSE POSITIVE FILTERING,,Filter changed PASS to catalogued_false_positive,"+str(len(pair_to_filter)-len(imprecise_bnd_filtered))+","+str(len(pair_to_filter)/original_total_pass_svs), file=metrics)
+    else:
+        print("SV FALSE POSITIVE FILTERING,,Filter changed PASS to catalogued_false_positive,0,1", file=metrics)
+    if original_total_pass_inss > 0:
+        print("SV FALSE POSITIVE FILTERING,,Filter changed PASS to catalogued_false_positive for INS,"+str(ins_filtered)+","+str(ins_filtered/original_total_pass_inss), file=metrics)
+    else:
+        print("SV FALSE POSITIVE FILTERING,,Filter changed PASS to catalogued_false_positive for INS,0,1", file=metrics)
+    if original_total_pass_dels > 0:
+        print("SV FALSE POSITIVE FILTERING,,Filter changed PASS to catalogued_false_positive for DEL,"+str(del_filtered)+","+str(del_filtered/original_total_pass_dels), file=metrics)
+    else:
+        print("SV FALSE POSITIVE FILTERING,,Filter changed PASS to catalogued_false_positive for DEL,0,1", file=metrics)
+    if original_total_pass_dups > 0:
+        print("SV FALSE POSITIVE FILTERING,,Filter changed PASS to catalogued_false_positive for TANDEM:DUP,"+str(dup_filtered)+","+str(dup_filtered/original_total_pass_dups), file=metrics)
+    else:
+        print("SV FALSE POSITIVE FILTERING,,Filter changed PASS to catalogued_false_positive for TANDEM:DUP,0,1", file=metrics)
+    if original_total_pass_bnds > 0:
+        print("SV FALSE POSITIVE FILTERING,,Filter changed PASS to catalogued_false_positive for BND,"+str(bnd_filtered)+","+str(bnd_filtered/original_total_pass_bnds), file=metrics)
+    else:
+        print("SV FALSE POSITIVE FILTERING,,Filter changed PASS to catalogued_false_positive for BND,0,1", file=metrics)
     if args.filter_imprecise_bnds and original_total_pass_imprecise_bnds > 0:
         print("SV FALSE POSITIVE FILTERING,,Filter changed PASS to imprecise_breakends for BND,"+str(len(imprecise_bnd_filtered))+","+str(len(imprecise_bnd_filtered)/original_total_pass_imprecise_bnds), file=metrics)
 
