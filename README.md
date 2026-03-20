@@ -130,6 +130,7 @@ snakemake --report report.html
 # Configuration
 
 Detailed configuration information for importing your own cancer cases for processing is available [in the config dir](config/README.md).
+The default configuration is optimized for variant call specificity (low false positive rate) rather than sensitivity (low false negative rate). 
 
 # Acknowledgements
 
