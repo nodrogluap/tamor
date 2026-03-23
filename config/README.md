@@ -206,5 +206,7 @@ The Dragen-provided Alu regions blacklist, populated automatically by the Snakem
 sequencing library is under the value (customizable, but defaulting to the Alu repeat size of ~300) specified in the setting ``library_mean_insert_size_alu_filtering_threshold``.
 This filter is applied post-hoc to the somatic SNV VCF file FILTER field, therefore this setting can be changed and reapplied simply by updating the modification date ("touching") a somatic SNV VCF file and rerunning Snakemake. 
 
-An additional ``config.yaml`` setting, ``filter_imprecise_structural_variants`` can be set to True or False to improve precision or recall respectively for breakend structural variants, with the biggest effect seen in germline SV calls and FFPE somatic calls.
+Two additional ``config.yaml`` settings control the rate of SV false positives:
+  * ``filter_imprecise_structural_variants`` can be set to True or False to improve precision or recall respectively for breakend structural variants, with the biggest effect seen in germline SV calls and FFPE somatic calls.
+  * ``min_structural_variant_read_support``, if set to non-zero, represents the minimum proportion of reads (split pair count + split read counts) at a site pair that support the structural variant. This is particularly useful for filtering out the random fragments that get accidentally ligated in FFPE WGS germline samples, where the propensity for such events is not well modelled in the germline SV quality values calculated by Dragen. The default value of 0.17 has been empiricially determined as bringing total germline SV calls in FFPE germline samples in line with those from fresh frozen when the mean genome coverage is 30-40x.  
 
