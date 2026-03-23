@@ -78,6 +78,12 @@ min_site_variant_phred_threshold: 10
 # of spurious translocations identified (in case they are not already on the SV blacklist).
 filter_imprecise_structural_variants: True
 
+# Any non-zero value for the following setting will reduce the number of false positives due to amplification of randomly-ligated fragments in a germline WGS sample,
+# most notably for FFPE samples. Empirically, a proportion of 0.14 brings the average number of germline SVs in FFPE samples just a bit above the number from fresh frozen samples.
+# Thresholds in the 0.15-0.2 range are commonly used in germline analysis tools as a reasonable tradeoff between false positive and false negative under the assumption of a diploid genome with 
+# allele amplification following a branching process (see doi:10.1093/nar/gkr1073).
+min_structural_variant_read_support: 0.14
+
 # For Dragen alignment, must have been built with --enable-cnv and --enable-rna and --enable-hla, so that subdirs anchored_rna and 
 # anchored_hla exist, as well as reference.bin, kmer_cnv.bin etc. in the top level dir.
 ref_genome: "resources"
