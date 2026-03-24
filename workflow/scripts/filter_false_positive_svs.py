@@ -1,23 +1,15 @@
 #!/usr/bin/env python
 
+import time
 import tempfile
 import argparse
 import gzip
+import yaml
 import sys
 import os
 import re
 from os import system, path
 from intervaltree import Interval, IntervalTree
-
-def str2bool(v):
-    if isinstance(v, bool):
-        return v
-    if v.lower() in ('yes', 'true', 't', 'y', '1'):
-        return True
-    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
-        return False
-    else:
-        raise argparse.ArgumentTypeError('Boolean value expected.')
 
 parser = argparse.ArgumentParser(
                     prog='filter_false_positive_svs',
@@ -25,9 +17,56 @@ parser = argparse.ArgumentParser(
 parser.add_argument("systematic_noise_bedpe") # Illumina-provided, gzip'ed
 parser.add_argument("blacklist_bedpe") # Tamor-specific
 parser.add_argument("sv_vcf") #assume it's gzip'ed
-parser.add_argument("filter_imprecise_bnds", type=str2bool)
+parser.add_argument("alu_bed")
+parser.add_argument("mapping_metrics_csv")
+parser.add_argument("wgs_coverage_metrics_csv")
 parser.add_argument("output_metrics")
 args = parser.parse_args()
+
+with open("config/config.yaml", "r") as f:
+    config = yaml.safe_load(f)
+min_read_support_prop = 0
+if "min_structural_variant_read_support" in config:
+    min_read_support_prop = config["min_structural_variant_read_support"]
+filter_imprecise_bnds = False
+if "filter_imprecise_structural_variants" in config:
+    filter_imprecise_bnds = config["filter_imprecise_structural_variants"]
+
+# Determine the median coverage across the genome if we have been asked to apply a read proportion filter (NOT using location-specific read depth)
+# The line we are looking for is something like this:
+# COVERAGE SUMMARY,,Median autosomal coverage over genome,42.00
+min_read_support = 0
+if min_read_support_prop > 0:
+    with open(args.wgs_coverage_metrics_csv) as coverage_metrics:
+        for line in coverage_metrics:
+            fields = line.split(",")
+            if "Median autosomal coverage over genome" in fields[2]:
+                min_read_support = float(fields[3])*min_read_support_prop
+
+# Alu regions, can filter SVs that span two Alus, typically for germline FFPE only, apply only if config asks for it and the insert size for the library is below the threshold.
+alu_tree = IntervalTree()
+filter_Alus = False
+if "library_mean_insert_size_alu_filtering_threshold" in config:
+    with open(args.mapping_metrics_csv, 'rt') as mapping_metrics:
+        for line in mapping_metrics:
+            if "Insert length: mean," in line:
+                fields = line.split(",")
+                if len(fields) < 4:
+                    filter_Alus = True
+                else:
+                    mean_insert_length = float(fields[3].strip()) if fields[3].strip() else 0
+                    if mean_insert_length < config["library_mean_insert_size_alu_filtering_threshold"]:
+                        filter_Alus = True
+    if filter_Alus:
+        with gzip.open(args.alu_bed, 'rt') as bed:
+            for line_num,line in enumerate(bed, start=1):
+                if line.startswith('#'): # comment/header
+                    continue
+                fields = line.split("\t")
+                if len(fields) < 3:
+                    print ("WARNING: Skipping SNV Alu blacklist regions BED file line without at least three tab-delimited columns, "+args.alu_bed+":"+str(line_num), file=sys.stderr)
+                    continue
+                alu_tree[int(fields[1]):int(fields[2])] = fields[0]
 
 # The SV blacklist is defined as pairs of genome locations and a unique name for the edge connecting them. 
 # Store the vertices as pointing to "chr:edge_name". 
@@ -62,6 +101,9 @@ tmpfile = tempfile.NamedTemporaryFile()
 pair_to_filter = {} # PASS -> catalogued_false_positive, based on overlap with black list 
 pair_to_pass = {} # if reprocessing a previously filtered VCF with a new blacklist, may need to explicitly set PASS for some SVs.
 imprecise_bnd_filtered = {}
+min_read_support_filtered = {}
+alu_filtered = {}
+
 ins_filtered = 0
 del_filtered = 0
 bnd_filtered = 0
@@ -74,6 +116,7 @@ original_total_pass_imprecise_bnds = 0
 original_total_pass_dups = 0
 
 # Treat the VCF as a TSV file.
+is_germline = False
 with gzip.open(args.sv_vcf, 'rt') as f:
     for line_num,line in enumerate(f, start=1):
         if line.startswith("#"): # header
@@ -82,7 +125,9 @@ with gzip.open(args.sv_vcf, 'rt') as f:
         fields = line.split("\t")
         if len(fields) != 10 and len(fields) != 11: # germline and somatic expectations respectively
             raise Exception('Expected 10 (germline) or 11 (somatic) tab-delimited columns but found ' + str(len(fields)) + " at "+args.sv_vcf+":"+str(line_num))
-        if fields[6] != "PASS" and fields[6] != "catalogued_false_positive" and fields[6] != "imprecise_breakends":
+        if len(fields) == 10 and not is_germline:
+            is_germline = True
+        if fields[6] != "PASS" and fields[6] != "catalogued_false_positive" and fields[6] != "imprecise_breakends" and fields[6] != "min_read_support" and fields[6] != "Alu_region_filtering":
             continue # not being filtered by us
         original_total_pass_svs = original_total_pass_svs + 1
 
@@ -146,24 +191,61 @@ with gzip.open(args.sv_vcf, 'rt') as f:
                 edge_names[chr_edge_spec[1]] = 1
         for blacklist_interval in vertex2_overlaps:
             # Check if there is a shared edge between the two vertices (genomic intervals) for this specific SV.
-            if(sv_vertex2_chr == "chr2" and sv_vertex2_start == 93694086):
-                print(f"Checking 2nd vertex edge for {blacklist_interval.data}", file=sys.stderr)
             chr_edge_spec = blacklist_interval.data.split("/")
             if chr_edge_spec[0] == sv_vertex2_chr and chr_edge_spec[1] in edge_names: # 2nd interval is on the correct contig, and has a shared edge
                 pair_to_filter[sv_pair_key] = 1
                 break
 
         if sv_pair_key not in pair_to_filter:
-            if args.filter_imprecise_bnds and (sv_spec[1] == "BND" or sv_spec[0] == "MantaBND") and "IMPRECISE" in fields[7]:
+            # Parse out the FORMAT fields from the last column (presumed to be our somatic sample) to get read depth stats. The order of fields is given by the 9th column (with FORMAT in the #CHROM header line)
+            if(len(fields) == 10): # germline
+                format_data = fields[9].split(":")
+            else: # somatic
+                format_data = fields[10].split(":")
+            format_keys = fields[8].split(":")
+            format_key_index = {}
+            for idx, x in enumerate(format_keys):
+                format_key_index[x] = idx
+            alt_supporting_reads_for_position = 0
+            SR_ref = 0
+            SR_alt = 0
+            if "SR" in format_key_index:
+                depths = format_data[format_key_index["SR"]].split(",")
+                SR_ref = int(depths[0])
+                for alt_split_read_depth in depths[1:]: # add up every split-read evidence reported except the 0th, reference allele depth
+                    if alt_split_read_depth != ".":
+                        SR_alt = SR_alt + int(alt_split_read_depth)
+
+            PR_ref = 0
+            PR_alt = 0
+            if "PR" in format_key_index:
+                depths = format_data[format_key_index["PR"]].split(",")
+                PR_ref = int(depths[0])
+                for alt_paired_reads_depth in depths[1:]: # add up every read pair on both sides of the breakend reported except the 0th, genome-consistent reference allele depth
+                    if alt_paired_reads_depth != ".":
+                        PR_alt = PR_alt + int(alt_paired_reads_depth)
+            
+            if filter_imprecise_bnds and (sv_spec[1] == "BND" or sv_spec[0] == "MantaBND") and "IMPRECISE" in fields[7]:
                 pair_to_filter[sv_pair_key] = 1 
                 imprecise_bnd_filtered[sv_pair_key] = 1
-            elif fields[6] == "catalogued_false_positive":
+            # See if we meet the alt support threshold (global based on mean coverage, and site-specific) with the parsed SR and PR fields.
+            elif is_germline and min_read_support != 0 and (SR_alt+PR_alt < min_read_support or (SR_alt+PR_alt)/(SR_ref+SR_alt+PR_ref+PR_alt) < min_read_support_prop):
+                pair_to_filter[sv_pair_key] = 1 
+                min_read_support_filtered[sv_pair_key] = 1
+            # See if the breakend SV spans two Alu regions and therefore should be filtered (should only be active for germline FFPE, as otherwise this might be real cancer biology).
+            elif is_germline and filter_Alus and (sv_spec[1] == "BND" or sv_spec[0] == "MantaBND") and (sv_vertex1_chr in [obj.data for obj in alu_tree[sv_vertex1_start:sv_vertex1_end]]) and (sv_vertex2_chr in [obj.data for obj in alu_tree[sv_vertex2_start:sv_vertex2_end]]):
+                pair_to_filter[sv_pair_key] = 1 
+                alu_filtered[sv_pair_key] = 1
+            elif fields[6] == "catalogued_false_positive" or fields[6] == "min_read_support": # need to reset a filter status that's no longer applicable
                 pair_to_pass[sv_pair_key] = 1
                     
 # No need to modify the SV file, so skip the rest of the script.
-if len(pair_to_filter) == 0 and len(imprecise_bnd_filtered) == 0:
+if len(pair_to_filter) == 0 and len(imprecise_bnd_filtered) == 0 and len(min_read_support_filtered) == 0 and len(alu_filtered) == 0:
     with open(args.output_metrics, "wt") as metrics:
         print("SV FALSE POSITIVE FILTERING,,Filter changed PASS to catalogued_false_positive,0,0.0", file=metrics)
+        print("SV FALSE POSITIVE FILTERING,,Filter changed PASS to imprecise_breakends,0,0.0", file=metrics)
+        print("SV FALSE POSITIVE FILTERING,,Filter changed PASS to min_read_support,0,0.0", file=metrics)
+        print("SV FALSE POSITIVE FILTERING,,Filter changed PASS to Alu_region_filtering,0,0.0", file=metrics)
     sys.exit(0)
 
 # Open the temporary text output file for writing.
@@ -172,13 +254,18 @@ with open(tmpfile.name, 'wt') as new_vcf:
     # Treat the VCF as a TSV file.
     with gzip.open(args.sv_vcf, 'rt') as f:
         for line_num,line in enumerate(f, start=1):
-            if line.startswith("##FILTER=<ID=catalogued_false_positive") or line.startswith("##FILTER=<ID=imprecise_breakends"):
+            if line.startswith("##FILTER=<ID=catalogued_false_positive") or line.startswith("##FILTER=<ID=imprecise_breakends") or line.startswith("##FILTER=<ID=min_read_support") or line.startswith(":##FILTER=<ID=Alu_region_filtering"):
                 continue
             # This line occurs in Dragen right after the FILTER description header lines for germline or somatic SV calls.
-            if line.startswith("##FORMAT=<ID=VF"): 
+            if line.startswith("##ALT=<ID=DEL"): 
                 print (f'##FILTER=<ID=catalogued_false_positive,Description="The structural variant overlaps a Tamor blacklisted false positive SV site-pair">', file=new_vcf)
-                if args.filter_imprecise_bnds:
+                if filter_imprecise_bnds:
                     print (f'##FILTER=<ID=imprecise_breakends,Description="The supporting BND structural variant reads failed to assemble consistently, and Tamor was configured to ignore these">', file=new_vcf)
+                if min_read_support:
+                    print (f'##FILTER=<ID=min_read_support,Description="The sum of spanning read pairs or split reads that support the alternate allele are less than the threshold of {min_read_support}, and Tamor was configured to ignore these">', file=new_vcf)
+                if filter_Alus:
+                    print (f'##FILTER=<ID=Alu_region_filtering,Description="The structural variant site pair spans two Alu repeats, and the Tamor SV filtering config for this sample is set (mean mapped insert size < {config["library_mean_insert_size_alu_filtering_threshold"]}) to exclude them due to high false positive rate (e.g. short library insert due to FFPE source of DNA)">', file=new_vcf)
+
             line = line.strip()
             if line.startswith("#"): # header as-is
                 print (line, file=new_vcf)
@@ -186,7 +273,7 @@ with open(tmpfile.name, 'wt') as new_vcf:
 
             fields = line.split("\t")
             # Reset any filter we might have previously applied with the script, as settings may have changed.
-            if(fields[6] == "imprecise_breakends"):
+            if(fields[6] == "imprecise_breakends" or fields[6] == "min_read_support") or fields[6] == "Alu_region_filtering":
                 fields[6] = "PASS"
 
             sv_spec = fields[2].split(":")
@@ -219,18 +306,29 @@ with open(tmpfile.name, 'wt') as new_vcf:
             # Requires filter status change?
             sv_pair_key = ":".join([sv_vertex1_chr,str(sv_vertex1_start),sv_vertex2_chr,str(sv_vertex2_start)])
             if sv_pair_key in pair_to_filter:
-                fields[6] = "catalogued_false_positive"
-                if sv_spec[1] == "INS" or sv_spec[0] == "MantaINS":
+                if sv_pair_key in min_read_support_filtered:
+                    fields[6] = "min_read_support"
+                elif sv_pair_key in alu_filtered:
+                    fields[6] = "Alu_region_filtering"
+                elif sv_spec[1] == "INS" or sv_spec[0] == "MantaINS":
+                    fields[6] = "catalogued_false_positive"
                     ins_filtered = ins_filtered + 1
                 elif sv_spec[1] == "DEL" or sv_spec[0] == "MantaDEL":
+                    fields[6] = "catalogued_false_positive"
                     del_filtered = del_filtered + 1
                 elif sv_spec[1] == "BND" or sv_spec[0] == "MantaBND":
                     if sv_pair_key in imprecise_bnd_filtered:
                         fields[6] = "imprecise_breakends"
                     else:
+                        fields[6] = "catalogued_false_positive"
                         bnd_filtered = bnd_filtered + 1
                 elif sv_spec[1] == "DUP" or sv_spec[0] == "MantaDUP":
+                    fields[6] = "catalogued_false_positive"
                     dup_filtered = dup_filtered + 1
+
+                if fields[6] == "PASS":
+                    raise Exception("Found site-pair flagged to be filtered, but could not recapitulate the reason (either the VCF file changed or this script has a logic error). " +
+                                    "If the latter, please raise a GitHub issue for Tamor with a VCF containing the variant at line "+str(line_num))
                 print("\t".join(fields), file=new_vcf)
             elif sv_pair_key in pair_to_pass:
                 fields[6] = "PASS"
@@ -239,9 +337,9 @@ with open(tmpfile.name, 'wt') as new_vcf:
                 print(line, file=new_vcf)
 
 with open(args.output_metrics, "wt") as metrics:
-    print("SV FALSE POSITIVE FILTERING,,Number of PASS imprecise BNDs,"+str(original_total_pass_imprecise_bnds)+",1", file=metrics)
     if original_total_pass_svs > 0:
-        print("SV FALSE POSITIVE FILTERING,,Filter changed PASS to catalogued_false_positive,"+str(len(pair_to_filter)-len(imprecise_bnd_filtered))+","+str(len(pair_to_filter)/original_total_pass_svs), file=metrics)
+        catalogued = len(pair_to_filter)-len(imprecise_bnd_filtered)-len(min_read_support_filtered)-len(alu_filtered)
+        print("SV FALSE POSITIVE FILTERING,,Filter changed PASS to catalogued_false_positive,"+str(catalogued)+","+str(catalogued/original_total_pass_svs), file=metrics)
     else:
         print("SV FALSE POSITIVE FILTERING,,Filter changed PASS to catalogued_false_positive,0,1", file=metrics)
     if original_total_pass_inss > 0:
@@ -260,8 +358,14 @@ with open(args.output_metrics, "wt") as metrics:
         print("SV FALSE POSITIVE FILTERING,,Filter changed PASS to catalogued_false_positive for BND,"+str(bnd_filtered)+","+str(bnd_filtered/original_total_pass_bnds), file=metrics)
     else:
         print("SV FALSE POSITIVE FILTERING,,Filter changed PASS to catalogued_false_positive for BND,0,1", file=metrics)
-    if args.filter_imprecise_bnds and original_total_pass_imprecise_bnds > 0:
+    print("SV FALSE POSITIVE FILTERING,,Number of PASS imprecise BNDs,"+str(original_total_pass_imprecise_bnds)+",1", file=metrics)
+    if filter_imprecise_bnds and original_total_pass_imprecise_bnds > 0:
         print("SV FALSE POSITIVE FILTERING,,Filter changed PASS to imprecise_breakends for BND,"+str(len(imprecise_bnd_filtered))+","+str(len(imprecise_bnd_filtered)/original_total_pass_imprecise_bnds), file=metrics)
+    if min_read_support > 0:
+        print("SV FALSE POSITIVE FILTERING,,Minimum read support threshold,"+str(min_read_support)+",", file=metrics)
+        print("SV FALSE POSITIVE FILTERING,,Filter changed PASS to min_read_support,"+str(len(min_read_support_filtered))+","+str(len(min_read_support_filtered)/original_total_pass_svs), file=metrics)
+    if filter_Alus:
+        print("SV FALSE POSITIVE FILTERING,,Filter changed PASS to Alu_region_filtering,"+str(len(alu_filtered))+","+str(len(alu_filtered)/original_total_pass_svs), file=metrics)
 
 # Remember the modification date of the original VCF file, so we can apply it to the new file.
 # Otherwise the somatic Snakemake rule will get retriggered if Snakemake is called after a completed run.
