@@ -202,9 +202,9 @@ Centre for Health Genomics and Informatics (for fresh frozen), plus another site
 
 The ``config.yaml`` file also contains a default setting that is primarily intended to mitigate false positive mutation calls in [Alu repeats](https://en.wikipedia.org/wiki/Alu_element#Alu_family) for sequencing libraries
 derived from formalin-fixed, paraffin-embdded (FFPE) samples.
-The Dragen-provided Alu regions blacklist, populated automatically by the Snakemake rule invoking the ``download_resources.py`` script, is applied to small nucleotide variant calls if the mean insert size for the 
+The Dragen-provided Alu regions blacklist, populated automatically by the Snakemake rule invoking the ``download_resources.py`` script, is applied to both small nucleotide and germline breakend structural variant calls if the mean insert size for the 
 sequencing library is under the value (customizable, but defaulting to the Alu repeat size of ~300) specified in the setting ``library_mean_insert_size_alu_filtering_threshold``.
-This filter is applied post-hoc to the somatic SNV VCF file FILTER field, therefore this setting can be changed and reapplied simply by updating the modification date ("touching") a somatic SNV VCF file and rerunning Snakemake. 
+This filter is applied post-hoc to the germline SV and somatic SNV VCF file FILTER fields, therefore this setting can be changed and reapplied simply by updating the modification date ("touching") a VCF file and rerunning Snakemake. 
 
 Two additional ``config.yaml`` settings control the rate of SV false positives:
   * ``filter_imprecise_structural_variants`` can be set to True or False to improve precision or recall respectively for breakend structural variants, with the biggest effect seen in germline SV calls and FFPE somatic calls.
