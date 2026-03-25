@@ -53,6 +53,9 @@ if "library_mean_insert_size_alu_filtering_threshold" in config:
                 fields = line.split(",")
                 if len(fields) < 4:
                     filter_Alus = True
+                elif fields[3].strip() == "NA":
+                    mean_insert_length = 0
+                    filter_Alus = True
                 else:
                     mean_insert_length = float(fields[3].strip()) if fields[3].strip() else 0
                     if mean_insert_length < config["library_mean_insert_size_alu_filtering_threshold"]:
