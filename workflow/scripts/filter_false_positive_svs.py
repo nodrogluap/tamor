@@ -179,8 +179,15 @@ with gzip.open(args.sv_vcf, 'rt') as f:
             sv_vertex2_start = sv_vertex1_start+1
             sv_vertex2_end = sv_vertex1_end+1
             original_total_pass_dups = original_total_pass_dups + 1        
+        elif sv_spec[1] == "INV" or sv_spec[0] == "MantaINV":
+            match = re.search(r"END=(\d+)", fields[7])
+            sv_vertex1_end = int(match.group(1))
+            sv_vertex2_chr = sv_vertex1_chr
+            sv_vertex2_start = sv_vertex1_start
+            sv_vertex2_end = sv_vertex1_end
+            original_total_pass_dups = original_total_pass_dups + 1
         else:
-            raise Exception('Expected INS, DEL, DUP, or BND in the third tab-delimited column, but found ' + sv_spec[1] + " at "+args.sv_vcf+":"+str(line_num))
+            raise Exception('Expected INV, INS, DEL, DUP, or BND in the third tab-delimited column, but found ' + sv_spec[1] + " at "+args.sv_vcf+":"+str(line_num))
 
         sv_pair_key = ":".join([sv_vertex1_chr,str(sv_vertex1_start),sv_vertex2_chr,str(sv_vertex2_start)])
         # Intersect with the blacklist position ranges for each vertex of the SV pair
@@ -305,6 +312,12 @@ with open(tmpfile.name, 'wt') as new_vcf:
                 sv_vertex2_chr = sv_vertex1_chr
                 sv_vertex2_start = sv_vertex1_start+1
                 sv_vertex2_end = sv_vertex1_end+1
+            elif sv_spec[1] == "INV" or sv_spec[0] == "MantaINV":
+                match = re.search(r"END=(\d+)", fields[7])
+                sv_vertex1_end = int(match.group(1))
+                sv_vertex2_chr = sv_vertex1_chr
+                sv_vertex2_start = sv_vertex1_start
+                sv_vertex2_end = sv_vertex1_end
 
             # Requires filter status change?
             sv_pair_key = ":".join([sv_vertex1_chr,str(sv_vertex1_start),sv_vertex2_chr,str(sv_vertex2_start)])
@@ -328,6 +341,8 @@ with open(tmpfile.name, 'wt') as new_vcf:
                 elif sv_spec[1] == "DUP" or sv_spec[0] == "MantaDUP":
                     fields[6] = "catalogued_false_positive"
                     dup_filtered = dup_filtered + 1
+                # Called inversions happen so rarely that we don't blacklist them.
+                # They could have been filtered out due to min read support of Alu region location though.
 
                 if fields[6] == "PASS":
                     raise Exception("Found site-pair flagged to be filtered, but could not recapitulate the reason (either the VCF file changed or this script has a logic error). " +
