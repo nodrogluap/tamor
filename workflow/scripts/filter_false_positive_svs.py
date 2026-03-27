@@ -47,19 +47,22 @@ if min_read_support_prop > 0:
 alu_tree = IntervalTree()
 filter_Alus = False
 if "library_mean_insert_size_alu_filtering_threshold" in config:
-    with open(args.mapping_metrics_csv, 'rt') as mapping_metrics:
-        for line in mapping_metrics:
-            if "Insert length: mean," in line:
-                fields = line.split(",")
-                if len(fields) < 4:
-                    filter_Alus = True
-                elif fields[3].strip() == "NA":
-                    mean_insert_length = 0
-                    filter_Alus = True
-                else:
-                    mean_insert_length = float(fields[3].strip()) if fields[3].strip() else 0
-                    if mean_insert_length < config["library_mean_insert_size_alu_filtering_threshold"]:
+    if args.mapping_metrics_csv == "/dev/null":
+        filter_Alus = True
+    else:
+        with open(args.mapping_metrics_csv, 'rt') as mapping_metrics:
+            for line in mapping_metrics:
+                if "Insert length: mean," in line:
+                    fields = line.split(",")
+                    if len(fields) < 4:
                         filter_Alus = True
+                    elif fields[3].strip() == "NA":
+                        mean_insert_length = 0
+                        filter_Alus = True
+                    else:
+                        mean_insert_length = float(fields[3].strip()) if fields[3].strip() else 0
+                        if mean_insert_length < config["library_mean_insert_size_alu_filtering_threshold"]:
+                            filter_Alus = True
     if filter_Alus:
         with gzip.open(args.alu_bed, 'rt') as bed:
             for line_num,line in enumerate(bed, start=1):
@@ -342,9 +345,8 @@ with open(tmpfile.name, 'wt') as new_vcf:
                     fields[6] = "catalogued_false_positive"
                     dup_filtered = dup_filtered + 1
                 # Called inversions happen so rarely that we don't blacklist them.
-                # They could have been filtered out due to min read support of Alu region location though.
-
-                if fields[6] == "PASS":
+                # They could have been filtered out due to min read support or Alu region location though.
+                elif sv_spec[1] != "INV" and sv_spec[0] != "MantaINV" and fields[6] == "PASS":
                     raise Exception("Found site-pair flagged to be filtered, but could not recapitulate the reason (either the VCF file changed or this script has a logic error). " +
                                     "If the latter, please raise a GitHub issue for Tamor with a VCF containing the variant at line "+str(line_num))
                 print("\t".join(fields), file=new_vcf)
