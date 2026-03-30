@@ -45,7 +45,7 @@ bed_ab = pd.merge(bed_a, bed_b, how="outer", on=sample_cols, suffixes=('_A', '_B
 bed_ab = bed_ab.replace('', np.nan).dropna(axis=0)
 
 # subset to sv's with breakpoints in different genes
-bed_ab_fusions = bed_ab.loc[~(bed_ab['GENE_A'] == bed_ab['GENE_B'])]
+bed_ab_fusions = bed_ab.loc[~(bed_ab['GENE_A'] == bed_ab['GENE_B'])].copy()
 bed_ab_fusions['GENE_FUSION_CANDIDATE'] = bed_ab_fusions['GENE_A'] + '--' + bed_ab_fusions['GENE_B']
 
 # sort rows
