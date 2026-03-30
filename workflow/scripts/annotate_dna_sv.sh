@@ -16,7 +16,7 @@ exon_annotations=$3
 echo "Annotating potential gene fusion events in: $sample_string"
 
 # Use recommended tool to "Convert SV VCF to BEDPE Format" https://support-docs.illumina.com/SW/dragen_v42/Content/SW/DRAGEN/MantaConvert%20VCFToBEDPE_fDG.htm
-zcat $sv_file | svtools vcftobedpe | svtools bedpesort > "${temp_dir}"/temp.sorted.bedpe
+zcat $sv_file | perl -F\\t -ape 'if(/^##INFO/ and not $info_headers_seen++){print "##INFO=<ID=SECONDARY,Number=0,Type=Flag,Description=\"Secondary breakend in a multi-line variants\">\n"}if($F[2] =~ /:1$/i){$F[7] .= ";SECONDARY"; $_ = join("\t", @F)}'| svtools vcftobedpe | svtools bedpesort > "${temp_dir}"/temp.sorted.bedpe
 
 # Split start and end of features into separate files
 grep -v '^##' "${temp_dir}"/temp.sorted.bedpe | cut -f1-3,7- > "${temp_dir}"/temp.sorted.a.bedpe 
