@@ -322,14 +322,14 @@ rule dragen_germline_sv_fusions:
                 # Only run the gene fusion analysis after false positive SV filtering has been applied.
                 sv_filter_metrics=config["output_dir"]+'/{project}/{subject}/{subject}_{normal}.dna.germline.sv_filter_metrics.csv'
         output:
-                dna_fusions=config["output_dir"]+'/{project}/{subject}/{subject}_{normal}.dna.germline.sv.fusion_candidates.features.csv'
+                dna_fusions=config["output_dir"]+'/{project}/{subject}/{subject}_{normal}.dna.germline.sv.fusion_candidates.features.csv',
+                temp_dir=temp(directory("dragen_germline_sv_fusions_{project}_{subject}_{normal}"))
         conda:
                 "../envs/svtools.yaml"
         shell:
                 """
-                workflow/scripts/annotate_dna_sv.sh {input.germline_sv} {config[temp_dir]} {config[ref_exon_annotations]}
-                workflow/scripts/format_sv_annotations.py {output.dna_fusions} {wildcards.subject} {config[temp_dir]}
-                rm {config[temp_dir]}/temp.sorted*
+                workflow/scripts/annotate_dna_sv.sh {input.germline_sv} {output.temp_dir} {config[ref_exon_annotations]}
+                workflow/scripts/format_sv_annotations.py {output.dna_fusions} {wildcards.subject} {output.temp_dir}
                 """
 
 rule dragen_somatic_sv_fusions:
@@ -339,12 +339,12 @@ rule dragen_somatic_sv_fusions:
                 # Only run the gene fusion analysis after false positive SV filtering has been applied.
                 sv_filter_metrics=config["output_dir"]+'/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.sv_filter_metrics.csv'
         output:
-                dna_fusions=config["output_dir"]+'/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.sv.fusion_candidates.features.csv'
+                dna_fusions=config["output_dir"]+'/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.sv.fusion_candidates.features.csv',
+                temp_dir=temp(directory("dragen_somatic_sv_fusions_{project}_{subject}_{tumor}_{normal}"))
         conda:
                 "../envs/svtools.yaml"
         shell:
                 """
-                workflow/scripts/annotate_dna_sv.sh {input.somatic_sv} {config[temp_dir]} {config[ref_exon_annotations]}
-                workflow/scripts/format_sv_annotations.py {output.dna_fusions} {wildcards.subject} {config[temp_dir]}
-                rm {config[temp_dir]}/temp.sorted*
+                workflow/scripts/annotate_dna_sv.sh {input.somatic_sv} {output.temp_dir]} {config[ref_exon_annotations]}
+                workflow/scripts/format_sv_annotations.py {output.dna_fusions} {wildcards.subject} {output.temp_dir}
                 """
