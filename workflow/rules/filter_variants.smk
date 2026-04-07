@@ -24,7 +24,7 @@ rule filter_somatic_variants:
                 """
                 workflow/scripts/filter_false_positive_snvs.py {input.snv_file} {input.mapping_metrics} {config[ref_fasta]} resources/systematic-noise-baseline-collection-1.1.0/snv_wgs_hg38_{config[systematic_noise_extraction_method]}_v1.1_systematic_noise.bed.gz resources/bed-file-collection-1.0.0/v1.0.0_hg38_Alu_regions.bed.gz resources/dragen_snv_blacklist.txt {output.snv_metrics_file}
                 workflow/scripts/filter_false_positive_cnvs.py resources/dragen_cnv_blacklist.bed {input.cnv_file} {output.cnv_metrics_file}
-                workflow/scripts/filter_false_positive_svs.py resources/sv-systematic-noise-baseline-collection-2.0.1/WGS_hg38_v2.0.1_systematic_noise.sv.bedpe.gz resources/dragen_sv_blacklist.bedpe {config[filter_imprecise_structural_variants]} {input.sv_file} {output.sv_metrics_file}
+                workflow/scripts/filter_false_positive_svs.py resources/sv-systematic-noise-baseline-collection-2.0.1/WGS_hg38_v2.0.1_systematic_noise.sv.bedpe.gz resources/dragen_sv_blacklist.bedpe {input.sv_file} resources/bed-file-collection-1.0.0/v1.0.0_hg38_Alu_regions.bed.gz {input.mapping_metrics} /dev/null {output.sv_metrics_file}
                 """
 
 rule filter_germline_variants:
@@ -34,6 +34,7 @@ rule filter_germline_variants:
         input:
                 snv_file=config["output_dir"]+"/{project}/{subject}/{subject}_{normal}.dna.germline.hard-filtered.vcf.gz",
                 mapping_metrics=config["output_dir"]+"/{project}/{subject}/{subject}_{normal}.dna.germline.mapping_metrics.csv",
+                wgs_coverage_metrics=config["output_dir"]+"/{project}/{subject}/{subject}_{normal}.dna.germline.wgs_coverage_metrics.csv",
                 cnv_file=config["output_dir"]+"/{project}/{subject}/{subject}_{normal}.dna.germline.cnv.vcf.gz",
                 sv_file=config["output_dir"]+"/{project}/{subject}/{subject}_{normal}.dna.germline.sv.vcf.gz"
         output:
@@ -47,5 +48,5 @@ rule filter_germline_variants:
                 """
                 workflow/scripts/filter_false_positive_snvs.py {input.snv_file} {input.mapping_metrics} {config[ref_fasta]} resources/systematic-noise-baseline-collection-1.1.0/snv_wgs_hg38_{config[systematic_noise_extraction_method]}_v1.1_systematic_noise.bed.gz resources/bed-file-collection-1.0.0/v1.0.0_hg38_Alu_regions.bed.gz resources/dragen_snv_blacklist.txt {output.snv_metrics_file}
                 workflow/scripts/filter_false_positive_cnvs.py resources/dragen_cnv_blacklist.bed {input.cnv_file} {output.cnv_metrics_file}
-                workflow/scripts/filter_false_positive_svs.py resources/sv-systematic-noise-baseline-collection-2.0.1/WGS_hg38_v2.0.1_systematic_noise.sv.bedpe.gz resources/dragen_sv_blacklist.bedpe {config[filter_imprecise_structural_variants]} {input.sv_file} {output.sv_metrics_file}
+                workflow/scripts/filter_false_positive_svs.py resources/sv-systematic-noise-baseline-collection-2.0.1/WGS_hg38_v2.0.1_systematic_noise.sv.bedpe.gz resources/dragen_sv_blacklist.bedpe {input.sv_file} resources/bed-file-collection-1.0.0/v1.0.0_hg38_Alu_regions.bed.gz {input.mapping_metrics} {input.wgs_coverage_metrics} {output.sv_metrics_file}
                 """
