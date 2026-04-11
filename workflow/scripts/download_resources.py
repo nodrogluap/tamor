@@ -30,10 +30,12 @@ resource_dict = {
 
 # Illumina Annotation Engine (used for Tumor Mutational Burden reporting) has its own downloading system, in a standard place on Dragen 4.2 servers, variable on v4.4+
 is_dragen_v42 = True
+is_dragen_v44 = False
+is_dragen_v45 = False
 nirvana_downloader_path = "/opt/edico/share/nirvana/Downloader"
 install_path = ""
 if(not os.path.exists(nirvana_downloader_path)):
-    # In Dragen v4.4 it's changed to be from the PATH so that multiple Dragen versions can be supported on one server.
+    # In Dragen v4.4+ it's changed to be from the PATH so that multiple Dragen versions can be supported on one server.
     result = subprocess.run(["/usr/bin/which", "dragen_info"], capture_output=True, text=True, check=True)
     if result.stderr:
         raise SystemExit("FATAL: Aborting reference data download, did not find Dragen install in path (assuming Dragen v4.4+)")   
@@ -52,6 +54,12 @@ if is_dragen_v42:
     if result.returncode != 0:
         raise SystemExit("FATAL: Received non-zero return code (" + str(result.returncode) + ") from command: " + nirvana_downloader_path + " --ga GRCh38 --out nirvana")
 else:
+    if "4.5" in install_path:
+        is_dragen_v45 = True
+    elif "4.4" in install_path:
+        is_dragen_v44 = True
+    else:
+        raise SystemExit("FATAL: Unsupported Dragen version (not 4.4 or 4.5) detected in dragen_info's install path (" + install_path+")")
     credentials_file = "credentials.json" # remember, we're already in the resources dir
     if(not os.path.exists(credentials_file)):
         raise SystemExit("FATAL: For Dragen v4.4+ an Illumina API key is required to download annotation resources, please generate (per https://help.dragen.illumina.com/product-guide/dragen-v4.4/nirvana#premium-sources) and place an Illumina API key JSON in resources/"+credentials_file)
@@ -67,10 +75,14 @@ else:
                    credentials_file, "--dir", "nirvana", "--versions-config", tmb_config_file])
 
 # Update the reference genome index as required for v4.4+
-if(not is_dragen_v42):
-        resource_dict["ref_genome"] = ["https://s3.us-east-1.amazonaws.com/webdata.illumina.com/downloads/software/dragen/references/genome-files/hg38-alt_masked.cnv.graph.hla.methyl_cg.rna-11-r5.0-1.tar.gz", "kmer_cnv.bin", "tar", "zxf"]
-        resource_dict["snv_systematic_noise"] = ["https://webdata.illumina.com/downloads/software/dragen/resource-files/misc/systematic-noise-baseline-collection-2.0.0.tar", "systematic-noise-baseline-collection-2.0.0", "tar", "vxf"]
-        resource_dict["sv_systematic_noise"]: ["https://webdata.illumina.com/downloads/software/dragen/resource-files/4.4/sv-systematic-noise-baseline-collection-v3.1.0-1.tar.gz", "WGS_hg38_v3.1.0_systematic_noise.sv.bedpe.gz", "tar", "zxvf"]
+if is_dragen_v44:
+    resource_dict["ref_genome"] = ["https://s3.us-east-1.amazonaws.com/webdata.illumina.com/downloads/software/dragen/references/genome-files/hg38-alt_masked.cnv.graph.hla.methyl_cg.rna-11-r5.0-1.tar.gz", "kmer_cnv.bin", "tar", "zxf"]
+    resource_dict["snv_systematic_noise"] = ["https://webdata.illumina.com/downloads/software/dragen/resource-files/misc/systematic-noise-baseline-collection-2.0.0.tar", "systematic-noise-baseline-collection-2.0.0", "tar", "vxf"]
+    resource_dict["sv_systematic_noise"]: ["https://webdata.illumina.com/downloads/software/dragen/resource-files/4.4/sv-systematic-noise-baseline-collection-v3.1.0-1.tar.gz", "WGS_hg38_v3.1.0_systematic_noise.sv.bedpe.gz", "tar", "zxvf"]
+elif is_dragen_v45:
+    resource_dict["ref_genome"] = ["https://webdata.illumina.com/downloads/software/dragen/resource-files/4.5/hash-tables/hg38-alt_masked.cnv.graph.hla.methyl_cg.rna-12-r6.0-1.tar.gz", "kmer_cnv.bin", "tar", "zxf"]
+    resource_dict["snv_systematic_noise"] = ["https://webdata.illumina.com/downloads/software/dragen/resource-files/misc/systematic-noise-baseline-collection-2.0.0.tar", "systematic-noise-baseline-collection-2.0.0", "tar", "vxf"]
+    resource_dict["sv_systematic_noise"]: ["https://webdata.illumina.com/downloads/software/dragen/resource-files/4.5/sv-systematic-noise-baseline-collection-v3.2.0-1.tar.gz", "WGS_hg38_v3.2.0_systematic_noise.sv.bedpe.gz", "tar", "zxvf"]
 
 for resource_name, spec in resource_dict.items():
     if(not os.path.exists(spec[1])):
