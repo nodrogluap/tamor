@@ -71,18 +71,18 @@ else:
     tmb_config_file = install_path+"/resources/annotation/tmb_annotations_GRCh38.json"
     if(not os.path.exists(tmb_config_file)):
         raise SystemExit("FATAL: For Dragen v4.4+ the expected default annotation config JSON is not where we expect it ("+tmb_config_file+")")
-    subprocess.run([install_path+"/share/nirvana/DataManager", "download", "-r", "GRCh38", "--credentials-file",
-                   credentials_file, "--dir", "nirvana", "--versions-config", tmb_config_file])
+    subprocess.run([install_path+"/share/nirvana/DataManager", "download", "-r", "GRCh38", "--credentials-file", 
+        credentials_file, "--dir", "nirvana", "--versions-config", tmb_config_file])
 
 # Update the reference genome index as required for v4.4+
 if is_dragen_v44:
     resource_dict["ref_genome"] = ["https://s3.us-east-1.amazonaws.com/webdata.illumina.com/downloads/software/dragen/references/genome-files/hg38-alt_masked.cnv.graph.hla.methyl_cg.rna-11-r5.0-1.tar.gz", "kmer_cnv.bin", "tar", "zxf"]
     resource_dict["snv_systematic_noise"] = ["https://webdata.illumina.com/downloads/software/dragen/resource-files/misc/systematic-noise-baseline-collection-2.0.0.tar", "systematic-noise-baseline-collection-2.0.0", "tar", "vxf"]
-    resource_dict["sv_systematic_noise"]: ["https://webdata.illumina.com/downloads/software/dragen/resource-files/4.4/sv-systematic-noise-baseline-collection-v3.1.0-1.tar.gz", "WGS_hg38_v3.1.0_systematic_noise.sv.bedpe.gz", "tar", "zxvf"]
+    resource_dict["sv_systematic_noise"] = ["https://webdata.illumina.com/downloads/software/dragen/resource-files/4.4/sv-systematic-noise-baseline-collection-v3.1.0-1.tar.gz", "WGS_hg38_v3.1.0_systematic_noise.sv.bedpe.gz", "tar", "zxvf"]
 elif is_dragen_v45:
     resource_dict["ref_genome"] = ["https://webdata.illumina.com/downloads/software/dragen/resource-files/4.5/hash-tables/hg38-alt_masked.cnv.graph.hla.methyl_cg.rna-12-r6.0-1.tar.gz", "kmer_cnv.bin", "tar", "zxf"]
     resource_dict["snv_systematic_noise"] = ["https://webdata.illumina.com/downloads/software/dragen/resource-files/misc/systematic-noise-baseline-collection-2.0.0.tar", "systematic-noise-baseline-collection-2.0.0", "tar", "vxf"]
-    resource_dict["sv_systematic_noise"]: ["https://webdata.illumina.com/downloads/software/dragen/resource-files/4.5/sv-systematic-noise-baseline-collection-v3.2.0-1.tar.gz", "WGS_hg38_v3.2.0_systematic_noise.sv.bedpe.gz", "tar", "zxvf"]
+    resource_dict["sv_systematic_noise"] = ["https://webdata.illumina.com/downloads/software/dragen/resource-files/4.5/sv-systematic-noise-baseline-collection-v3.2.0-1.tar.gz", "WGS_hg38_v3.2.0_systematic_noise.sv.bedpe.gz", "tar", "zxvf"]
 
 for resource_name, spec in resource_dict.items():
     if(not os.path.exists(spec[1])):
