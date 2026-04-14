@@ -7,9 +7,22 @@ import pandas as pd
 configfile: "config/config.yaml"
 
 is_dragen_v42 = True
+is_dragen_v44 = False
+is_dragen_v45 = False
 nirvana_downloader_path = "/opt/edico/share/nirvana/Downloader"
 if(not os.path.exists(nirvana_downloader_path)):
         is_dragen_v42 = False
+        # In Dragen v4.4+ it's changed to be from the PATH so that multiple Dragen versions can be supported on one server.
+        result = subprocess.run(["/usr/bin/which", "dragen_info"], capture_output=True, text=True, check=True)
+        if result.stderr:
+                raise SystemExit("FATAL: Aborting, did not find Dragen install in path (assuming Dragen v4.4+)")
+        install_path = result.stdout.removesuffix("/bin/dragen_info\n")
+        if "4.5" in install_path:
+                is_dragen_v45 = True
+        elif "4.4" in install_path:
+                is_dragen_v44 = True
+        else:
+                raise SystemExit("FATAL: Unsupported Dragen version (not 4.2, 4.4 or 4.5) detected in dragen_info's install path (" + install_path+")")
 
 # Used by PCGR for reporting known germline cancer susceptibility or related variants.
 # The CNV calls will also be used later to filter somatic CNV calls.
@@ -60,8 +73,10 @@ rule dragen_germline_snv_sv_and_cnv_calls:
                 harmonize_fastq_compression_formats(this_sample_only_fastq_list_csv)
  
                 # todo max call mem only if huge input file needs downsampling               
-                dragen_cmd = "dragen -r "+config["ref_genome"]+" --ora-reference "+config["ref_ora"]+" --enable-map-align true --enable-map-align-output true --enable-bam-indexing true --fastq-list {this_sample_only_fastq_list_csv} --fastq-list-all-samples true --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.normal}.dna.germline --enable-hla true --intermediate-results-dir "+ config["temp_dir"]+" -f"+" --enable-variant-caller true --enable-cnv true --cnv-enable-self-normalization true --enable-sv true --enable-down-sampler true --down-sampler-coverage 60 --enable-variant-annotation=true --variant-annotation-data=resources/nirvana --variant-annotation-assembly=GRCh38 --msi-command collect-evidence --msi-coverage-threshold " + str(config["msi_min_coverage"]) + " --msi-microsatellites-file {input.msi_sites} --soft-read-trimmers polyg --read-trimmers adapter --trim-adapter-read1 resources/adapter_sequences/read1_3prime.fasta --trim-adapter-read2 resources/adapter_sequences/read2_3prime.fasta" 
+                dragen_cmd = "dragen -r "+config["ref_genome"]+" --ora-reference "+config["ref_ora"]+" --enable-map-align true --enable-map-align-output true --enable-bam-indexing true --fastq-list {this_sample_only_fastq_list_csv} --fastq-list-all-samples true --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.normal}.dna.germline --enable-hla true --intermediate-results-dir "+ config["temp_dir"]+" -f"+" --enable-variant-caller true --enable-cnv true --cnv-enable-self-normalization true --enable-sv true --enable-variant-annotation=true --variant-annotation-data=resources/nirvana --variant-annotation-assembly=GRCh38 --msi-command collect-evidence --msi-coverage-threshold " + str(config["msi_min_coverage"]) + " --msi-microsatellites-file {input.msi_sites} --soft-read-trimmers polyg --read-trimmers adapter --trim-adapter-read1 resources/adapter_sequences/read1_3prime.fasta --trim-adapter-read2 resources/adapter_sequences/read2_3prime.fasta" 
 
+                if not is_dragen_v45:
+                        dragen_cmd = dragen_cmd + "--enable-down-sampler true --down-sampler-coverage 60"
                 if is_dragen_v42:
                         dragen_cmd = dragen_cmd + " --hla-enable-class-2 true"
                 if config["generate_crams"]:
@@ -345,6 +360,7 @@ rule dragen_somatic_sv_fusions:
                 "../envs/svtools.yaml"
         shell:
                 """
-                workflow/scripts/annotate_dna_sv.sh {input.somatic_sv} {output.temp_dir]} {config[ref_exon_annotations]}
+                workflow/scripts/annotate_dna_sv.sh {input.somatic_sv} {output.temp_dir} {config[ref_exon_annotations]}
                 workflow/scripts/format_sv_annotations.py {output.dna_fusions} {wildcards.subject} {output.temp_dir}
                 """
+
