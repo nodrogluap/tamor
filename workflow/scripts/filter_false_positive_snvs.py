@@ -61,7 +61,7 @@ filter_Alus = False
 if "library_mean_insert_size_alu_filtering_threshold" in config:
     with open(args.mapping_metrics_csv, 'rt') as mapping_metrics:
         for line in mapping_metrics:
-            if line.startswith("TUMOR MAPPING/ALIGNING SUMMARY,,Insert length: mean,"):
+            if "MAPPING/ALIGNING SUMMARY,,Insert length: mean," in line:
                 fields = line.split(",")
                 if len(fields) < 4:
                     filter_Alus = True
