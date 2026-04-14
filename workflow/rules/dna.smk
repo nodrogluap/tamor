@@ -1,28 +1,11 @@
 #include: "metadata.smk"
 include: "msi.smk"
+include: "dragen_version.smk"
 #include: "fastq_list.smk"
 import os
 import pandas as pd
 
 configfile: "config/config.yaml"
-
-is_dragen_v42 = True
-is_dragen_v44 = False
-is_dragen_v45 = False
-nirvana_downloader_path = "/opt/edico/share/nirvana/Downloader"
-if(not os.path.exists(nirvana_downloader_path)):
-        is_dragen_v42 = False
-        # In Dragen v4.4+ it's changed to be from the PATH so that multiple Dragen versions can be supported on one server.
-        result = subprocess.run(["/usr/bin/which", "dragen_info"], capture_output=True, text=True, check=True)
-        if result.stderr:
-                raise SystemExit("FATAL: Aborting, did not find Dragen install in path (assuming Dragen v4.4+)")
-        install_path = result.stdout.removesuffix("/bin/dragen_info\n")
-        if "4.5" in install_path:
-                is_dragen_v45 = True
-        elif "4.4" in install_path:
-                is_dragen_v44 = True
-        else:
-                raise SystemExit("FATAL: Unsupported Dragen version (not 4.2, 4.4 or 4.5) detected in dragen_info's install path (" + install_path+")")
 
 # Used by PCGR for reporting known germline cancer susceptibility or related variants.
 # The CNV calls will also be used later to filter somatic CNV calls.
@@ -249,6 +232,8 @@ rule dragen_somatic_snv_sv_and_cnv_calls:
 
                 if is_dragen_v42:
                         dragen_cmd = dragen_cmd + " --hla-enable-class-2 true --sv-systematic-noise resources/sv-systematic-noise-baseline-collection-2.0.1/WGS_hg38_v2.0.1_systematic_noise.sv.bedpe.gz"
+                elif is_dragen_v45:
+                        dragen_cmd = dragen_cmd + " --sv-systematic-noise resources/WGS_hg38_v3.2.0_systematic_noise.sv.bedpe.gz"
                 else:
                         dragen_cmd = dragen_cmd + " --sv-systematic-noise resources/WGS_hg38_v3.1.0_systematic_noise.sv.bedpe.gz"
 
@@ -337,14 +322,14 @@ rule dragen_germline_sv_fusions:
                 # Only run the gene fusion analysis after false positive SV filtering has been applied.
                 sv_filter_metrics=config["output_dir"]+'/{project}/{subject}/{subject}_{normal}.dna.germline.sv_filter_metrics.csv'
         output:
-                dna_fusions=config["output_dir"]+'/{project}/{subject}/{subject}_{normal}.dna.germline.sv.fusion_candidates.features.csv',
-                temp_dir=temp(directory("dragen_germline_sv_fusions_{project}_{subject}_{normal}"))
+                dna_fusions=config["output_dir"]+'/{project}/{subject}/{subject}_{normal}.dna.germline.sv.fusion_candidates.features.csv'
+        shadow: "shallow"
         conda:
                 "../envs/svtools.yaml"
         shell:
                 """
-                workflow/scripts/annotate_dna_sv.sh {input.germline_sv} {output.temp_dir} {config[ref_exon_annotations]}
-                workflow/scripts/format_sv_annotations.py {output.dna_fusions} {wildcards.subject} {output.temp_dir}
+                workflow/scripts/annotate_dna_sv.sh {input.germline_sv} . {config[ref_exon_annotations]}
+                workflow/scripts/format_sv_annotations.py {output.dna_fusions} {wildcards.subject} .
                 """
 
 rule dragen_somatic_sv_fusions:
@@ -355,12 +340,12 @@ rule dragen_somatic_sv_fusions:
                 sv_filter_metrics=config["output_dir"]+'/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.sv_filter_metrics.csv'
         output:
                 dna_fusions=config["output_dir"]+'/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.sv.fusion_candidates.features.csv',
-                temp_dir=temp(directory("dragen_somatic_sv_fusions_{project}_{subject}_{tumor}_{normal}"))
+        shadow: "shallow"
         conda:
                 "../envs/svtools.yaml"
         shell:
                 """
-                workflow/scripts/annotate_dna_sv.sh {input.somatic_sv} {output.temp_dir} {config[ref_exon_annotations]}
-                workflow/scripts/format_sv_annotations.py {output.dna_fusions} {wildcards.subject} {output.temp_dir}
+                workflow/scripts/annotate_dna_sv.sh {input.somatic_sv} . {config[ref_exon_annotations]}
+                workflow/scripts/format_sv_annotations.py {output.dna_fusions} {wildcards.subject} .
                 """
 
