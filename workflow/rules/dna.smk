@@ -59,7 +59,7 @@ rule dragen_germline_snv_sv_and_cnv_calls:
                 dragen_cmd = "dragen -r "+config["ref_genome"]+" --ora-reference "+config["ref_ora"]+" --enable-map-align true --enable-map-align-output true --enable-bam-indexing true --fastq-list {this_sample_only_fastq_list_csv} --fastq-list-all-samples true --output-directory "+ config["output_dir"]+"/{wildcards.project}/{wildcards.subject} --output-file-prefix {wildcards.subject}_{wildcards.normal}.dna.germline --enable-hla true --intermediate-results-dir "+ config["temp_dir"]+" -f"+" --enable-variant-caller true --enable-cnv true --cnv-enable-self-normalization true --enable-sv true --enable-variant-annotation=true --variant-annotation-data=resources/nirvana --variant-annotation-assembly=GRCh38 --msi-command collect-evidence --msi-coverage-threshold " + str(config["msi_min_coverage"]) + " --msi-microsatellites-file {input.msi_sites} --soft-read-trimmers polyg --read-trimmers adapter --trim-adapter-read1 resources/adapter_sequences/read1_3prime.fasta --trim-adapter-read2 resources/adapter_sequences/read2_3prime.fasta" 
 
                 if not is_dragen_v45:
-                        dragen_cmd = dragen_cmd + "--enable-down-sampler true --down-sampler-coverage 60"
+                        dragen_cmd = dragen_cmd + " --enable-down-sampler true --down-sampler-coverage 60"
                 if is_dragen_v42:
                         dragen_cmd = dragen_cmd + " --hla-enable-class-2 true"
                 if config["generate_crams"]:
