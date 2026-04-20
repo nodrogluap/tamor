@@ -38,7 +38,7 @@ fi
 # Check that we have a version of samtools that's new enough to do what we need.
 VERSION=$(samtools --version |& head -n 1)
 VERSION_NUM=$(echo "$VERSION" | awk '{print $2}' | cut -f2)
-IFS="." read MAJOR MINOR <<< $VERSION_NUM
+IFS="." read MAJOR MINOR PATCH <<< $VERSION_NUM
 MIN_MAJOR=1
 MIN_MINOR=6
 if (( MAJOR > MIN_MAJOR )) || \
