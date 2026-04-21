@@ -23,22 +23,25 @@ def has_small_insert(mapping_metrics_file):
 
 def get_snv_systematic_noise_file(wildcards):
         if is_dragen_v42:
-                return "resources/systematic-noise-baseline-collection-1.1.0/snv_wgs_hg38_{config[systematic_noise_extraction_method]}_v1.1_systematic_noise.bed.gz"
+                method = "max"
+                if "systematic_noise_extraction_method" in config:
+                        method = config["systematic_noise_extraction_method"]
+                return f"resources/systematic-noise-baseline-collection-1.1.0/snv_wgs_hg38_{method}_v1.1_systematic_noise.bed.gz"
         else:
                 if hasattr(wildcards, 'tumor'):
-                        mapping_metrics=config["output_dir"]+"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.mapping_metrics.csv"
+                        mapping_metrics=config["output_dir"]+f"/{wildcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.tumor}_{wildcards.normal}.dna.somatic.mapping_metrics.csv"
                         if not get_tumor_has_pcr_duplicates(wildcards):
                                 return "resources/systematic-noise-baseline-collection-2.0.0/IDPF_WGS_hg38_v.2.0.0_systematic_noise.snv.bed.gz"
-                        elif has_small_insert(mapping_metrics):
-                                return "resources/FFPE_WGS_hg38_v2.0.0_systematic_noise.snv.bed.gz"
+                        #elif has_small_insert(mapping_metrics):
+                        #        return "resources/FFPE_WGS_hg38_v2.0.0_systematic_noise.snv.bed.gz"
                         else:
                                 return "resources/systematic-noise-baseline-collection-2.0.0/WGS_hg38_v2.0.0_systematic_noise.snv.bed.gz"
                 else:
-                        mapping_metrics=config["output_dir"]+"/{project}/{subject}/{subject}_{normal}.dna.germline.mapping_metrics.csv"
+                        mapping_metrics=config["output_dir"]+f"/{project}/{subject}/{subject}_{normal}.dna.germline.mapping_metrics.csv"
                         if not get_normal_has_pcr_duplicates(wildcards):
                                 return "resources/systematic-noise-baseline-collection-2.0.0/IDPF_WGS_hg38_v.2.0.0_systematic_noise.snv.bed.gz"
-                        elif has_small_insert(mapping_metrics):
-                                return "resources/FFPE_WGS_hg38_v2.0.0_systematic_noise.snv.bed.gz"
+                        #elif has_small_insert(mapping_metrics):
+                        #        return "resources/FFPE_WGS_hg38_v2.0.0_systematic_noise.snv.bed.gz"
                         else:
                                 return "resources/systematic-noise-baseline-collection-2.0.0/WGS_hg38_v2.0.0_systematic_noise.snv.bed.gz"
 
