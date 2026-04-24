@@ -61,6 +61,77 @@ It is worth noting that the BCL format of a WGS run is typically ~60% of the siz
 Therefore the BCLs rather than FASTQ.gz files should be kept if there is potential for warranted changes in upstream processing such as  
 barcode mismatch allowance, UMI processing, or adapter trimming.
 
+**The safest way to delete FASTQ files is with Tamor's ``deleteFASTQs.py`` script.** 
+Before deleting anything, this scripts verifies that the BAM/CRAM exists, and is intact 
+(using samtool's quickcheck), that the variant calls are intact (gzip CRC32 check), that 
+the FASTQ list CSV file exists and is properly formatted, and that all the source BCL files for the 
+case are still available. This means that if needed, you could later regenerate the FASTQ files from either the 
+BAM/CRAM (Plan A, affects only this case through use of ``cram2fastq.sh``) or the BCLs 
+(a.k.a. Plan B, affects timestamps of all cases on the same run if you use ``bcl-convert``).
+
+Example usage for case (subject) ``PR-CY-SAR-05026458`` from cohort ``PR-CY-SAR``:
+```bash
+$ workflow/scripts/deleteFASTQs.py -h
+usage: Delete Tamor input FASTQs [-h] [--perform_deletion] project subject
+
+Deletes FASTQ files for a (completely analyzed) case to save space, if CRAMs and FASTQ list CSVs exist in the output dir, which
+will allow us recreate the FASTQs at a later date.
+
+positional arguments:
+  project
+  subject
+
+options:
+  -h, --help          show this help message and exit
+  --perform_deletion  Perform the file deletions (optional, defaults to False, only listing what would be deleted)
+
+
+$ workflow/scripts/deleteFASTQs.py PR-CY-SAR PR-CY-SAR-05026458
+INFO: Sample PR-CY-SAR-05026458-5504-T1 is suitable for FASTQ deletion
+INFO: Sample PR-CY-SAR-05026458-5466-N is suitable for FASTQ deletion
+INFO: Could delete /bulk/chgi_analysis/primary/novaseq6000/230109_A00906_0346_AHL5CYDSX5/Li37834_S5_L001_R1_001.fastq.gz
+INFO: Could delete /bulk/chgi_analysis/primary/novaseq6000/230109_A00906_0346_AHL5CYDSX5/Li37834_S5_L001_R2_001.fastq.gz
+INFO: Could delete /bulk/chgi_analysis/primary/novaseq6000/230109_A00906_0346_AHL5CYDSX5/Li37834_S5_L002_R1_001.fastq.gz
+INFO: Could delete /bulk/chgi_analysis/primary/novaseq6000/230109_A00906_0346_AHL5CYDSX5/Li37834_S5_L002_R2_001.fastq.gz
+INFO: Could delete /bulk/chgi_analysis/primary/novaseq6000/230109_A00906_0346_AHL5CYDSX5/Li37834_S5_L003_R1_001.fastq.gz
+INFO: Could delete /bulk/chgi_analysis/primary/novaseq6000/230109_A00906_0346_AHL5CYDSX5/Li37834_S5_L003_R2_001.fastq.gz
+INFO: Could delete /bulk/chgi_analysis/primary/novaseq6000/230109_A00906_0346_AHL5CYDSX5/Li37834_S5_L004_R1_001.fastq.gz
+INFO: Could delete /bulk/chgi_analysis/primary/novaseq6000/230109_A00906_0346_AHL5CYDSX5/Li37834_S5_L004_R2_001.fastq.gz
+INFO: Could delete /bulk/chgi_analysis/primary/novaseq6000/230111_A00906_0348_AH2M32DSX5/Li37891_S16_L001_R1_001.fastq.gz
+INFO: Could delete /bulk/chgi_analysis/primary/novaseq6000/230111_A00906_0348_AH2M32DSX5/Li37891_S16_L001_R2_001.fastq.gz
+INFO: Could delete /bulk/chgi_analysis/primary/novaseq6000/230111_A00906_0348_AH2M32DSX5/Li37891_S16_L002_R1_001.fastq.gz
+INFO: Could delete /bulk/chgi_analysis/primary/novaseq6000/230111_A00906_0348_AH2M32DSX5/Li37891_S16_L002_R2_001.fastq.gz
+INFO: Could delete /bulk/chgi_analysis/primary/novaseq6000/230111_A00906_0348_AH2M32DSX5/Li37891_S16_L003_R1_001.fastq.gz
+INFO: Could delete /bulk/chgi_analysis/primary/novaseq6000/230111_A00906_0348_AH2M32DSX5/Li37891_S16_L003_R2_001.fastq.gz
+INFO: Could delete /bulk/chgi_analysis/primary/novaseq6000/230111_A00906_0348_AH2M32DSX5/Li37891_S16_L004_R1_001.fastq.gz
+INFO: Could delete /bulk/chgi_analysis/primary/novaseq6000/230111_A00906_0348_AH2M32DSX5/Li37891_S16_L004_R2_001.fastq.gz
+
+
+$ workflow/scripts/deleteFASTQs.py PR-CY-SAR PR-CY-SAR-05026458 --perform_deletion
+INFO: Sample PR-CY-SAR-05026458-5504-T1 is suitable for FASTQ deletion
+INFO: Sample PR-CY-SAR-05026458-5466-N is suitable for FASTQ deletion
+INFO: Deleting /bulk/chgi_analysis/primary/novaseq6000/230109_A00906_0346_AHL5CYDSX5/Li37834_S5_L001_R1_001.fastq.gz
+INFO: Deleting /bulk/chgi_analysis/primary/novaseq6000/230109_A00906_0346_AHL5CYDSX5/Li37834_S5_L001_R2_001.fastq.gz
+INFO: Deleting /bulk/chgi_analysis/primary/novaseq6000/230109_A00906_0346_AHL5CYDSX5/Li37834_S5_L002_R1_001.fastq.gz
+INFO: Deleting /bulk/chgi_analysis/primary/novaseq6000/230109_A00906_0346_AHL5CYDSX5/Li37834_S5_L002_R2_001.fastq.gz
+INFO: Deleting /bulk/chgi_analysis/primary/novaseq6000/230109_A00906_0346_AHL5CYDSX5/Li37834_S5_L003_R1_001.fastq.gz
+INFO: Deleting /bulk/chgi_analysis/primary/novaseq6000/230109_A00906_0346_AHL5CYDSX5/Li37834_S5_L003_R2_001.fastq.gz
+INFO: Deleting /bulk/chgi_analysis/primary/novaseq6000/230109_A00906_0346_AHL5CYDSX5/Li37834_S5_L004_R1_001.fastq.gz
+INFO: Deleting /bulk/chgi_analysis/primary/novaseq6000/230109_A00906_0346_AHL5CYDSX5/Li37834_S5_L004_R2_001.fastq.gz
+INFO: Deleting /bulk/chgi_analysis/primary/novaseq6000/230111_A00906_0348_AH2M32DSX5/Li37891_S16_L001_R1_001.fastq.gz
+INFO: Deleting /bulk/chgi_analysis/primary/novaseq6000/230111_A00906_0348_AH2M32DSX5/Li37891_S16_L001_R2_001.fastq.gz
+INFO: Deleting /bulk/chgi_analysis/primary/novaseq6000/230111_A00906_0348_AH2M32DSX5/Li37891_S16_L002_R1_001.fastq.gz
+INFO: Deleting /bulk/chgi_analysis/primary/novaseq6000/230111_A00906_0348_AH2M32DSX5/Li37891_S16_L002_R2_001.fastq.gz
+INFO: Deleting /bulk/chgi_analysis/primary/novaseq6000/230111_A00906_0348_AH2M32DSX5/Li37891_S16_L003_R1_001.fastq.gz
+INFO: Deleting /bulk/chgi_analysis/primary/novaseq6000/230111_A00906_0348_AH2M32DSX5/Li37891_S16_L003_R2_001.fastq.gz
+INFO: Deleting /bulk/chgi_analysis/primary/novaseq6000/230111_A00906_0348_AH2M32DSX5/Li37891_S16_L004_R1_001.fastq.gz
+INFO: Deleting /bulk/chgi_analysis/primary/novaseq6000/230111_A00906_0348_AH2M32DSX5/Li37891_S16_L004_R2_001.fastq.gz
+
+$ workflow/scripts/deleteFASTQs.py PR-CY-SAR PR-CY-SAR-05026458
+INFO: Sample PR-CY-SAR-05026458-5504-T1 already has all FASTQs deleted
+INFO: Sample PR-CY-SAR-05026458-5466-N already has all FASTQs deleted
+```
+
 ### Restoring deleted raw reads
 
 The most space-efficient option is to remove the source FASTQ.gz files after variant calling is complete. 
