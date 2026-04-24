@@ -66,11 +66,14 @@ Before deleting anything, this scripts verifies that the BAM/CRAM exists, and is
 (using samtool's quickcheck), that the variant calls are intact (gzip CRC32 check), that 
 the FASTQ list CSV file exists and is properly formatted, and that all the source BCL files for the 
 case are still available. This means that if needed, you could later regenerate the FASTQ files from either the 
-BAM/CRAM (Plan A, affects only this case through use of ``cram2fastq.sh``) or the BCLs 
+BAM/CRAM (Plan A, affects only this case through use of ``cram2fastq.sh`` as described later in this doc) or the BCLs 
 (a.k.a. Plan B, affects timestamps of all cases on the same run if you use ``bcl-convert``).
 
 Example usage for case (subject) ``PR-CY-SAR-05026458`` from cohort ``PR-CY-SAR``:
 ```bash
+$ mamba env create -f workflow/envs/deleteFASTQs.yaml
+$ mamba activate deleteFASTQs
+
 $ workflow/scripts/deleteFASTQs.py -h
 usage: Delete Tamor input FASTQs [-h] [--perform_deletion] project subject
 
