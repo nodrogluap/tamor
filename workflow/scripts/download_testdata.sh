@@ -22,7 +22,7 @@ rm -rf SRR6702602 SRR6702601
 # variants in the human population, and the human reference genome k-mers (k=15):
 
 # Get the common human population variant kmers (30mers) from the FastGT tool.
-wget http://bioinfo.ut.ee/FastGT/downloads/kmer_db_WG30238282.db
+wget http://bioinfo.ut.ee/download/FastGT/downloads/kmer_db_WG30238282.db
 
 # Calculate the reference genome (passed into script) k-mers with the Jellyfish program (installed in the test conda env). Needs ~40GB memory.
 jellyfish count -m 15 -s 100M -t 16 -C -o human.15mers.jf $1
