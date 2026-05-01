@@ -4,7 +4,7 @@ This complements the germline SV systematic noise BEDPE file provided by Illumin
 
 A structural variant was blacklisted here if it had PASS status in 4 or more cohorts, and was not supported by the Dragen RNA 
 fusion caller in any sample (all cases had matched deep transcriptomes available as well). This means that the blacklist is
-biased towards generating few to no false negatives (and spurious discovery of commonalities in SVs amongst case susbsets), rather than 
+biased towards generating few to no false negatives (and spurious discovery of commonalities in SVs amongst case subsets), rather than 
 abating the case-specific false positive rate.
 
 The score column in the BEDPE lists the number of PASS observations for the site pair. The name field contains an example SV ID from the cases.
