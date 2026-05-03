@@ -37,7 +37,7 @@ def get_snv_systematic_noise_file(wildcards):
                         else:
                                 return "resources/systematic-noise-baseline-collection-2.0.0/WGS_hg38_v2.0.0_systematic_noise.snv.bed.gz"
                 else:
-                        mapping_metrics=config["output_dir"]+f"/{project}/{subject}/{subject}_{normal}.dna.germline.mapping_metrics.csv"
+                        mapping_metrics=config["output_dir"]+f"/{wilcards.project}/{wildcards.subject}/{wildcards.subject}_{wildcards.normal}.dna.germline.mapping_metrics.csv"
                         if not get_normal_has_pcr_duplicates(wildcards):
                                 return "resources/systematic-noise-baseline-collection-2.0.0/IDPF_WGS_hg38_v.2.0.0_systematic_noise.snv.bed.gz"
                         #elif has_small_insert(mapping_metrics):
