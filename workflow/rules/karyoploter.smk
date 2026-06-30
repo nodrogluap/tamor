@@ -7,9 +7,9 @@ rule generate_karyoploter_cnv_plot:
         input:
                 somatic_snv_vcf=config["output_dir"]+'/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.hard-filtered.vcf.gz',
                 somatic_cnv_vcf=config["output_dir"]+'/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.cnv.vcf.gz',
-                # Make the rule dependent on the CNV and SNV post-filtering having been run, to reduce artifacts in the plots.
-                snv_filter_metrics_file=config["output_dir"]+'/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.snv_filter_metrics.csv',
-                cnv_filter_metrics_file=config["output_dir"]+'/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.cnv_filter_metrics.csv'
+                # Evoke post germline and somatic cnv filtering (reduce artifacts in the plots).
+                germline_filter_metrics_file=config["output_dir"]+'/{project}/{subject}/{subject}_{normal}.dna.germline.cnv_filter_metrics.csv',
+                somatic_filter_metrics_file=config["output_dir"]+'/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.cnv_filter_metrics.csv'
         output:
                 somatic_vaf=config["output_dir"]+'/{project}/{subject}/{subject}_{tumor}_{normal}.dna.somatic.hard-filtered.pass.vaf',
                 jpeg=config["output_dir"]+'/{project}/{subject}/{subject}_{tumor}_{normal}.cnv_plot.jpeg'
