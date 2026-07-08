@@ -81,7 +81,7 @@ if isinstance(config["reporting_min_proportion"], float) or isinstance(config["r
 # Somatic small nucleotide variants reformatting
 tf=tempfile.NamedTemporaryFile(suffix=".vcf")
 SNVFILE=tf.name
-system(f"gzip -cd {args.snv} | perl -ne 'if(/^##INFO=<ID=DP,/){{print \"##INFO=<ID=TDP,Number=1,Type=Integer,Description=\\\"Read depth of alternative allele in the tumor\\\">\\n##INFO=<ID=TVAF,Number=1,Type=Float,Description=\\\"Alternative allele proportion of reads in the tumor\\\">\\n\"}}($tdp, $tvaf) = /\\t[01][\\/|][01]:\\d+.?\\d*:\\d+,(\\d+):([0-9]+\\.?[0-9]*):\\S+?$/;s/\\tDP=/\\tTDP=$tdp;TVAF=$tvaf;DP=/; s/;SOMATIC//; next if m(\\t\\.[/|]\\.\\S+$) or $tvaf and $tvaf < {tvaf_threshold}; print' > {SNVFILE}")
+system(f"gzip -cd {args.snv} | perl -ane 'next if not /^#/ and not /\tPASS\t/; if(/^##INFO=<ID=DP,/){{print \"##INFO=<ID=TDP,Number=1,Type=Integer,Description=\\\"Read depth of alternative allele in the tumor\\\">\\n##INFO=<ID=TVAF,Number=1,Type=Float,Description=\\\"Alternative allele proportion of reads in the tumor\\\">\\n\"}}($tdp, $tvaf) = /\\t[01][\\/|][01]:\\d+.?\\d*:\\d+,(\\d+):([0-9]+\\.?[0-9]*):\\S+?$/;s/\\tDP=/\\tTDP=$tdp;TVAF=$tvaf;DP=/; s/;SOMATIC//; next if m(\\t\\.[/|]\\.\\S+$) or $tvaf and $tvaf < {tvaf_threshold}; print' > {SNVFILE}")
 # Only keeping the original to avoid FileNotFoundError when temp file automatically cleaned up by Snakemake after rule application.
 system(f"bgzip -c {SNVFILE} > {SNVFILE}.gz")
 system(f"tabix {SNVFILE}.gz")
@@ -115,6 +115,6 @@ system(f"tail -n +2 {tumor_rna_fusion_tsv} | perl -ane '$confidence = $F[4] =~ /
 #TODO: append DNA structural variants to fusion call list where appropriate
 
 # Generate PCGR report with all these data, include CNAs file only if not empty (PCGR fails if it's empty beyond the header)
-system(f"pcgr --input_cpsr {args.cpsr} --input_cpsr_yaml {args.cpsr_yaml} --vep_dir resources --refdata_dir resources --output_dir {args.outdir}/pcgr/{args.project}/{args.subject}_{args.tumor}_{args.normal} --sample_id {args.tumor} --debug --tumor_dp_tag TDP --tumor_af_tag TVAF --genome_assembly grch38 --input_vcf {SNVFILE}.gz --tumor_site {tumor_site} --tumor_purity {tumor_purity} --tumor_ploidy {tumor_ploidy} --assay WGS --estimate_signatures --estimate_msi --estimate_tmb --force_overwrite " + (f"--input_cna {CNAFILE} --n_copy_gain 3" if os.path.getsize(CNAFILE) != len(cna_header) else "") + (f" --input_rna_expression {TPMFILE} --expression_sim" if os.path.getsize(TPMFILE) != len(tpm_header) else ""))
+system(f"pcgr --input_cpsr {args.cpsr} --input_cpsr_yaml {args.cpsr_yaml} --vep_dir resources --refdata_dir resources --output_dir {args.outdir}/pcgr/{args.project}/{args.subject}_{args.tumor}_{args.normal} --sample_id {args.tumor} --debug --tumor_dp_tag TDP --tumor_af_tag TVAF --genome_assembly grch38 --input_vcf {SNVFILE}.gz --tumor_site {tumor_site} --tumor_purity {tumor_purity} --tumor_ploidy {tumor_ploidy} --assay WGS --estimate_signatures --estimate_msi --estimate_tmb --call_conf_tag SQ --force_overwrite " + (f"--input_cna {CNAFILE} --n_copy_gain 3" if os.path.getsize(CNAFILE) != len(cna_header) else "") + (f" --input_rna_expression {TPMFILE} --expression_sim" if os.path.getsize(TPMFILE) != len(tpm_header) else ""))
 
 exit(0)
