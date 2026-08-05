@@ -234,6 +234,8 @@ rule dragen_somatic_snv_sv_and_cnv_calls:
                         dragen_cmd = dragen_cmd + " --hla-enable-class-2 true --sv-systematic-noise resources/sv-systematic-noise-baseline-collection-2.0.1/WGS_hg38_v2.0.1_systematic_noise.sv.bedpe.gz"
                 elif is_dragen_v45:
                         dragen_cmd = dragen_cmd + " --sv-systematic-noise resources/WGS_hg38_v3.2.0_systematic_noise.sv.bedpe.gz"
+                        if has_pcr_duplicates:
+                                dragen_cmd = dragen_cmd + " --vc-enable-low-qual-ffpe-mode true --enable-somatic-ml true"
                 else:
                         dragen_cmd = dragen_cmd + " --sv-systematic-noise resources/WGS_hg38_v3.1.0_systematic_noise.sv.bedpe.gz"
 
