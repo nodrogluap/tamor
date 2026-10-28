@@ -20,8 +20,10 @@ oncokb_api_token_file: "config/oncokb_api_key.txt"
 upload_to_ipa: False
 
 # Where to write temporary intermediate outputs used internally by Dragen (preferably an SSD or other very fast storage).
-#temp_dir: "/staging/tmp"
-temp_dir: "/staging"
+temp_dir: "/tmp"
+
+# Where to write temporary intermediate outputs if rule is executed with "snakemake --executor slurm":
+slurm_scratch_dir: "/scratch/$SLURM_JOB_ID"
 
 # For samples where SampleSheet contains UMI OverrideCycle setting:
 # What UMI scheme is being used (if random UMIs are used, comment out this setting). 
